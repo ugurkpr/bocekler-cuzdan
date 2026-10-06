@@ -277,6 +277,47 @@ button,.tap{-webkit-user-select:none;user-select:none}
 .seg button{min-height:44px}
 .check{min-height:44px;cursor:pointer}
 .pname{min-height:44px}
+/* alt başlıklar */
+.catblock{display:grid}
+.subs{display:grid;margin:4px 0 0 4px;padding-left:12px;border-left:2px solid var(--line)}
+.subs .sub{display:flex;justify-content:space-between;gap:8px;border:0;background:none;font:inherit;color:var(--muted);font-size:14px;padding:8px 6px;min-height:38px;border-radius:8px;text-align:left}
+.subs .sub span:last-child{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.subrow{display:flex;gap:8px;align-items:center}
+.subrow input{flex:1}
+.sublist{display:grid;gap:8px}
+.subadd{display:inline-flex;gap:6px;align-items:center}
+.subadd input{width:150px;min-height:40px;padding:6px 10px}
+.sugg{display:flex;flex-wrap:wrap;gap:6px}
+.sugg .chip{border-style:dashed}
+/* rapor */
+.reportcard{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit}
+.reportcard .ic{grid-row:span 2;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-text)}
+.reportcard .ic svg{width:22px;height:22px}
+.reportcard b{font-weight:600}
+.reportcard small{color:var(--muted);font-size:13px;grid-column:2}
+.reportcard .chev{grid-row:1 / span 2;grid-column:3}
+.rp{display:grid;gap:18px}
+.rp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rp-head h2{font-size:22px}
+.rp-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.rp-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rp-tile{background:var(--sunk);border-radius:14px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.rp-tile b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.rp-tile small{color:var(--muted);font-size:12px}
+.rp-sec{display:grid;gap:6px}
+.rp-sec h3{font-family:var(--display);font-size:17px;margin-bottom:2px}
+.rp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.rp-row:first-of-type{border-top:0}
+.rp-row .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp-row .r small{display:block;color:var(--muted);font-size:12px}
+.rp-row .sub2{grid-column:1/-1;color:var(--muted);font-size:13px;padding-left:12px}
+.rp-bar{grid-column:1/-1;height:6px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.rp-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),color-mix(in oklch,var(--accent),var(--surface) 35%))}
+.rp .up,.rp small.up{color:var(--alarm)!important;font-weight:600} .rp .down,.rp small.down{color:var(--in)!important;font-weight:600}
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.stack i{display:block;height:100%}
+.rp-note{font-size:14px;line-height:1.5}
+.rp-note b{font-weight:600}
 </style>
 </head>
 <body>
@@ -399,7 +440,7 @@ async function fetchRates(manual){
     saveLocal(); render(); if(manual) toast('Kurlar güncellendi');
   } catch(e){ if(manual) toast('Kurlar alınamadı. İnterneti kontrol et ya da kurları elle yaz.'); }
 }
-let view = { ym: todayYM, tab: 'ozet', day: null, cat: null };
+let view = { ym: todayYM, tab: 'ozet', day: null, cat: null, sub: null };
 let mode = 'loading';  // 'db' | 'local' | 'loading'
 let col = null;
 
@@ -477,10 +518,23 @@ function entriesFor(ym){
   const list = m.items.map(x=>({...x}));
   for(const r of S.settings.recurring){
     if(ym < r.from || (r.until && ym > r.until) || (m.skip||[]).includes(r.id)) continue;
-    list.push({ id:'r:'+r.id, rid:r.id, t:r.t, amt:r.amt, cat:r.cat, note:r.note,
+    list.push({ id:'r:'+r.id, rid:r.id, t:r.t, amt:r.amt, cat:r.cat, sub:r.sub, note:r.note,
       date:`${ym}-${pad(Math.min(r.day, daysIn(ym)))}`, rec:true });
   }
   return list.sort((a,b)=> b.date.localeCompare(a.date) || (b.rec?0:1)-(a.rec?0:1));
+}
+const subName = (catId, subId) => { const c = S.settings.cats.find(x=>x.id===catId); const x = c && (c.subs||[]).find(y=>y.id===subId); return x ? x.name : ''; };
+function subTotals(ym, catId){
+  const out = {};
+  for(const e of entriesFor(ym)) if(e.t==='out' && e.cat===catId){ const k = e.sub && subName(catId, e.sub) ? e.sub : '_'; out[k] = (out[k]||0) + e.amt; }
+  return out;
+}
+// Özet'te kategorinin altında alt başlık dağılımı (en az bir alt başlıklı kayıt varsa)
+function subLines(ym, c){
+  if(!(c.subs||[]).length) return '';
+  const t = subTotals(ym, c.id), keys = Object.keys(t).sort((a,b)=>t[b]-t[a]);
+  if(!keys.some(k=>k!=='_')) return '';
+  return `<div class="subs">${keys.map(k=>`<button class="sub tap" data-catgo="${esc(c.id)}" data-sub="${k}"><span>${k==='_' ? 'Alt başlıksız' : esc(subName(c.id,k))}</span><span>${tl.format(t[k])}</span></button>`).join('')}</div>`;
 }
 function totals(ym){
   let inc=0, out=0; const byCat={};
@@ -519,17 +573,17 @@ function renderSummary(){
   const orphan = Object.keys(byCat).filter(id=>!S.settings.cats.some(c=>c.id===id)).map(cat);
   const unlimited = [...S.settings.cats.filter(c=>c.t==='out' && !(c.budget>0) && byCat[c.id]), ...orphan]
     .sort((a,b)=>byCat[b.id]-byCat[a.id]);
-  const plain = unlimited.length ? `<div class="plain"><span class="label">Limitsiz</span>${unlimited.map(c=>`<button class="tap" data-catgo="${esc(c.id)}"><span>${esc(c.name)}</span><span class="num">${tl.format(byCat[c.id])} <span class="chev">›</span></span></button>`).join('')}</div>` : '';
+  const plain = unlimited.length ? `<div class="plain"><span class="label">Limitsiz</span>${unlimited.map(c=>`<button class="tap" data-catgo="${esc(c.id)}"><span>${esc(c.name)}</span><span class="num">${tl.format(byCat[c.id])} <span class="chev">›</span></span></button>${subLines(view.ym, c)}`).join('')}</div>` : '';
   const rows = limited.map(c => {
     const spent = byCat[c.id]||0, b = c.budget||0;
     const scale = Math.max(spent, b) || 1;
     const ratio = b ? spent/b : 0;
     const cls = b ? (ratio>1 ? 'over' : ratio>=.8 ? 'near' : '') : '';
     const pill = cls==='over' ? `<span class="pill over">${tl.format(spent-b)} aştı</span>` : cls==='near' ? `<span class="pill near">%${Math.round(ratio*100)}</span>` : '';
-    return { spent, html: `<button class="barrow tap" data-catgo="${esc(c.id)}">
+    return { spent, html: `<div class="catblock"><button class="barrow tap" data-catgo="${esc(c.id)}">
       <div class="bar-top"><span>${esc(c.name)}${pill}</span><span class="num">${tl.format(spent)}${b?` / ${tl.format(b)}`:''}</span></div>
       <div class="track"><div class="fill" style="width:${(spent/scale*100).toFixed(1)}%;background:${barGrad(b ? spent/b : 0)}"></div>${b?`<div class="limit" style="left:calc(${(b/scale*100).toFixed(1)}% - 1px)" title="Limit"></div>`:''}</div>
-    </button>`};
+    </button>${subLines(view.ym, c)}</div>`};
   }).sort((a,b)=>b.spent-a.spent).map(r=>r.html).join('');
 
   return `${alertsHTML()}
@@ -540,6 +594,7 @@ function renderSummary(){
       <button class="cell tap" data-goto="liste"><span class="label">Gider</span><b class="num">${tl.format(out)}</b></button>
     </div>
   </div>
+  <section><button class="card reportcard tap" data-report="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>${ymLabel(view.ym)} raporu</b><span class="chev">›</span><small>Nereye ne gitti, geçen aya göre ne değişti</small></button></section>
   ${savCard(view.ym)}
   ${!hasAny ? `<section><div class="card empty"><b>Bu ay henüz kayıt yok</b>Alttaki <strong>+</strong> düğmesiyle ilk gelirini ya da harcamanı ekle. Maaş, kira gibi her ay tekrarlananları bir kez “her ay tekrarla” diye eklemen yeterli.</div></section>`:''}
   <section>
@@ -709,7 +764,8 @@ function openSavSheet(entry, preset){
 }
 
 function renderList(){
-  const list = view.cat ? entriesFor(view.ym).filter(e=>e.cat===view.cat) : entriesFor(view.ym);
+  let list = view.cat ? entriesFor(view.ym).filter(e=>e.cat===view.cat) : entriesFor(view.ym);
+  if(view.cat && view.sub) list = list.filter(e => view.sub==='_' ? !(e.sub && subName(e.cat,e.sub)) : e.sub===view.sub);
   const outBy = {}, inBy = {};
   list.forEach(e => { const o = e.t==='in' ? inBy : outBy; o[e.date] = (o[e.date]||0) + e.amt; });
   const dim = daysIn(view.ym), [y,m] = view.ym.split('-').map(Number);
@@ -726,7 +782,7 @@ function renderList(){
   const elapsed = view.ym<todayYM ? dim : view.ym===todayYM ? now.getDate() : 0;
   const top = Object.entries(outBy).sort((a,b)=>b[1]-a[1])[0];
   const stats = (elapsed && spent) || top ? `<div class="daystats">${elapsed&&spent?`<span>Günlük ortalama <b class="num">${tl.format(Math.round(spent/elapsed))}</b></span>`:''}${top?`<span>En çok harcanan gün <b>${dayLabel(top[0],{day:'numeric',month:'long'})}</b> <span class="num">(${tl.format(top[1])})</span></span>`:''}</div>` : '';
-  const catChip = view.cat ? `<div style="margin-top:12px"><button class="chip filterchip" data-catgo="" aria-pressed="true">${esc(cat(view.cat).name)} <span aria-hidden="true">✕</span></button> <span class="note">sadece bu kategori gösteriliyor</span></div>` : '';
+  const catChip = view.cat ? `<div style="margin-top:12px"><button class="chip filterchip" data-catgo="" aria-pressed="true">${esc(cat(view.cat).name)}${view.sub ? ' › '+(view.sub==='_' ? 'Alt başlıksız' : esc(subName(view.cat,view.sub))) : ''} <span aria-hidden="true">✕</span></button> <span class="note">sadece bunlar gösteriliyor</span></div>` : '';
   const head = view.day
     ? `<div class="sec-head" style="margin:18px 0 10px"><h2>${dayLabel(view.day)}</h2><button class="chip" data-day="">Tüm ay</button></div>`
     : `<div class="sec-head" style="margin:18px 0 10px"><h2>Tüm hareketler</h2><small>Bir güne dokun, sadece onu gör</small></div>`;
@@ -741,7 +797,7 @@ function renderList(){
     <div class="day"><h3><span>${d===todayISO?'Bugün · ':''}${dayLabel(d)}</span><span class="num">${outBy[d]?'−'+tl.format(outBy[d]):''}${inBy[d]?(outBy[d]?' · ':'')+'+'+tl.format(inBy[d]):''}</span></h3><div class="items">
     ${es.map(e => { const c=cat(e.cat); return `<button class="item" data-edit="${esc(e.id)}">
       <span class="dot">${esc(c.name.charAt(0))}</span>
-      <span class="mid"><b>${esc(e.note || c.name)}</b><small>${esc(c.name)}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
+      <span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${esc(c.name)}${subName(e.cat,e.sub) ? ' › '+esc(subName(e.cat,e.sub)) : ''}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
       <span class="amt num ${e.t}">${e.t==='in'?'+':'−'}${tl.format(e.amt)}</span></button>`; }).join('')}
     </div></div>`).join('');
   }
@@ -978,6 +1034,85 @@ async function enableNotifications(){
   render();
 }
 
+/* ---------- aylık rapor ---------- */
+function reportData(ym){
+  const cur = totals(ym), pym = ymAdd(ym,-1), prev = totals(pym);
+  const outs = entriesFor(ym).filter(e=>e.t==='out');
+  const fixed = outs.filter(e=>e.rec).reduce((a,e)=>a+e.amt,0);
+  const top = [...outs].sort((a,b)=>b.amt-a.amt).slice(0,5);
+  const cats = Object.entries(cur.byCat).sort((a,b)=>b[1]-a[1]).map(([id,v])=>({c:cat(id), v, p: cur.out ? v/cur.out : 0, prev: prev.byCat[id]||0}));
+  const limited = S.settings.cats.filter(c=>c.t==='out' && c.budget>0);
+  const over = limited.filter(c=>(cur.byCat[c.id]||0) > c.budget);
+  const dim = daysIn(ym), elapsed = ym<todayYM ? dim : ym===todayYM ? now.getDate() : 0;
+  const byDay = {}; outs.forEach(e=>{ byDay[e.date]=(byDay[e.date]||0)+e.amt; });
+  const peak = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+  const act = debts().filter(d=>instNo(d,ym));
+  const dTot = act.reduce((a,d)=>a+amtOf(d,ym),0), dPaid = act.filter(d=>(payOf(d,ym)||{}).paid).reduce((a,d)=>a+amtOf(d,ym),0);
+  const prevHas = entriesFor(pym).length > 0;
+  return {ym, pym, cur, prev, prevHas, fixed, top, cats, limited, over, elapsed, peak, sav: savMonthTL(ym), dTot, dPaid, left: cur.inc-cur.out};
+}
+const chg = (a, b) => b ? (a-b)/b : null;
+const pctTxt = p => '%' + Math.abs(Math.round(p*100)).toLocaleString('tr-TR');
+function reportText(r){
+  const L = [`Böcekler Cüzdan · ${ymLabel(r.ym)} raporu`, ''];
+  L.push(`Gelir: ${tl.format(r.cur.inc)}`);
+  const ch = r.prevHas ? chg(r.cur.out, r.prev.out) : null;
+  L.push(`Gider: ${tl.format(r.cur.out)}${ch!==null ? ` (geçen aya göre ${pctTxt(ch)} ${ch>=0?'fazla':'az'})` : ''}`);
+  L.push(`Kalan: ${tl.format(r.left)}${r.cur.inc ? ` (tasarruf oranı ${pctTxt(Math.max(0,r.left)/r.cur.inc)})` : ''}`);
+  if(r.sav) L.push(`Birikim: ${tl.format(r.sav)}`);
+  if(r.cats.length){ L.push('', 'Paranın gittiği yer:'); r.cats.slice(0,6).forEach(x=>L.push(`• ${x.c.name}: ${tl.format(x.v)} (${pctTxt(x.p)})`)); }
+  if(r.limited.length) L.push('', `Bütçe: ${r.limited.length} limitten ${r.limited.length - r.over.length} tanesi tutuldu${r.over.length ? ' · aşılan: '+r.over.map(c=>c.name).join(', ') : ''}`);
+  return L.join('\n');
+}
+function openReport(ym){
+  const draw = () => {
+    const r = reportData(ym), ch = r.prevHas ? chg(r.cur.out, r.prev.out) : null, chi = r.prevHas ? chg(r.cur.inc, r.prev.inc) : null;
+    const rate = r.cur.inc ? Math.max(0, r.left)/r.cur.inc : null;
+    const arrow = (a, b, goodWhenDown) => { if(!b) return ''; const c = (a-b)/b; if(Math.abs(c) < .005) return '<small>değişmedi</small>'; const bad = goodWhenDown ? c>0 : c<0; return `<small class="${bad?'up':'down'}">${c>0?'↑':'↓'} ${pctTxt(c)}</small>`; };
+    const AY = AYLAR[+r.pym.slice(5)-1];
+    sheetRoot.innerHTML = `<div class="scrim" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${ymLabel(ym)} raporu"><div class="in rp">
+      <div class="grab"></div>
+      <div class="rp-head">
+        <button class="icon-btn" id="rpPrev" aria-label="Önceki ay">‹</button>
+        <div style="text-align:center"><h2>${ymLabel(ym)}</h2><div class="rp-sub">${ym===todayYM ? `Aylık rapor · ${now.getDate()} ${AYLAR[now.getMonth()]}’e kadar` : 'Aylık rapor'}</div></div>
+        <button class="icon-btn" id="rpNext" aria-label="Sonraki ay">›</button>
+      </div>
+      <div class="rp-tiles">
+        <div class="rp-tile"><small>Gelir</small><b>${tl.format(r.cur.inc)}</b>${arrow(r.cur.inc, r.prevHas && r.prev.inc, false)}</div>
+        <div class="rp-tile"><small>Gider</small><b>${tl.format(r.cur.out)}</b>${arrow(r.cur.out, r.prevHas && r.prev.out, true)}</div>
+        <div class="rp-tile"><small>Kalan</small><b class="${r.left<0?'up':''}">${r.left<0?'−':''}${tl.format(Math.abs(r.left))}</b></div>
+        <div class="rp-tile"><small>Tasarruf oranı</small><b>${rate===null ? '–' : pctTxt(rate)}</b><small>kalan / gelir</small></div>
+      </div>
+      ${r.prevHas ? `<div class="rp-note">${ch===null||Math.abs(ch)<.005 ? `Gider ${AY} ile aynı seviyede.` : ch>0 ? `Bu ay ${AY} ayına göre <b class="up">${tl.format(r.cur.out-r.prev.out)} daha fazla</b> harcandı (${pctTxt(ch)}).` : `Bu ay ${AY} ayına göre <b class="down">${tl.format(r.prev.out-r.cur.out)} daha az</b> harcandı (${pctTxt(ch)}).`}</div>` : `<div class="rp-note note">Geçen aya ait kayıt yok, karşılaştırma bir sonraki aydan itibaren görünecek.</div>`}
+      ${r.cats.length ? `<div class="rp-sec"><h3>Paranın gittiği yer</h3>${r.cats.map(x=>{
+          const st = subTotals(ym, x.c.id), keys = Object.keys(st).filter(k=>k!=='_').sort((a,b)=>st[b]-st[a]);
+          return `<div class="rp-row"><span>${esc(x.c.name)} <span class="note">· ${pctTxt(x.p)}</span></span><span class="r">${tl.format(x.v)}${r.prevHas ? arrow(x.v, x.prev, true) : ''}</span><span class="rp-bar"><i style="width:${(x.p*100).toFixed(1)}%"></i></span>${keys.map(k=>`<span class="sub2">› ${esc(subName(x.c.id,k))}: ${tl.format(st[k])}</span>`).join('')}</div>`; }).join('')}</div>` : ''}
+      ${r.cur.out ? `<div class="rp-sec"><h3>Sabit ve değişken giderler</h3>
+        <div class="stack"><i style="width:${(r.fixed/r.cur.out*100).toFixed(1)}%;background:var(--accent)"></i><i style="width:${((r.cur.out-r.fixed)/r.cur.out*100).toFixed(1)}%;background:color-mix(in oklch,var(--accent),var(--surface) 55%)"></i></div>
+        <div class="rp-note"><b>${tl.format(r.fixed)}</b> sabit (her ay tekrarlayan) · <b>${tl.format(r.cur.out-r.fixed)}</b> değişken</div></div>` : ''}
+      ${r.top.length ? `<div class="rp-sec"><h3>En büyük harcamalar</h3>${r.top.map(e=>`<div class="rp-row"><span>${esc(e.note || subName(e.cat,e.sub) || cat(e.cat).name)}<br><span class="note">${dayLabel(e.date,{day:'numeric',month:'long'})} · ${esc(cat(e.cat).name)}</span></span><span class="r">${tl.format(e.amt)}</span></div>`).join('')}</div>` : ''}
+      ${r.limited.length ? `<div class="rp-sec"><h3>Bütçe</h3><div class="rp-note">${r.limited.length} limitten <b>${r.limited.length - r.over.length}</b> tanesi tutuldu.${r.over.length ? ` Aşılan: ${r.over.map(c=>`<b class="up">${esc(c.name)}</b> (${tl.format((r.cur.byCat[c.id]||0)-c.budget)} fazla)`).join(', ')}.` : ' Hiçbir limit aşılmadı.'}</div></div>` : ''}
+      <div class="rp-sec"><h3>Diğer</h3>
+        ${r.elapsed && r.cur.out ? `<div class="rp-row"><span>Günlük ortalama harcama</span><span class="r">${tl.format(Math.round(r.cur.out/r.elapsed))}</span></div>` : ''}
+        ${r.peak ? `<div class="rp-row"><span>En çok harcanan gün</span><span class="r">${dayLabel(r.peak[0],{day:'numeric',month:'long'})}<small>${tl.format(r.peak[1])}</small></span></div>` : ''}
+        ${r.dTot ? `<div class="rp-row"><span>Kart ve kredi ödemeleri</span><span class="r">${tl.format(r.dTot)}<small>${tl.format(r.dPaid)} ödendi</small></span></div>` : ''}
+        <div class="rp-row"><span>Birikim</span><span class="r">${r.sav ? tl.format(r.sav) : 'Yok'}</span></div>
+      </div>
+      <div class="btns"><button class="btn" id="rpShare" style="flex:1">Raporu paylaş</button><button class="btn ghost" data-close style="flex:1">Kapat</button></div>
+    </div></div>`;
+    sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
+    document.getElementById('rpPrev').onclick = () => { ym = ymAdd(ym,-1); draw(); };
+    document.getElementById('rpNext').onclick = () => { ym = ymAdd(ym,1); draw(); };
+    document.getElementById('rpShare').onclick = async () => {
+      const text = reportText(r);
+      try { if(navigator.share){ await navigator.share({title:`${ymLabel(ym)} raporu`, text}); return; } } catch(e){ if(e && e.name==='AbortError') return; }
+      try { await navigator.clipboard.writeText(text); toast('Rapor kopyalandı, istediğin yere yapıştır'); } catch(e){ toast('Paylaşma bu cihazda desteklenmiyor.'); }
+    };
+  };
+  draw();
+}
+
 function openMonthPicker(){
   let y = +view.ym.slice(0,4);
   const draw = () => {
@@ -1030,12 +1165,12 @@ function renderSettings(){
     </div>
   </section>
   <section>
-    <div class="sec-head"><h2>Gider kategorileri</h2><small>Dokun: ad, limit, sil</small></div>
-    <div class="card">${outCats.map(c=>`<button class="set-row tap" data-catedit="${esc(c.id)}"><span class="name">${esc(c.name)}</span><span class="meta num">${c.budget ? tl.format(c.budget)+' limit' : 'Limit yok'}</span><span class="chev">›</span></button>`).join('')}</div>
+    <div class="sec-head"><h2>Gider kategorileri</h2><small>Dokun: ad, limit, alt başlık</small></div>
+    <div class="card">${outCats.map(c=>`<button class="set-row tap" data-catedit="${esc(c.id)}"><span class="name">${esc(c.name)}</span><span class="meta num">${(c.subs||[]).length ? c.subs.length+' alt başlık · ' : ''}${c.budget ? tl.format(c.budget)+' limit' : 'Limit yok'}</span><span class="chev">›</span></button>`).join('')}</div>
   </section>
   <section>
     <div class="sec-head"><h2>Gelir kategorileri</h2><small>Dokun: ad, sil</small></div>
-    <div class="card">${inCats.map(c=>`<button class="set-row tap" data-catedit="${esc(c.id)}"><span class="name">${esc(c.name)}</span><span class="chev">›</span></button>`).join('')}</div>
+    <div class="card">${inCats.map(c=>`<button class="set-row tap" data-catedit="${esc(c.id)}"><span class="name">${esc(c.name)}</span>${(c.subs||[]).length ? `<span class="meta">${c.subs.length} alt başlık</span>` : ''}<span class="chev">›</span></button>`).join('')}</div>
   </section>
   <section><button class="btn ghost" id="addCat" style="width:100%">+ Yeni kategori ekle</button></section>
   <section>
@@ -1060,7 +1195,10 @@ function renderSettings(){
 }
 function openCatSheet(c){
   const editing = !!c;
-  const st = c ? {name:c.name, t:c.t, budget:c.budget||''} : {name:'', t:'out', budget:''};
+  const st = c ? {name:c.name, t:c.t, budget:c.budget||'', subs:(c.subs||[]).map(x=>({...x}))} : {name:'', t:'out', budget:'', subs:[]};
+  const SUGGEST = {abonelik:['Netflix','Spotify','YouTube Premium','iCloud','Disney+','Amazon Prime','Exxen','BluTV','ChatGPT','Telefon hattı','İnternet','Spor salonu'],
+    fatura:['Elektrik','Su','Doğalgaz','İnternet','Telefon','Aidat'], ulasim:['Yakıt','İstanbulkart','Taksi','Otopark','Araç bakım'],
+    market:['Migros','A101','BİM','Şok','CarrefourSA'], yemek:['Kahve','Restoran','Yemek siparişi'], saglik:['İlaç','Muayene','Diş'], maas:['Ana maaş','Prim','İkramiye']};
   const uses = () => {
     let n = 0; for(const m of Object.values(S.months)) n += (m.items||[]).filter(i=>i.cat===c.id).length;
     return n + S.settings.recurring.filter(r=>r.cat===c.id).length;
@@ -1073,10 +1211,19 @@ function openCatSheet(c){
       ${editing ? '' : `<div class="seg" role="group" aria-label="Tür"><button data-ct="out" aria-pressed="${st.t==='out'}">Gider</button><button data-ct="in" aria-pressed="${st.t==='in'}">Gelir</button></div>`}
       <div class="field"><label class="label" for="cName">Adı</label><input id="cName" maxlength="30" placeholder="${st.t==='out'?'Örn. Evcil hayvan':'Örn. Kira geliri'}" value="${esc(st.name)}"></div>
       ${st.t==='out' ? `<div class="field"><label class="label" for="cBudget">Aylık limit (₺)</label><input id="cBudget" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Boş bırakırsan limit yok" value="${fmtIn(st.budget)}"></div>` : ''}
+      <div class="field"><span class="label">Alt başlıklar</span>
+        ${st.subs.length ? `<div class="sublist">${st.subs.map((x,i)=>`<div class="subrow"><input data-subname="${i}" maxlength="30" value="${esc(x.name)}" placeholder="Alt başlık adı" aria-label="Alt başlık ${i+1}"><button class="icon-btn danger" data-subdel="${i}" aria-label="${esc(x.name)} alt başlığını sil">✕</button></div>`).join('')}</div>` : `<div class="note">Örneğin Abonelikler altında Netflix, Spotify. Kayıt eklerken seçersin, Özet’te hepsi bu başlığın altında toplanır.</div>`}
+        <button class="btn ghost sm" id="cAddSub">+ Alt başlık ekle</button>
+        ${(() => { const have = new Set(st.subs.map(x=>x.name.toLocaleLowerCase('tr'))); const sg = (SUGGEST[c ? c.id : ''] || []).filter(n=>!have.has(n.toLocaleLowerCase('tr'))); return sg.length ? `<span class="note">Hızlı ekle:</span><div class="sugg">${sg.map(n=>`<button class="chip" data-sugg="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>` : ''; })()}
+      </div>
       <button class="btn" id="cSave">${editing?'Kaydet':'Ekle'}</button>
       ${editing ? `<button class="btn ghost" id="cDel" style="color:var(--out)">Kategoriyi sil</button>` : ''}
     </div></div>`;
-    const keep = () => { st.name = document.getElementById('cName').value; const b = document.getElementById('cBudget'); if(b) st.budget = b.value; };
+    const keep = () => { st.name = document.getElementById('cName').value; const b = document.getElementById('cBudget'); if(b) st.budget = b.value;
+      sheetRoot.querySelectorAll('[data-subname]').forEach(inp => { st.subs[+inp.dataset.subname].name = inp.value; }); };
+    document.getElementById('cAddSub').onclick = () => { keep(); st.subs.push({id:uid(), name:''}); draw(); const all = sheetRoot.querySelectorAll('[data-subname]'); all[all.length-1]?.focus(); };
+    sheetRoot.querySelectorAll('[data-subdel]').forEach(b => b.onclick = () => { keep(); st.subs.splice(+b.dataset.subdel, 1); draw(); });
+    sheetRoot.querySelectorAll('[data-sugg]').forEach(b => b.onclick = () => { keep(); st.subs.push({id:uid(), name:b.dataset.sugg}); draw(); });
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-ct]').forEach(b=>b.onclick=()=>{ keep(); st.t=b.dataset.ct; draw(); });
     document.getElementById('cSave').onclick = () => {
@@ -1084,8 +1231,9 @@ function openCatSheet(c){
       const name = st.name.trim(); if(!name) return toast('Kategori adı yaz.');
       const raw = String(st.budget||'').trim(), budget = raw==='' ? 0 : parseAmt(raw);
       if(raw!=='' && budget===null) return toast('Geçerli bir limit yaz.');
-      if(editing){ c.name = name; if(c.t==='out') c.budget = budget||0; }
-      else S.settings.cats.push({id:uid(), name, t:st.t, budget: st.t==='out' ? (budget||0) : 0});
+      const subs = st.subs.map(x=>({id:x.id, name:x.name.trim()})).filter(x=>x.name);
+      if(editing){ c.name = name; if(c.t==='out') c.budget = budget||0; c.subs = subs; }
+      else S.settings.cats.push({id:uid(), name, t:st.t, budget: st.t==='out' ? (budget||0) : 0, subs});
       saveSettings(); closeSheet(); render(); toast(editing ? 'Kaydedildi' : `${name} eklendi`);
     };
     const del = document.getElementById('cDel');
@@ -1207,6 +1355,8 @@ function openSheet(entry){
   const draw = () => {
     const cats = S.settings.cats.filter(c=>c.t===st.t);
     if(!cats.some(c=>c.id===st.cat)) st.cat = cats[0]?.id || null;
+    const cc = S.settings.cats.find(c=>c.id===st.cat), subs = (cc && cc.subs) || [];
+    if(st.sub && !subs.some(x=>x.id===st.sub)) st.sub = null;
     sheetRoot.innerHTML = `<div class="scrim" data-close></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="${editing?'Kaydı düzenle':'Yeni kayıt'}"><div class="in">
       <div class="grab"></div>
@@ -1220,6 +1370,10 @@ function openSheet(entry){
       <div class="field"><span class="label">Kategori</span><div class="chips">
         ${cats.map(c=>`<button class="chip" data-cat="${esc(c.id)}" aria-pressed="${c.id===st.cat}">${esc(c.name)}</button>`).join('')}
       </div></div>
+      ${cc ? `<div class="field"><span class="label">${esc(cc.name)} › alt başlık <span style="text-transform:none;letter-spacing:0;font-weight:400">(isteğe bağlı)</span></span><div class="chips">
+        ${subs.map(x=>`<button class="chip" data-sub="${esc(x.id)}" aria-pressed="${x.id===st.sub}">${esc(x.name)}</button>`).join('')}
+        ${st.addingSub ? `<span class="subadd"><input id="fNewSub" maxlength="30" placeholder="${cc.id==='abonelik'?'Örn. Netflix':'Alt başlık adı'}"><button class="chip" id="fNewSubOk" aria-pressed="true">Ekle</button></span>` : `<button class="chip" id="fAddSub">+ Yeni</button>`}
+      </div></div>` : ''}
       <div class="two">
         <div class="field"><label class="label" for="fDate">Tarih</label><input type="date" id="fDate" value="${st.date}"></div>
         <div class="field"><label class="label" for="fNote">Not</label><input id="fNote" maxlength="60" placeholder="İsteğe bağlı" value="${esc(st.note||'')}"></div>
@@ -1235,7 +1389,16 @@ function openSheet(entry){
     const keep = () => { st.amt = document.getElementById('fAmt').value; st.date = document.getElementById('fDate').value; st.note = document.getElementById('fNote').value; const r=document.getElementById('fRep'); if(r) st.repeat=r.checked; };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{ keep(); st.t=b.dataset.type; draw(); });
-    sheetRoot.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ keep(); st.cat=b.dataset.cat; draw(); });
+    sheetRoot.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ keep(); if(st.cat!==b.dataset.cat){ st.cat=b.dataset.cat; st.sub=null; st.addingSub=false; } draw(); });
+    sheetRoot.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{ keep(); st.sub = st.sub===b.dataset.sub ? null : b.dataset.sub; draw(); });
+    const as = document.getElementById('fAddSub'); if(as) as.onclick = () => { keep(); st.addingSub = true; draw(); setTimeout(()=>document.getElementById('fNewSub')?.focus(), 30); };
+    const addSub = () => { const inp = document.getElementById('fNewSub'), name = inp.value.trim(); if(!name) return toast('Alt başlık adı yaz.');
+      keep(); const c = S.settings.cats.find(x=>x.id===st.cat); c.subs = c.subs || [];
+      let ex = c.subs.find(x=>x.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'));
+      if(!ex){ ex = {id:uid(), name}; c.subs.push(ex); saveSettings(); }
+      st.sub = ex.id; st.addingSub = false; draw(); };
+    const ok = document.getElementById('fNewSubOk'); if(ok) ok.onclick = addSub;
+    const ni = document.getElementById('fNewSub'); if(ni) ni.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); addSub(); } });
     document.getElementById('fSave').onclick = () => { keep(); save(st, entry); };
     const del = document.getElementById('fDel');
     if(del) del.onclick = () => { if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='Silmek için tekrar dokun'; return; } removeItem(entry); };
@@ -1297,18 +1460,18 @@ function save(st, entry){
   const ym = st.date.slice(0,7), day = +st.date.slice(8);
   if(entry && entry.rec){
     const r = S.settings.recurring.find(x=>x.id===entry.rid);
-    Object.assign(r, {t:st.t, amt, cat:st.cat, note:st.note.trim(), day});
+    Object.assign(r, {t:st.t, amt, cat:st.cat, sub:st.sub||null, note:st.note.trim(), day});
     saveSettings();
   } else if(entry){
     const oldYm = entry.date.slice(0,7);
     const om = monthDoc(oldYm); om.items = om.items.filter(i=>i.id!==entry.id);
-    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, date:st.date, note:st.note.trim()});
+    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, date:st.date, note:st.note.trim()});
     saveMonth(oldYm); if(ym!==oldYm) saveMonth(ym);
   } else if(st.repeat){
-    S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, note:st.note.trim(), day, from:ym});
+    S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, note:st.note.trim(), day, from:ym});
     saveSettings();
   } else {
-    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, date:st.date, note:st.note.trim()});
+    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, date:st.date, note:st.note.trim()});
     saveMonth(ym);
   }
   view.ym = ym; closeSheet(); render(); toast(entry ? 'Güncellendi' : 'Kaydedildi');
@@ -1325,10 +1488,11 @@ document.getElementById('prevM').onclick = () => { view.ym = ymAdd(view.ym,-1); 
 document.getElementById('nextM').onclick = () => { view.ym = ymAdd(view.ym,1); view.day = null; render(); };
 document.getElementById('monthLbl').onclick = () => { if(mode!=='loading') openMonthPicker(); };
 document.getElementById('addBtn').onclick = () => { if(mode==='loading') return; view.tab==='birikim' ? openSavSheet(null) : view.tab==='odeme' ? openDebtSheet(null,'card') : openSheet(null); };
-document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { view.tab=b.dataset.tab; view.cat=null; render(); window.scrollTo(0,0); });
+document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { view.tab=b.dataset.tab; view.cat=null; view.sub=null; render(); window.scrollTo(0,0); });
 main.addEventListener('click', e => {
   const cg = e.target.closest('[data-catgo]');
-  if(cg){ view.cat = cg.dataset.catgo || null; view.day = null; view.tab = 'liste'; render(); window.scrollTo({top:0, behavior:'smooth'}); return; }
+  if(cg){ view.cat = cg.dataset.catgo || null; view.sub = (view.cat && cg.dataset.sub) || null; view.day = null; view.tab = 'liste'; render(); window.scrollTo({top:0, behavior:'smooth'}); return; }
+  const rp = e.target.closest('[data-report]'); if(rp){ openReport(view.ym); return; }
   const as = e.target.closest('[data-addsav]'); if(as){ openSavSheet(null, as.dataset.addsav); return; }
   const ce = e.target.closest('[data-catedit]'); if(ce){ const c = S.settings.cats.find(x=>x.id===ce.dataset.catedit); if(c) openCatSheet(c); return; }
   const re = e.target.closest('[data-recedit]'); if(re){ const r = S.settings.recurring.find(x=>x.id===re.dataset.recedit); if(r){ const ym = r.from > todayYM ? r.from : todayYM;
