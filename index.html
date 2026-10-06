@@ -424,6 +424,23 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 .plusb{position:absolute;top:8px;right:10px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;line-height:1;background:color-mix(in srgb,var(--accent-ink) 18%,transparent)}
 .iouline{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:inherit}
 .iouline b{font-variant-numeric:tabular-nums}
+/* açılır-kapanır kart/kredi + banka rozeti */
+.debt{gap:0!important}
+.debthead{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;width:100%;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;min-height:48px}
+.dh-mid{display:grid;gap:2px;min-width:0}
+.dh-mid b{font-size:16px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-mid small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dh-r{display:grid;justify-items:end;gap:4px}
+.dh-r b{font-family:var(--display);font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dh-chev{font-size:22px;transition:transform .2s}
+.debt.open .dh-chev{transform:rotate(90deg)}
+.debt-body{display:none}
+.debt.open .debt-body{display:grid;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.bbadge{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.02em;flex:none;overflow:hidden;box-shadow:inset 0 0 0 1px rgb(0 0 0 / .06)}
+.bbadge img{width:100%;height:100%;object-fit:contain;background:#fff}
+.logo-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.debtlist{display:grid;gap:10px}
+.debt + .debt{margin-top:0!important}
 </style>
 </head>
 <body>
@@ -477,7 +494,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.21 · 6 Ekim 2026';
+const APP_VERSION = '1.22 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -1097,6 +1114,45 @@ function renderList(){
   return `<div class="card"><div class="cal">${cells}</div>${stats}${catChip}</div>${head}${body}`;
 }
 
+/* ---------- bankalar: kurumsal renkli rozet (logolar tescilli olduğu için gömülmez; istenirse kullanıcı kendi logosunu yükler) ---------- */
+const BANKS = [
+  {id:'garanti', name:'Garanti BBVA', c:'#1A8C5B', t:'G', k:['garanti','bonus','miles&smiles','miles & smiles','shop&fly','flexi']},
+  {id:'isbank', name:'İş Bankası', c:'#0B2C66', t:'İş', k:['iş bank','isbank','maximum','maximiles']},
+  {id:'yapikredi', name:'Yapı Kredi', c:'#004B93', t:'YK', k:['yapı kredi','yapikredi',' world','adios']},
+  {id:'akbank', name:'Akbank', c:'#E2001A', t:'A', k:['akbank','axess','wings']},
+  {id:'qnb', name:'QNB', c:'#5C0F72', t:'QNB', k:['qnb','cardfinans','finansbank']},
+  {id:'halkbank', name:'Halkbank', c:'#0068B4', t:'H', k:['halkbank','paraf']},
+  {id:'ziraat', name:'Ziraat Bankası', c:'#E30613', t:'Z', k:['ziraat','bankkart']},
+  {id:'vakif', name:'VakıfBank', c:'#FDB913', fg:'#1E1A00', t:'V', k:['vakıf','vakif','vakıfbank worldcard']},
+  {id:'deniz', name:'DenizBank', c:'#0071BC', t:'D', k:['deniz']},
+  {id:'teb', name:'TEB', c:'#00843D', t:'TEB', k:[' teb ','cepteteb']},
+  {id:'ing', name:'ING', c:'#FF6200', t:'ING', k:[' ing ','ing bank','ingbank']},
+  {id:'hsbc', name:'HSBC', c:'#DB0011', t:'HSBC', k:['hsbc','advantage']},
+  {id:'enpara', name:'Enpara.com', c:'#6B2C91', t:'E', k:['enpara']},
+  {id:'kuveyt', name:'Kuveyt Türk', c:'#0E8F6F', t:'KT', k:['kuveyt','sağlam kart']},
+  {id:'fiba', name:'Fibabanka', c:'#F7941D', fg:'#2A1600', t:'F', k:['fiba']},
+  {id:'odea', name:'Odeabank', c:'#7A1F5C', t:'O', k:['odea']},
+  {id:'seker', name:'Şekerbank', c:'#00A0E3', t:'Ş', k:['şeker','seker']},
+  {id:'albaraka', name:'Albaraka', c:'#0A8C3C', t:'AB', k:['albaraka']},
+  {id:'papara', name:'Papara', c:'#1B1B1B', t:'P', k:['papara']},
+  {id:'anadolu', name:'Anadolubank', c:'#C8102E', t:'AN', k:['anadolubank']},
+  {id:'burgan', name:'Burgan Bank', c:'#0057A8', t:'BB', k:['burgan']},
+];
+// Bankanın kendi adı önce, sonra en uzun eşleşen kart programı (ör. "VakıfBank Worldcard" → VakıfBank, "World" → Yapı Kredi)
+function guessBank(name){ const raw = name||'', n = ' '+raw.toLocaleLowerCase('tr')+' | '+raw.toLowerCase()+' '; let best = null, sc = 0;
+  for(const b of BANKS) b.k.forEach((k,i) => { const v = k.trim().length + (i===0 ? 100 : 0); if(n.includes(k) && v > sc){ best = b; sc = v; } });   // ilk anahtar bankanın kendi adı: kart programından önce gelir
+  return best; }
+const bankOf = d => BANKS.find(b => b.id === d.bank) || (d.bank === '' ? null : guessBank(d.name));
+function bankBadge(d){
+  if(d.logo) return `<span class="bbadge"><img src="${d.logo}" alt=""></span>`;
+  const b = bankOf(d);
+  return b ? `<span class="bbadge" style="background:${b.c};color:${b.fg||'#fff'};font-size:${b.t.length>2?12:b.t.length>1?14:18}px" aria-hidden="true">${b.t}</span>`
+           : `<span class="bbadge" style="background:var(--accent);color:var(--accent-ink)" aria-hidden="true">${esc((d.name||'?').charAt(0).toLocaleUpperCase('tr'))}</span>`;
+}
+let openDebts; try { openDebts = new Set(JSON.parse(localStorage.getItem('acik-kartlar') || '[]')); } catch(e){ openDebts = new Set(); }
+const isOpen = d => openDebts.has(d.id);
+const debtHead = (d, sub, st, amt) => `<button class="debthead" data-dtgl="${esc(d.id)}" aria-expanded="${isOpen(d)}">${bankBadge(d)}<span class="dh-mid"><b>${esc(d.name)}</b><small>${sub}</small></span><span class="dh-r">${amt ? `<b>${amt}</b>` : ''}<span class="st ${st.cls}">${st.txt}</span></span><span class="chev dh-chev" aria-hidden="true">›</span></button>`;
+
 /* ---------- kredi kartları ve krediler ---------- */
 const debts = () => S.settings.debts || (S.settings.debts = []);
 const ymDiff = (a,b) => { const [y1,m1]=a.split('-').map(Number), [y2,m2]=b.split('-').map(Number); return (y2-y1)*12+(m2-m1); };
@@ -1254,7 +1310,9 @@ function renderDebts(){
   const cardItem = d => {
     const st = statusOf(d,ym), s = cardStmt(d,ym), pend = pendingOf(d,ym), lim = d.limit||0, tot = cardTotalDebt(d,ym), entered = cardEntered(d,ym);
     const due = dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'});
-    return `<div class="card debt"><div class="debt-top"><div><b>${esc(d.name)}</b><small>Son ödeme ${due} · kesim ${cutDayOf(d)}</small></div><span class="st ${st.cls}">${st.txt}</span></div>
+    const shortDue = dayLabel(dueOf(d,ym),{day:'numeric',month:'short'});
+    return `<div class="card debt ${isOpen(d)?'open':''}">${debtHead(d, `Son ödeme ${shortDue}`, st, entered ? tl.format(s.left) : '')}<div class="debt-body">
+      <small class="note">Son ödeme ${due} · hesap kesim ${cutDayOf(d)}${bankOf(d) ? ' · '+esc(bankOf(d).name) : ''}</small>
       <div class="cardgrid">
         <div class="hl"><small>Ekstre borcu</small><b>${tl.format(s.total)}</b></div>
         <div><small>Asgari ödeme</small><b>${tl.format(s.min)}</b></div>
@@ -1266,17 +1324,17 @@ function renderDebts(){
       <div class="btns debtbtns3"><button class="btn sm" data-pay="${d.id}">${s.paid ? 'Ödemeyi düzenle' : 'Ödeme yap'}</button>
       <button class="btn sm ghost" data-cedit="${d.id}">Borcu düzenle</button>
       <button class="btn sm ghost" data-ics="${d.id}">Takvime ekle</button>
-      <button class="btn sm ghost" data-dedit="${d.id}">Kart ayarı</button></div></div>`;
+      <button class="btn sm ghost" data-dedit="${d.id}">Kart ayarı</button></div></div></div>`;
   };
   const item = d => {
     if(d.kind==='card') return cardItem(d);
     const st = statusOf(d,ym), p = payOf(d,ym), a = amtOf(d,ym), n = instNo(d,ym), isPaid = p && p.paid;
     const sub = d.kind==='loan' ? `Taksit ${n}/${d.count} · son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}` : `Son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}`;
     const amt = d.kind==='card' && !a ? `<span class="note">Ekstre tutarı henüz girilmedi</span>` : `<span class="amtbig num">${tl.format(a)}</span>`;
-    return `<div class="card debt"><div class="debt-top"><div><b>${esc(d.name)}</b><small>${sub}</small></div><span class="st ${st.cls}">${st.txt}</span></div>${amt}
+    return `<div class="card debt ${isOpen(d)?'open':''}">${debtHead(d, `Taksit ${n}/${d.count} · ${dayLabel(dueOf(d,ym),{day:'numeric',month:'short'})}`, st, tl.format(a))}<div class="debt-body"><small class="note">${sub}${bankOf(d) ? ' · '+esc(bankOf(d).name) : ''}</small>${amt}
       <div class="btns debtbtns"><button class="btn sm${isPaid?' ghost':''}" data-pay="${d.id}">${isPaid?'Ödemeyi geri al':d.kind==='card'?'Ekstre gir / öde':'Ödendi işaretle'}</button>
       <button class="btn sm ghost" data-ics="${d.id}">Takvime ekle</button>
-      <button class="btn sm ghost" data-dedit="${d.id}">Düzenle</button></div></div>`;
+      <button class="btn sm ghost" data-dedit="${d.id}">Düzenle</button></div></div></div>`;
   };
   const cards = act.filter(d=>d.kind==='card'), loans = act.filter(d=>d.kind==='loan');
   const idle = debts().filter(d=>!instNo(d,ym));
@@ -1293,8 +1351,8 @@ function renderDebts(){
     </div>
   </div>
   ${!debts().length ? `<section><div class="card empty"><b>Henüz kart ya da kredi yok</b>Kredi kartlarını ve kredilerini ekle. Son ödeme günleri burada sıralanır, yaklaşınca Özet’te uyarı çıkar.</div></section>` : ''}
-  ${cards.length ? `<section><div class="sec-head"><h2>Kredi kartları</h2></div>${cards.map(item).join('')}</section>` : ''}
-  ${loans.length ? `<section><div class="sec-head"><h2>Krediler</h2></div>${loans.map(item).join('')}</section>` : ''}
+  ${cards.length ? `<section><div class="sec-head"><h2>Kredi kartları</h2><small>Dokun: ayrıntı</small></div><div class="debtlist">${cards.map(item).join('')}</div></section>` : ''}
+  ${loans.length ? `<section><div class="sec-head"><h2>Krediler</h2><small>Dokun: ayrıntı</small></div><div class="debtlist">${loans.map(item).join('')}</div></section>` : ''}
   ${idle.length ? `<section><div class="sec-head"><h2>Bu ay taksiti olmayanlar</h2></div><div class="card">${idle.map(d=>`<div class="set-row"><span class="name">${esc(d.name)}<br><small class="note">${d.kind==='loan' ? (ym<d.start?'İlk taksit '+ymLabel(d.start):'Taksitler bitti') : 'Takip '+ymLabel(d.from)+' başlıyor'}</small></span><button class="icon-btn" data-dedit="${d.id}">Düzenle</button></div>`).join('')}</div></section>` : ''}
   <section><div class="btns"><button class="btn" data-adddebt="card" style="flex:1">Kart ekle</button><button class="btn" data-adddebt="loan" style="flex:1">Kredi ekle</button></div></section>
   <section>
@@ -1453,6 +1511,9 @@ function openDebtSheet(d, kind){
       <div class="sec-head" style="margin:0"><h2>${editing?'Düzenle':loan?'Kredi ekle':'Kart ekle'}</h2><button class="icon-btn" data-close>Kapat</button></div>
       ${editing ? '' : `<div class="seg" role="group" aria-label="Tür"><button data-kind="card" aria-pressed="${!loan}">Kredi kartı</button><button data-kind="loan" aria-pressed="${loan}">Kredi</button></div>`}
       <div class="field"><label class="label" for="dName">Adı</label><input id="dName" maxlength="40" placeholder="${loan?'Örn. İhtiyaç kredisi':'Örn. Bonus, Maximum'}" value="${esc(st.name)}"></div>
+      <div class="field"><label class="label" for="dBank">Banka</label><select id="dBank"><option value="">Seçilmedi</option>${BANKS.map(b=>`<option value="${b.id}" ${(st.bank !== undefined && st.bank !== null ? st.bank : ((guessBank(st.name)||{}).id||''))===b.id ? 'selected' : ''}>${b.name}</option>`).join('')}</select></div>
+      <div class="field"><span class="label">Görünüm</span><div class="logo-row">${bankBadge({...st, bank: st.bank !== undefined && st.bank !== null ? st.bank : ((guessBank(st.name)||{}).id||'')})}<label class="btn sm ghost" for="dLogo" style="cursor:pointer">${st.logo ? 'Logoyu değiştir' : 'Kendi logonu yükle'}</label><input type="file" id="dLogo" accept="image/*" hidden>${st.logo ? '<button class="chip" id="dLogoDel">Logoyu kaldır</button>' : ''}</div>
+        <span class="note">Banka seçince kurumsal rengi gelir. İstersen bankanın logosunu ya da kartının fotoğrafını yükle, sadece bu telefonda saklanır.</span></div>
       <div class="two">
         <div class="field"><label class="label" for="dDay">Son ödeme günü</label><input id="dDay" class="num" type="number" inputmode="numeric" min="1" max="31" placeholder="Ayın kaçı" value="${st.dueDay}"></div>
         <div class="field"><label class="label" for="dRem">Hatırlatma</label><select id="dRem">${[1,2,3,5,7].map(n=>`<option value="${n}" ${+st.remind===n?'selected':''}>${n} gün önce</option>`).join('')}</select></div>
@@ -1476,18 +1537,28 @@ function openDebtSheet(d, kind){
       <button class="btn" id="dSave">${editing?'Kaydet':'Ekle'}</button>
       ${editing ? '<button class="btn ghost" id="dDel" style="color:var(--out)">Sil</button>' : ''}
     </div></div>`;
-    const keep = () => { st.name=document.getElementById('dName').value; st.dueDay=document.getElementById('dDay').value; st.remind=+document.getElementById('dRem').value;
+    const keep = () => { st.name=document.getElementById('dName').value; st.dueDay=document.getElementById('dDay').value; st.remind=+document.getElementById('dRem').value; st.bank=document.getElementById('dBank').value;
       if(st.kind==='loan'){ st.amt=document.getElementById('dAmt').value; st.count=document.getElementById('dCount').value; st.start=document.getElementById('dStart').value; }
       else { st.cutDay=document.getElementById('dCut').value; st.minRate=+document.getElementById('dMin').value; st.limit=document.getElementById('dLimit').value;
         const ds=document.getElementById('dStmt'); if(ds){ st.stmt=ds.value; st.bal=document.getElementById('dBal').value; } } };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{ keep(); st.kind=b.dataset.kind; draw(); });
+    document.getElementById('dBank').addEventListener('change', () => { keep(); draw(); });
+    document.getElementById('dName').addEventListener('change', () => { const sel = document.getElementById('dBank'); if(!sel.value){ const g = guessBank(document.getElementById('dName').value); if(g){ keep(); st.bank = g.id; draw(); } } });
+    const dl = document.getElementById('dLogoDel'); if(dl) dl.onclick = () => { keep(); st.logo = null; draw(); };
+    document.getElementById('dLogo').addEventListener('change', e => {
+      const f = e.target.files[0]; if(!f) return; keep();
+      const img = new Image(), url = URL.createObjectURL(f);
+      img.onload = () => { const S2 = 160, c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d');
+        x.fillStyle = '#fff'; x.fillRect(0,0,S2,S2); const k = Math.min(S2/img.width, S2/img.height); const w = img.width*k, h = img.height*k;
+        x.drawImage(img, (S2-w)/2, (S2-h)/2, w, h); URL.revokeObjectURL(url); st.logo = c.toDataURL('image/jpeg', .9); draw(); };
+      img.onerror = () => toast('Bu görsel açılamadı.'); img.src = url; });
     document.getElementById('dSave').onclick = () => {
       keep();
       const name = st.name.trim(), day = parseInt(st.dueDay,10);
       if(!name) return toast('Bir ad yaz.');
       if(!(day>=1 && day<=31)) return toast('Son ödeme günü 1 ile 31 arasında olmalı.');
-      const rec = {kind:st.kind, name, dueDay:day, remind:st.remind||3};
+      const rec = {kind:st.kind, name, dueDay:day, remind:st.remind||3, bank: st.bank || '', logo: st.logo || null};
       if(st.kind==='card'){
         const cut = String(st.cutDay||'').trim()==='' ? null : parseInt(st.cutDay,10);
         if(cut!==null && !(cut>=1 && cut<=31)) return toast('Kesim günü 1 ile 31 arasında olmalı.');
@@ -2151,6 +2222,8 @@ main.addEventListener('click', e => {
     if(d.kind==='card'){ openCardPaySheet(d, view.ym, 'pay'); return; }
     if((payOf(d,view.ym)||{}).paid){ if(!pb.dataset.armed){ pb.dataset.armed=1; pb.textContent='Geri almak için tekrar dokun'; return; } unpay(d,view.ym); render(); toast('Ödeme geri alındı'); }
     else openPaySheet(d, view.ym); return; }
+  const tg = e.target.closest('[data-dtgl]'); if(tg){ const id = tg.dataset.dtgl, box = tg.closest('.debt'); if(openDebts.has(id)) openDebts.delete(id); else openDebts.add(id);
+    box.classList.toggle('open', openDebts.has(id)); tg.setAttribute('aria-expanded', openDebts.has(id)); try { localStorage.setItem('acik-kartlar', JSON.stringify([...openDebts])); } catch(err){} return; }
   const ce2 = e.target.closest('[data-cedit]'); if(ce2){ const d = debts().find(x=>x.id===ce2.dataset.cedit); if(d) openCardPaySheet(d, view.ym, 'edit'); return; }
   const ic = e.target.closest('[data-ics]'); if(ic){ const d=find(ic.dataset.ics); if(d) addToCalendar(d); return; }
   const de = e.target.closest('[data-dedit]'); if(de){ const d=find(de.dataset.dedit); if(d) openDebtSheet(d); return; }
