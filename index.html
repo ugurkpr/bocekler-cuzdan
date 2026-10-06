@@ -51,11 +51,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 /* header */
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px 14px}
-.brand{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05;letter-spacing:-.01em;min-width:0}
+.brand small{display:block;font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 .month{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
 .month button{border:0;background:none;width:34px;height:34px;border-radius:50%;font-size:18px;line-height:1}
 .month button:hover{background:var(--sunk)}
-.month span{min-width:104px;text-align:center;font-weight:600;font-size:14px}
+.month .mlabel{width:auto;min-width:96px;padding:0 6px;border-radius:999px;font-size:14px;font-weight:600}
+.top-r{display:flex;align-items:center;gap:6px}
+.gear{border:1px solid var(--line);background:var(--surface);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.gear svg{width:20px;height:20px}
+.gear[aria-current="page"]{color:var(--accent);border-color:var(--accent)}
 
 /* summary */
 .hero{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:18px 18px 16px;display:grid;gap:14px}
@@ -97,7 +102,7 @@ section{margin-top:22px}
 /* list */
 .day{margin-top:14px}
 .day:first-child{margin-top:0}
-.day h3{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.day h3{display:flex;justify-content:space-between;gap:8px;font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
 .items{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;padding:12px 14px;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -178,6 +183,42 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 .badge.ok{background:color-mix(in srgb,var(--in) 16%,transparent);color:var(--in)} .badge.no{background:var(--sunk);color:var(--muted)} .badge.neg{background:color-mix(in srgb,var(--out) 16%,transparent);color:var(--out)}
 .rates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .calc{font-size:14px;color:var(--muted)}
+/* payments */
+.alert{display:grid;gap:6px;width:100%;text-align:left;background:color-mix(in srgb,var(--warn) 13%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
+.alert.late{background:color-mix(in srgb,var(--out) 9%,var(--surface));border-color:color-mix(in srgb,var(--out) 40%,transparent)}
+.alert b{font-weight:600}
+.alert div{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.alert div span:last-child{color:var(--muted);white-space:nowrap}
+.debt{display:grid;gap:10px}
+.debt + .debt{margin-top:10px}
+.debt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.debt-top b{font-size:16px;font-weight:600}
+.debt-top small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.amtbig{font-family:var(--display);font-size:23px;font-weight:700}
+.st{flex:none;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.st.paid{background:color-mix(in srgb,var(--in) 16%,transparent);color:var(--in)}
+.st.soon,.st.today{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.st.late{background:color-mix(in srgb,var(--out) 16%,transparent);color:var(--out)}
+.btn.sm{padding:9px 12px;font-size:14px;border-radius:10px}
+/* daily calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .wd{text-align:center;font-size:11px;color:var(--muted);font-weight:600;padding-bottom:2px}
+.cal button{border:0;border-radius:9px;min-height:46px;padding:5px 1px 4px;display:grid;align-content:space-between;justify-items:center;background:var(--sunk);font-size:13px;font-weight:600;color:var(--ink)}
+.cal button small{font-size:10px;font-weight:500;color:var(--ink);opacity:.75;font-variant-numeric:tabular-nums}
+.cal button.fut{opacity:.4}
+.cal button.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.cal button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.cal button[aria-pressed="true"] small{color:inherit;opacity:1}
+.daystats{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted);margin-top:12px}
+.daystats b{color:var(--ink);font-weight:600}
+.day h3 span:last-child{text-transform:none;letter-spacing:0;color:var(--ink)}
+/* month picker */
+.ynav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ynav b{font-family:var(--display);font-size:24px}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mgrid button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:14px 4px;font-weight:600}
+.mgrid button.now{border-color:var(--accent);color:var(--accent)}
+.mgrid button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
 </style>
@@ -186,11 +227,14 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 
 <div class="wrap">
   <header class="top">
-    <div class="brand">Böcekler Cüzdan</div>
-    <div class="month" role="group" aria-label="Ay seçimi">
-      <button id="prevM" aria-label="Önceki ay">‹</button>
-      <span id="monthLbl" class="num"></span>
-      <button id="nextM" aria-label="Sonraki ay">›</button>
+    <div class="brand">Böcekler<small>Cüzdan</small></div>
+    <div class="top-r">
+      <div class="month" role="group" aria-label="Ay seçimi">
+        <button id="prevM" aria-label="Önceki ay">‹</button>
+        <button id="monthLbl" class="mlabel num" aria-label="Ay ve yıl seç"></button>
+        <button id="nextM" aria-label="Sonraki ay">›</button>
+      </div>
+      <button class="gear" id="gearBtn" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3.1 14H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.8H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.1z"/></svg></button>
     </div>
   </header>
   <main id="main"></main>
@@ -200,8 +244,9 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
   <button class="tab" data-tab="ozet" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Özet</button>
   <button class="tab" data-tab="liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Hareketler</button>
   <button class="fab" id="addBtn" aria-label="Kayıt ekle">+</button>
+  <button class="tab" data-tab="odeme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></svg>Ödemeler</button>
   <button class="tab" data-tab="birikim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Birikim</button>
-  <button class="tab" data-tab="ayar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3.1 14H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 3.1V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.8H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.1z"/></svg>Ayarlar</button>
+
 </div></nav>
 
 <div id="sheetRoot"></div>
@@ -220,6 +265,7 @@ const todayISO = `${todayYM}-${pad(now.getDate())}`;
 const ymAdd = (ym,d) => { let [y,m]=ym.split('-').map(Number); m+=d; while(m<1){m+=12;y--} while(m>12){m-=12;y++} return `${y}-${pad(m)}`; };
 const ymLabel = ym => { const [y,m]=ym.split('-').map(Number); return `${AYLAR[m-1]} ${y}`; };
 const daysIn = ym => { const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); };
+const dayLabel = (iso, opt={day:'numeric',month:'long',weekday:'long'}) => new Date(iso+'T12:00').toLocaleDateString('tr-TR', opt);
 const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const parseAmt = v => { v=String(v).trim().replace(/[\s₺]/g,''); if(v.includes(',')) v=v.replace(/\./g,'').replace(',','.'); const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.round(n*100)/100 : null; };
@@ -231,7 +277,8 @@ const defaultSettings = () => ({
     ['abonelik','Abonelikler','out'],['diger','Diğer','out'],
     ['maas','Maaş','in'],['ek','Ek gelir','in'],['digergelir','Diğer gelir','in']
   ].map(([id,name,t])=>({id,name,t,budget:0})),
-  recurring: []
+  recurring: [],
+  debts: []
 });
 
 let S = { settings: defaultSettings(), months: {}, rates: {} };
@@ -260,16 +307,17 @@ async function fetchRates(manual){
     saveLocal(); render(); if(manual) toast('Kurlar güncellendi');
   } catch(e){ if(manual) toast('Kurlar alınamadı. İnterneti kontrol et ya da kurları elle yaz.'); }
 }
-let view = { ym: todayYM, tab: 'ozet' };
+let view = { ym: todayYM, tab: 'ozet', day: null };
 let mode = 'loading';  // 'db' | 'local' | 'loading'
 let col = null;
 
 /* ---------- storage ---------- */
 const LS_KEY = 'cuzdan-defteri-v1';
 function loadLocal(){
-  try { const raw = localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); if(d&&d.settings){ S=d; S.rates=S.rates||{}; } } } catch(e){}
+  try { const raw = localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); if(d&&d.settings){ S=d; S.rates=S.rates||{}; S.settings.debts=S.settings.debts||[]; } } } catch(e){}
 }
 function saveLocal(){
+  writeReminders();
   try { localStorage.setItem(LS_KEY, JSON.stringify(S)); }
   catch(e){ toast('Tarayıcı kaydı kapalı. Yedeği Ayarlar’dan dışa aktar.'); }
 }
@@ -331,7 +379,7 @@ async function init(){
 
 /* ---------- derived data ---------- */
 const cat = id => S.settings.cats.find(c=>c.id===id) || {id, name:'Silinmiş kategori', t:'out', budget:0};
-const monthDoc = ym => { const m = S.months[ym] || (S.months[ym] = {items:[], skip:[], sav:[]}); m.sav = m.sav||[]; return m; };
+const monthDoc = ym => { const m = S.months[ym] || (S.months[ym] = {items:[], skip:[], sav:[], pay:{}}); m.sav = m.sav||[]; m.pay = m.pay||{}; return m; };
 function entriesFor(ym){
   const m = S.months[ym] || {items:[], skip:[]};
   const list = m.items.map(x=>({...x}));
@@ -354,11 +402,13 @@ function totals(ym){
 const main = document.getElementById('main');
 function render(){
   document.getElementById('monthLbl').textContent = ymLabel(view.ym);
+  if(view.tab==='ayar') document.getElementById('gearBtn').setAttribute('aria-current','page'); else document.getElementById('gearBtn').removeAttribute('aria-current');
   document.querySelectorAll('nav .tab').forEach(b => { if(b.dataset.tab===view.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   if(mode==='loading'){ main.innerHTML = `<div class="empty"><b>Defter açılıyor</b>Kayıtların yükleniyor…</div>`; return; }
-  main.innerHTML = view.tab==='ozet' ? renderSummary() : view.tab==='liste' ? renderList() : view.tab==='birikim' ? renderSavings() : renderSettings();
+  main.innerHTML = view.tab==='ozet' ? renderSummary() : view.tab==='liste' ? renderList() : view.tab==='birikim' ? renderSavings() : view.tab==='odeme' ? renderDebts() : renderSettings();
   if(view.tab==='ayar') bindSettings();
   if(view.tab==='birikim') bindSavings();
+  if(view.tab==='odeme') bindDebts();
 }
 
 function renderSummary(){
@@ -382,7 +432,7 @@ function renderSummary(){
     </div>`};
   }).sort((a,b)=>b.spent-a.spent).map(r=>r.html).join('');
 
-  return `
+  return `${alertsHTML()}
   <div class="hero">
     <div><div class="label">${ymLabel(view.ym)} · kalan</div><div class="big num">${left<0?'−':''}${tl.format(Math.abs(left))}</div></div>
     <div class="row">
@@ -556,17 +606,290 @@ function openSavSheet(entry){
 
 function renderList(){
   const list = entriesFor(view.ym);
-  if(!list.length) return `<div class="card empty"><b>${ymLabel(view.ym)} için kayıt yok</b>Alttaki <strong>+</strong> ile ekleyebilirsin.</div>`;
-  const groups = {};
-  list.forEach(e => (groups[e.date] ||= []).push(e));
-  const gun = d => new Date(d+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
-  return Object.entries(groups).map(([d,es]) => `
-    <div class="day"><h3>${d===todayISO?'Bugün · ':''}${gun(d)}</h3><div class="items">
+  const outBy = {}, inBy = {};
+  list.forEach(e => { const o = e.t==='in' ? inBy : outBy; o[e.date] = (o[e.date]||0) + e.amt; });
+  const dim = daysIn(view.ym), [y,m] = view.ym.split('-').map(Number);
+  const lead = (new Date(y,m-1,1).getDay()+6)%7;
+  const max = Math.max(1, ...Object.values(outBy));
+  let cells = ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'].map(w=>`<span class="wd">${w}</span>`).join('') + '<span></span>'.repeat(lead);
+  for(let d=1; d<=dim; d++){
+    const iso = `${view.ym}-${pad(d)}`, v = outBy[iso]||0, sel = view.day===iso;
+    const cls = [iso>todayISO?'fut':'', iso===todayISO?'today':''].join(' ').trim();
+    const bg = !sel && v ? ` style="background:color-mix(in srgb,var(--out) ${Math.round(12+38*v/max)}%,var(--sunk))"` : '';
+    cells += `<button class="${cls}" data-day="${iso}" aria-pressed="${sel}"${bg} aria-label="${d} ${AYLAR[m-1]}, ${v?tl.format(v)+' harcama':'harcama yok'}">${d}<small>${v?tlShort(v):''}</small></button>`;
+  }
+  const spent = Object.values(outBy).reduce((a,b)=>a+b,0);
+  const elapsed = view.ym<todayYM ? dim : view.ym===todayYM ? now.getDate() : 0;
+  const top = Object.entries(outBy).sort((a,b)=>b[1]-a[1])[0];
+  const stats = (elapsed && spent) || top ? `<div class="daystats">${elapsed&&spent?`<span>Günlük ortalama <b class="num">${tl.format(Math.round(spent/elapsed))}</b></span>`:''}${top?`<span>En çok harcanan gün <b>${dayLabel(top[0],{day:'numeric',month:'long'})}</b> <span class="num">(${tl.format(top[1])})</span></span>`:''}</div>` : '';
+  const head = view.day
+    ? `<div class="sec-head" style="margin:18px 0 10px"><h2>${dayLabel(view.day)}</h2><button class="chip" data-day="">Tüm ay</button></div>`
+    : `<div class="sec-head" style="margin:18px 0 10px"><h2>Tüm hareketler</h2><small>Bir güne dokun, sadece onu gör</small></div>`;
+  const shown = view.day ? list.filter(e=>e.date===view.day) : list;
+  let body;
+  if(!list.length) body = `<div class="card empty"><b>${ymLabel(view.ym)} için kayıt yok</b>Alttaki <strong>+</strong> ile ekleyebilirsin.</div>`;
+  else if(!shown.length) body = `<div class="card empty"><b>Bu gün kayıt yok</b>Başka bir güne dokun ya da “Tüm ay”a dön.</div>`;
+  else {
+    const groups = {};
+    shown.forEach(e => (groups[e.date] ||= []).push(e));
+    body = Object.entries(groups).map(([d,es]) => `
+    <div class="day"><h3><span>${d===todayISO?'Bugün · ':''}${dayLabel(d)}</span><span class="num">${outBy[d]?'−'+tl.format(outBy[d]):''}${inBy[d]?(outBy[d]?' · ':'')+'+'+tl.format(inBy[d]):''}</span></h3><div class="items">
     ${es.map(e => { const c=cat(e.cat); return `<button class="item" data-edit="${esc(e.id)}">
       <span class="dot">${esc(c.name.charAt(0))}</span>
       <span class="mid"><b>${esc(e.note || c.name)}</b><small>${esc(c.name)}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
       <span class="amt num ${e.t}">${e.t==='in'?'+':'−'}${tl.format(e.amt)}</span></button>`; }).join('')}
     </div></div>`).join('');
+  }
+  return `<div class="card"><div class="cal">${cells}</div>${stats}</div>${head}${body}`;
+}
+
+/* ---------- kredi kartları ve krediler ---------- */
+const debts = () => S.settings.debts || (S.settings.debts = []);
+const ymDiff = (a,b) => { const [y1,m1]=a.split('-').map(Number), [y2,m2]=b.split('-').map(Number); return (y2-y1)*12+(m2-m1); };
+const dayDiff = (a,b) => Math.round((new Date(b+'T12:00') - new Date(a+'T12:00'))/864e5);
+const isoAdd = (iso,n) => { const d=new Date(iso+'T12:00'); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+function instNo(d, ym){ if(d.kind!=='loan') return ym >= d.from ? 1 : 0; const i = ymDiff(d.start, ym); return i>=0 && i<d.count ? i+1 : 0; }
+const dueOf = (d, ym) => `${ym}-${pad(Math.min(d.dueDay, daysIn(ym)))}`;
+const payOf = (d, ym) => ((S.months[ym]||{}).pay||{})[d.id] || null;
+const amtOf = (d, ym) => { const p = payOf(d, ym); return (p && p.amt) || (d.kind==='loan' ? d.amt : 0); };
+function statusOf(d, ym){
+  const p = payOf(d, ym);
+  if(p && p.paid) return {cls:'paid', txt:'Ödendi'};
+  if(ym < d.from) return {cls:'paid', txt:'Takip öncesi'};
+  const n = dayDiff(todayISO, dueOf(d, ym));
+  if(n < 0) return {cls:'late', txt:`${-n} gün gecikti`};
+  if(n === 0) return {cls:'today', txt:'Son gün bugün'};
+  if(n <= (d.remind||3)) return {cls:'soon', txt:`${n} gün kaldı`};
+  return {cls:'', txt:`${n} gün var`};
+}
+function alertsNow(){
+  const out = [];
+  for(const ym of [ymAdd(todayYM,-1), todayYM, ymAdd(todayYM,1)])
+    for(const d of debts()){ if(!instNo(d,ym)) continue; const st = statusOf(d,ym); if(st.cls==='late'||st.cls==='today'||st.cls==='soon') out.push({d, ym, st, due:dueOf(d,ym)}); }
+  return out.sort((a,b)=>a.due.localeCompare(b.due));
+}
+function alertsHTML(){
+  const a = alertsNow(); if(!a.length) return '';
+  const late = a.some(x=>x.st.cls==='late');
+  return `<button class="alert ${late?'late':''}" data-goto="odeme" data-ym="${a[0].ym}"><b>${late?'Geciken ödeme var':'Yaklaşan ödemeler'}</b>${a.map(x=>{ const v=amtOf(x.d,x.ym); return `<div><span>${esc(x.d.name)} · ${dayLabel(x.due,{day:'numeric',month:'short'})}</span><span class="num">${x.st.txt}${v?' · '+tl.format(v):''}</span></div>`; }).join('')}</button>`;
+}
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator;
+
+function renderDebts(){
+  const ym = view.ym, act = debts().filter(d=>instNo(d,ym));
+  const total = act.reduce((a,d)=>a+amtOf(d,ym),0);
+  const paid = act.filter(d=>(payOf(d,ym)||{}).paid).reduce((a,d)=>a+amtOf(d,ym),0);
+  const item = d => {
+    const st = statusOf(d,ym), p = payOf(d,ym), a = amtOf(d,ym), n = instNo(d,ym), isPaid = p && p.paid;
+    const sub = d.kind==='loan' ? `Taksit ${n}/${d.count} · son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}` : `Son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}`;
+    const amt = d.kind==='card' && !a ? `<span class="note">Ekstre tutarı henüz girilmedi</span>` : `<span class="amtbig num">${tl.format(a)}</span>`;
+    return `<div class="card debt"><div class="debt-top"><div><b>${esc(d.name)}</b><small>${sub}</small></div><span class="st ${st.cls}">${st.txt}</span></div>${amt}
+      <div class="btns"><button class="btn sm${isPaid?' ghost':''}" data-pay="${d.id}">${isPaid?'Ödemeyi geri al':d.kind==='card'?'Ekstre gir / öde':'Ödendi işaretle'}</button>
+      <button class="btn sm ghost" data-ics="${d.id}">Takvime ekle</button>
+      <button class="btn sm ghost" data-dedit="${d.id}">Düzenle</button></div></div>`;
+  };
+  const cards = act.filter(d=>d.kind==='card'), loans = act.filter(d=>d.kind==='loan');
+  const idle = debts().filter(d=>!instNo(d,ym));
+  const perm = notifOK() ? Notification.permission : 'none';
+  return `
+  <div class="hero">
+    <div><div class="label">${ymLabel(ym)} · kart ve kredi ödemeleri</div><div class="big num">${tl.format(total)}</div></div>
+    <div class="row">
+      <div class="cell"><span class="label">Ödenen</span><b class="num">${tl.format(paid)}</b></div>
+      <div class="cell"><span class="label">Kalan</span><b class="num">${tl.format(total-paid)}</b></div>
+    </div>
+  </div>
+  ${!debts().length ? `<section><div class="card empty"><b>Henüz kart ya da kredi yok</b>Kredi kartlarını ve kredilerini ekle. Son ödeme günleri burada sıralanır, yaklaşınca Özet’te uyarı çıkar.</div></section>` : ''}
+  ${cards.length ? `<section><div class="sec-head"><h2>Kredi kartları</h2></div>${cards.map(item).join('')}</section>` : ''}
+  ${loans.length ? `<section><div class="sec-head"><h2>Krediler</h2></div>${loans.map(item).join('')}</section>` : ''}
+  ${idle.length ? `<section><div class="sec-head"><h2>Bu ay taksiti olmayanlar</h2></div><div class="card">${idle.map(d=>`<div class="set-row"><span class="name">${esc(d.name)}<br><small class="note">${d.kind==='loan' ? (ym<d.start?'İlk taksit '+ymLabel(d.start):'Taksitler bitti') : 'Takip '+ymLabel(d.from)+' başlıyor'}</small></span><button class="icon-btn" data-dedit="${d.id}">Düzenle</button></div>`).join('')}</div></section>` : ''}
+  <section><div class="btns"><button class="btn" data-adddebt="card" style="flex:1">Kart ekle</button><button class="btn" data-adddebt="loan" style="flex:1">Kredi ekle</button></div></section>
+  <section>
+    <div class="sec-head"><h2>Hatırlatıcılar</h2></div>
+    <div class="card" style="display:grid;gap:12px">
+      <div class="note"><b style="color:var(--ink)">En garantili yol:</b> her kartta ve kredide “Takvime ekle”ye dokun. Telefonunun kendi takvimi, son ödeme gününden önce ve o gün sabah 10’da seni uyarır. Her ay kendiliğinden tekrarlar.</div>
+      ${isIOS
+        ? `<div class="note">iPhone, sunucusu olmayan uygulamaların kendi başına bildirim atmasına izin vermiyor. Bu yüzden iPhone’da takvim hatırlatıcısını kullan. Uygulamayı açtığında yaklaşan ödemeler Özet’in en üstünde de görünür.</div>`
+        : !notifOK()
+          ? `<div class="note">Bu tarayıcı bildirim desteklemiyor. Uygulamayı ana ekrana ekleyip oradan açınca deneyebilirsin.</div>`
+          : perm==='granted'
+            ? `<div class="note">Uygulama bildirimleri açık. Telefonun izin verdiği sıklıkta (genelde günde bir) yaklaşan ödemeleri kontrol edip bildirim gönderir.</div>`
+            : `<div class="note">Android’de uygulama kapalıyken de yaklaşan ödemeler için bildirim gönderebilir.</div><button class="btn ghost" id="notifBtn">Bildirimlere izin ver</button>`}
+    </div>
+  </section>`;
+}
+function bindDebts(){
+  const nb = document.getElementById('notifBtn'); if(nb) nb.onclick = enableNotifications;
+}
+function ensureCat(id, name){ if(!S.settings.cats.some(c=>c.id===id)){ S.settings.cats.push({id, name, t:'out', budget:0}); saveSettings(); } return id; }
+function markPaid(d, ym, amt, addExp){
+  const m = monthDoc(ym); let exp = null;
+  if(addExp){
+    const catId = d.kind==='loan' ? ensureCat('kredi','Kredi ödemesi') : ensureCat('kartodeme','Kart ödemesi');
+    exp = uid();
+    m.items.push({id:exp, t:'out', amt, cat:catId, date: ym===todayYM ? todayISO : dueOf(d,ym), note:`${d.name} ${d.kind==='loan'?'taksidi':'ödemesi'}`});
+  }
+  m.pay[d.id] = {amt, paid:true, paidOn:todayISO, exp};
+  saveMonth(ym);
+}
+function unpay(d, ym){
+  const m = monthDoc(ym), p = m.pay[d.id]; if(!p) return;
+  if(p.exp) m.items = m.items.filter(i=>i.id!==p.exp);
+  m.pay[d.id] = {amt:p.amt, paid:false};
+  saveMonth(ym);
+}
+function openPaySheet(d, ym){
+  const st = { amt: amtOf(d,ym) || '', exp: d.kind==='loan' };
+  const draw = () => {
+    sheetRoot.innerHTML = `<div class="scrim" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(d.name)} ödemesi"><div class="in">
+      <div class="grab"></div>
+      <div class="sec-head" style="margin:0"><h2>${esc(d.name)}</h2><button class="icon-btn" data-close>Kapat</button></div>
+      <div class="note">${ymLabel(ym)} · son ödeme ${dayLabel(dueOf(d,ym))}</div>
+      <div class="field"><label class="label" for="pAmt">${d.kind==='card'?'Ekstre tutarı (₺)':'Taksit tutarı (₺)'}</label>
+        <input class="amount-in num" id="pAmt" inputmode="decimal" placeholder="0" value="${st.amt!==''?String(st.amt).replace('.',','):''}" autocomplete="off"></div>
+      <label class="check"><input type="checkbox" id="pExp" ${st.exp?'checked':''}> Bu ayın giderlerine de ekle</label>
+      <div class="note">${d.kind==='card' ? 'Kart harcamalarını zaten tek tek gider olarak giriyorsan bunu işaretleme, yoksa iki kez sayılır.' : 'Taksit, giderlere “Kredi ödemesi” kategorisiyle eklenir.'}</div>
+      <div class="btns">${d.kind==='card' ? '<button class="btn ghost" id="pSaveAmt" style="flex:1">Sadece tutarı kaydet</button>' : ''}<button class="btn" id="pPaid" style="flex:1">Ödendi olarak işaretle</button></div>
+    </div></div>`;
+    sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheet);
+    const read = () => parseAmt(document.getElementById('pAmt').value);
+    const sa = document.getElementById('pSaveAmt');
+    if(sa) sa.onclick = () => { const v = read(); if(!v) return toast('Tutarı yaz.'); const m = monthDoc(ym); m.pay[d.id] = {...(m.pay[d.id]||{}), amt:v, paid:false}; saveMonth(ym); closeSheet(); render(); toast('Ekstre tutarı kaydedildi'); };
+    document.getElementById('pPaid').onclick = () => { const v = read(); if(!v) return toast('Tutarı yaz.'); markPaid(d, ym, v, document.getElementById('pExp').checked); closeSheet(); render(); toast('Ödendi olarak işaretlendi'); };
+  };
+  draw();
+}
+function openDebtSheet(d, kind){
+  const editing = !!d;
+  const st = d ? {...d} : {kind: kind||'card', name:'', dueDay:'', remind:3, amt:'', count:'', start:todayYM};
+  const draw = () => {
+    const loan = st.kind==='loan';
+    sheetRoot.innerHTML = `<div class="scrim" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${loan?'Kredi':'Kredi kartı'}"><div class="in">
+      <div class="grab"></div>
+      <div class="sec-head" style="margin:0"><h2>${editing?'Düzenle':loan?'Kredi ekle':'Kart ekle'}</h2><button class="icon-btn" data-close>Kapat</button></div>
+      ${editing ? '' : `<div class="seg" role="group" aria-label="Tür"><button data-kind="card" aria-pressed="${!loan}">Kredi kartı</button><button data-kind="loan" aria-pressed="${loan}">Kredi</button></div>`}
+      <div class="field"><label class="label" for="dName">Adı</label><input id="dName" maxlength="40" placeholder="${loan?'Örn. İhtiyaç kredisi':'Örn. Bonus, Maximum'}" value="${esc(st.name)}"></div>
+      <div class="two">
+        <div class="field"><label class="label" for="dDay">Son ödeme günü</label><input id="dDay" class="num" type="number" inputmode="numeric" min="1" max="31" placeholder="Ayın kaçı" value="${st.dueDay}"></div>
+        <div class="field"><label class="label" for="dRem">Hatırlatma</label><select id="dRem">${[1,2,3,5,7].map(n=>`<option value="${n}" ${+st.remind===n?'selected':''}>${n} gün önce</option>`).join('')}</select></div>
+      </div>
+      ${loan ? `<div class="two">
+        <div class="field"><label class="label" for="dAmt">Aylık taksit (₺)</label><input id="dAmt" class="num" inputmode="decimal" placeholder="Örn. 5.250" value="${st.amt?String(st.amt).replace('.',','):''}"></div>
+        <div class="field"><label class="label" for="dCount">Taksit sayısı</label><input id="dCount" class="num" type="number" inputmode="numeric" min="1" max="480" placeholder="Örn. 24" value="${st.count}"></div>
+      </div>
+      <div class="field"><label class="label" for="dStart">İlk taksit ayı</label><input id="dStart" type="month" value="${st.start}"></div>
+      <div class="note">Geçmiş taksitler “Takip öncesi” sayılır, sadece bu aydan sonrasını işaretlemen gerekir.</div>` : ''}
+      <button class="btn" id="dSave">${editing?'Kaydet':'Ekle'}</button>
+      ${editing ? '<button class="btn ghost" id="dDel" style="color:var(--out)">Sil</button>' : ''}
+    </div></div>`;
+    const keep = () => { st.name=document.getElementById('dName').value; st.dueDay=document.getElementById('dDay').value; st.remind=+document.getElementById('dRem').value;
+      if(st.kind==='loan'){ st.amt=document.getElementById('dAmt').value; st.count=document.getElementById('dCount').value; st.start=document.getElementById('dStart').value; } };
+    sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheet);
+    sheetRoot.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{ keep(); st.kind=b.dataset.kind; draw(); });
+    document.getElementById('dSave').onclick = () => {
+      keep();
+      const name = st.name.trim(), day = parseInt(st.dueDay,10);
+      if(!name) return toast('Bir ad yaz.');
+      if(!(day>=1 && day<=31)) return toast('Son ödeme günü 1 ile 31 arasında olmalı.');
+      const rec = {kind:st.kind, name, dueDay:day, remind:st.remind||3};
+      if(st.kind==='loan'){
+        const amt = parseAmt(st.amt), count = parseInt(st.count,10);
+        if(!amt) return toast('Aylık taksiti yaz.');
+        if(!(count>=1)) return toast('Taksit sayısını yaz.');
+        if(!/^\d{4}-\d{2}$/.test(st.start)) return toast('İlk taksit ayını seç.');
+        Object.assign(rec, {amt, count, start:st.start});
+      }
+      if(editing) Object.assign(d, rec); else debts().push({id:uid(), from:todayYM, ...rec});
+      saveSettings(); closeSheet(); render(); toast(editing?'Kaydedildi':`${name} eklendi`);
+    };
+    const del = document.getElementById('dDel');
+    if(del) del.onclick = () => { if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='Silmek için tekrar dokun'; return; }
+      S.settings.debts = debts().filter(x=>x.id!==d.id); saveSettings(); closeSheet(); render(); toast('Silindi'); };
+  };
+  draw();
+}
+
+/* takvim (.ics) hatırlatıcısı */
+function icsText(d){
+  let ym = todayYM;
+  if(dayDiff(todayISO, dueOf(d, ym)) < 0 || (payOf(d, ym)||{}).paid) ym = ymAdd(ym, 1);
+  const byDay = d.dueDay > 28 ? `BYMONTHDAY=${Array.from({length:d.dueDay-27},(_,i)=>28+i).join(',')};BYSETPOS=-1` : `BYMONTHDAY=${d.dueDay}`;
+  let rule = `FREQ=MONTHLY;${byDay}`;
+  if(d.kind==='loan'){
+    if(ym < d.start) ym = d.start;
+    const rem = d.count - ymDiff(d.start, ym);
+    if(rem <= 0) return null;
+    rule += `;COUNT=${rem}`;
+  }
+  const dt = dueOf(d, ym).replace(/-/g,'');
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const r = d.remind || 3;
+  const t = v => String(v).replace(/[\\,;]/g, m => '\\' + m);
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Bocekler Cuzdan//TR','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT', `UID:${d.id}-${dt}@bocekler-cuzdan`, `DTSTAMP:${stamp}`, `DTSTART:${dt}T100000`, `DTEND:${dt}T103000`, `RRULE:${rule}`,
+    `SUMMARY:${t(d.name+' son ödeme günü')}`, `DESCRIPTION:${t('Böcekler Cüzdan hatırlatıcısı. Ödeyince uygulamada Ödendi olarak işaretle.')}`,
+    'BEGIN:VALARM','ACTION:DISPLAY', `DESCRIPTION:${t(d.name+': son ödemeye '+r+' gün kaldı')}`, `TRIGGER:-P${r}D`, 'END:VALARM',
+    'BEGIN:VALARM','ACTION:DISPLAY', `DESCRIPTION:${t(d.name+': son ödeme günü bugün')}`, 'TRIGGER:PT0M', 'END:VALARM',
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function addToCalendar(d){
+  const text = icsText(d); if(!text) return toast('Bu kredinin kalan taksiti yok.');
+  const file = 'bocekler-' + (d.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'odeme') + '.ics';
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    location.href = `./takvim.ics?n=${encodeURIComponent(file)}&d=${encodeURIComponent(text)}`;
+  } else {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'text/calendar'})); a.download = file;
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+  toast('Takvim açılıyor, “Ekle”ye dokun');
+}
+
+/* Android bildirimleri: hatırlatma listesi IndexedDB'de tutulur, servis çalışanı günde bir kontrol eder */
+function idb(){ return new Promise((res,rej)=>{ const r = indexedDB.open('bocekler',1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbSet(k,v){ const db = await idb(); return new Promise(res=>{ const tx = db.transaction('kv','readwrite'); tx.objectStore('kv').put(v,k); tx.oncomplete = () => res(); tx.onerror = () => res(); }); }
+async function writeReminders(){
+  try {
+    const list = [];
+    for(const ym of [ymAdd(todayYM,-1), todayYM, ymAdd(todayYM,1), ymAdd(todayYM,2)])
+      for(const d of debts()){
+        if(!instNo(d,ym) || ym < d.from || (payOf(d,ym)||{}).paid) continue;
+        const v = amtOf(d,ym);
+        list.push({key:d.id+'@'+ym, name:d.name, due:dueOf(d,ym), from:isoAdd(dueOf(d,ym), -(d.remind||3)), amt: v ? tl.format(v) : ''});
+      }
+    await idbSet('reminders', list);
+  } catch(e){}
+}
+async function enableNotifications(){
+  if(!notifOK()) return toast('Bu tarayıcı bildirim desteklemiyor.');
+  const p = await Notification.requestPermission();
+  if(p !== 'granted'){ render(); return toast('İzin verilmedi. Telefon ayarlarından açabilirsin.'); }
+  const reg = await navigator.serviceWorker.ready;
+  try { if('periodicSync' in reg) await reg.periodicSync.register('odeme-kontrol', {minInterval: 12*3600e3}); } catch(e){}
+  await writeReminders();
+  try { await reg.showNotification('Böcekler Cüzdan', {body:'Bildirimler açık. Yaklaşan ödemelerde haber vereceğim.', icon:'icon-192.png'}); } catch(e){}
+  render();
+}
+
+function openMonthPicker(){
+  let y = +view.ym.slice(0,4);
+  const draw = () => {
+    sheetRoot.innerHTML = `<div class="scrim" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Ay seç"><div class="in">
+      <div class="grab"></div>
+      <div class="ynav"><button class="icon-btn" id="yPrev" aria-label="Önceki yıl">‹ ${y-1}</button><b class="num">${y}</b><button class="icon-btn" id="yNext" aria-label="Sonraki yıl">${y+1} ›</button></div>
+      <div class="mgrid">${AYLAR.map((a,i)=>{ const ym=`${y}-${pad(i+1)}`; return `<button data-pick="${ym}" aria-pressed="${ym===view.ym}" class="${ym===todayYM?'now':''}">${a}</button>`; }).join('')}</div>
+      <div class="btns"><button class="btn ghost" id="pickToday" style="flex:1">Bu aya dön</button><button class="btn ghost" data-close style="flex:1">Kapat</button></div>
+    </div></div>`;
+    sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheet);
+    document.getElementById('yPrev').onclick = () => { y--; draw(); };
+    document.getElementById('yNext').onclick = () => { y++; draw(); };
+    document.getElementById('pickToday').onclick = () => { view.ym = todayYM; view.day = null; closeSheet(); render(); };
+    sheetRoot.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { view.ym = b.dataset.pick; view.day = null; closeSheet(); render(); });
+  };
+  draw();
 }
 
 function renderSettings(){
@@ -683,8 +1006,8 @@ function importData(ev){
     document.getElementById('cancelImport').onclick = () => { area.innerHTML=''; ev.target.value=''; };
     document.getElementById('doImport').onclick = () => {
       const old = Object.keys(S.months);
-      S = { settings: {cats:d.settings.cats, recurring:d.settings.recurring||[], savTarget:d.settings.savTarget||0}, months: {}, rates: d.rates||S.rates||{} };
-      for(const [ym,m] of Object.entries(d.months)) if(/^\d{4}-\d{2}$/.test(ym)) S.months[ym] = {items:m.items||[], skip:m.skip||[], sav:m.sav||[]};
+      S = { settings: {cats:d.settings.cats, recurring:d.settings.recurring||[], savTarget:d.settings.savTarget||0, debts:d.settings.debts||[]}, months: {}, rates: d.rates||S.rates||{} };
+      for(const [ym,m] of Object.entries(d.months)) if(/^\d{4}-\d{2}$/.test(ym)) S.months[ym] = {items:m.items||[], skip:m.skip||[], sav:m.sav||[], pay:m.pay||{}};
       if(mode==='db'){
         queueWrite('settings', S.settings);
         for(const ym of Object.keys(S.months)) queueWrite('m-'+ym, S.months[ym]);
@@ -781,12 +1104,22 @@ function removeItem(entry){
 /* ---------- events ---------- */
 let toastT;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true, 2600); }
-document.getElementById('prevM').onclick = () => { view.ym = ymAdd(view.ym,-1); render(); };
-document.getElementById('nextM').onclick = () => { view.ym = ymAdd(view.ym,1); render(); };
-document.getElementById('addBtn').onclick = () => { if(mode==='loading') return; view.tab==='birikim' ? openSavSheet(null) : openSheet(null); };
+document.getElementById('prevM').onclick = () => { view.ym = ymAdd(view.ym,-1); view.day = null; render(); };
+document.getElementById('nextM').onclick = () => { view.ym = ymAdd(view.ym,1); view.day = null; render(); };
+document.getElementById('monthLbl').onclick = () => { if(mode!=='loading') openMonthPicker(); };
+document.getElementById('gearBtn').onclick = () => { view.tab = 'ayar'; render(); window.scrollTo(0,0); };
+document.getElementById('addBtn').onclick = () => { if(mode==='loading') return; view.tab==='birikim' ? openSavSheet(null) : view.tab==='odeme' ? openDebtSheet(null,'card') : openSheet(null); };
 document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { view.tab=b.dataset.tab; render(); window.scrollTo(0,0); });
 main.addEventListener('click', e => {
-  const g = e.target.closest('[data-goto]'); if(g){ view.tab=g.dataset.goto; render(); window.scrollTo(0,0); return; }
+  const g = e.target.closest('[data-goto]'); if(g){ view.tab=g.dataset.goto; if(g.dataset.ym) view.ym=g.dataset.ym; render(); window.scrollTo(0,0); return; }
+  const dy = e.target.closest('[data-day]'); if(dy){ view.day = dy.dataset.day && dy.dataset.day!==view.day ? dy.dataset.day : null; render(); return; }
+  const find = id => debts().find(x=>x.id===id);
+  const pb = e.target.closest('[data-pay]'); if(pb){ const d=find(pb.dataset.pay); if(!d) return;
+    if((payOf(d,view.ym)||{}).paid){ if(!pb.dataset.armed){ pb.dataset.armed=1; pb.textContent='Geri almak için tekrar dokun'; return; } unpay(d,view.ym); render(); toast('Ödeme geri alındı'); }
+    else openPaySheet(d, view.ym); return; }
+  const ic = e.target.closest('[data-ics]'); if(ic){ const d=find(ic.dataset.ics); if(d) addToCalendar(d); return; }
+  const de = e.target.closest('[data-dedit]'); if(de){ const d=find(de.dataset.dedit); if(d) openDebtSheet(d); return; }
+  const ad = e.target.closest('[data-adddebt]'); if(ad){ openDebtSheet(null, ad.dataset.adddebt); return; }
   const sv = e.target.closest('[data-sedit]'); if(sv){ const x=savFor(view.ym).find(y=>y.id===sv.dataset.sedit); if(x) openSavSheet(x); return; }
   const b = e.target.closest('[data-edit]'); if(!b) return;
   const entry = entriesFor(view.ym).find(x=>x.id===b.dataset.edit); if(entry) openSheet(entry);
