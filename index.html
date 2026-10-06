@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#255E45">
+<meta name="theme-color" content="#A3560F">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,24 +17,24 @@
 <style>
 /* Layout: tek sütun telefon uygulaması — üstte ay seçici, ortada sekme içeriği, altta sabit sekme çubuğu + ekle düğmesi */
 :root{
-  --bg:#EEF1EC; --surface:#FFFFFF; --sunk:#E3E8E1; --line:#D3DACF;
-  --ink:#15201A; --muted:#5E6B63;
-  --accent:#255E45; --accent-ink:#FFFFFF; --accent-soft:#D6E7DC;
-  --in:#23784C; --out:#B2423A; --warn:#B27A12;
+  --bg:#F7EFE3; --surface:#FFFCF7; --sunk:#EFE3D2; --line:#E4D4BE;
+  --ink:#2B1D12; --muted:#7A6450;
+  --accent:#A3560F; --accent-ink:#FFFFFF; --accent-soft:#F6DFC2;
+  --in:#3C7A45; --out:#B5432F; --warn:#C7891A;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0F1512; --surface:#18211C; --sunk:#1F2A24; --line:#2C3A32;
-  --ink:#E7EEE9; --muted:#97A69D;
-  --accent:#6FC197; --accent-ink:#0C1A12; --accent-soft:#1F3A2B;
-  --in:#6FC197; --out:#EE8379; --warn:#E3B04F; color-scheme:dark}}
+  --bg:#17110C; --surface:#221912; --sunk:#2D2219; --line:#3B2D21;
+  --ink:#F3E9DD; --muted:#B39F8A;
+  --accent:#F0A24A; --accent-ink:#22160B; --accent-soft:#3D2A17;
+  --in:#7CC48A; --out:#EF8A78; --warn:#E8B84A; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0F1512; --surface:#18211C; --sunk:#1F2A24; --line:#2C3A32;
-  --ink:#E7EEE9; --muted:#97A69D;
-  --accent:#6FC197; --accent-ink:#0C1A12; --accent-soft:#1F3A2B;
-  --in:#6FC197; --out:#EE8379; --warn:#E3B04F; color-scheme:dark}
+  --bg:#17110C; --surface:#221912; --sunk:#2D2219; --line:#3B2D21;
+  --ink:#F3E9DD; --muted:#B39F8A;
+  --accent:#F0A24A; --accent-ink:#22160B; --accent-soft:#3D2A17;
+  --in:#7CC48A; --out:#EF8A78; --warn:#E8B84A; color-scheme:dark}
 
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px)}
@@ -73,11 +73,16 @@ section{margin-top:22px}
 
 /* budget bars */
 .bars{display:grid;gap:14px}
+.plain{display:grid;gap:0;margin-top:14px;padding-top:6px;border-top:1px solid var(--line)}
+.plain:first-child{margin-top:0;padding-top:0;border-top:0}
+.plain .label{margin-bottom:4px}
+.plain div{display:flex;justify-content:space-between;gap:8px;padding:7px 0;font-size:14px}
+.plain div span:last-child{font-weight:500}
 .bar-top{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:6px}
 .bar-top span:first-child{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar-top span:last-child{color:var(--muted);white-space:nowrap}
 .track{position:relative;height:10px;border-radius:6px;background:var(--sunk);overflow:visible}
-.fill{height:100%;border-radius:6px;background:var(--accent)}
+.fill{height:100%;border-radius:6px;background:var(--in)}
 .fill.near{background:var(--warn)} .fill.over{background:var(--out)}
 .limit{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55;border-radius:1px}
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
@@ -159,10 +164,10 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 .asset:last-child{grid-column:span 2}
 .asset .q{font-family:var(--display);font-size:21px;font-weight:700;overflow-wrap:anywhere}
 .asset small{color:var(--muted);font-size:13px}
-.streak{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.streak{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
 .streak div{display:grid;justify-items:center;gap:4px;font-size:12px;color:var(--muted)}
 .streak b{width:100%;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;background:var(--sunk);color:var(--muted)}
-.streak b.ok{background:var(--accent-soft);color:var(--in)}
+.streak b.ok{background:color-mix(in srgb,var(--in) 16%,transparent);color:var(--in)}
 .streak b.neg{background:color-mix(in srgb,var(--out) 16%,transparent);color:var(--out)}
 .streak .cur{color:var(--ink);font-weight:600}
 .savstat{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;width:100%;text-align:left}
@@ -170,7 +175,7 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 .savstat b{font-weight:600}
 .savstat small{color:var(--muted);font-size:13px}
 .savstat .track{grid-column:1/-1;margin-top:8px}
-.badge.ok{background:var(--accent-soft);color:var(--in)} .badge.no{background:var(--sunk);color:var(--muted)} .badge.neg{background:color-mix(in srgb,var(--out) 16%,transparent);color:var(--out)}
+.badge.ok{background:color-mix(in srgb,var(--in) 16%,transparent);color:var(--in)} .badge.no{background:var(--sunk);color:var(--muted)} .badge.neg{background:color-mix(in srgb,var(--out) 16%,transparent);color:var(--out)}
 .rates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .calc{font-size:14px;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
@@ -360,9 +365,12 @@ function renderSummary(){
   const {inc,out,byCat} = totals(view.ym);
   const left = inc - out;
   const hasAny = entriesFor(view.ym).length > 0;
-  const outCats = S.settings.cats.filter(c=>c.t==='out' && (c.budget>0 || byCat[c.id]));
+  const limited = S.settings.cats.filter(c=>c.t==='out' && c.budget>0);
   const orphan = Object.keys(byCat).filter(id=>!S.settings.cats.some(c=>c.id===id)).map(cat);
-  const rows = [...outCats, ...orphan].map(c => {
+  const unlimited = [...S.settings.cats.filter(c=>c.t==='out' && !(c.budget>0) && byCat[c.id]), ...orphan]
+    .sort((a,b)=>byCat[b.id]-byCat[a.id]);
+  const plain = unlimited.length ? `<div class="plain"><span class="label">Limitsiz</span>${unlimited.map(c=>`<div><span>${esc(c.name)}</span><span class="num">${tl.format(byCat[c.id])}</span></div>`).join('')}</div>` : '';
+  const rows = limited.map(c => {
     const spent = byCat[c.id]||0, b = c.budget||0;
     const scale = Math.max(spent, b) || 1;
     const ratio = b ? spent/b : 0;
@@ -386,24 +394,35 @@ function renderSummary(){
   ${!hasAny ? `<section><div class="card empty"><b>Bu ay henüz kayıt yok</b>Alttaki <strong>+</strong> düğmesiyle ilk gelirini ya da harcamanı ekle. Maaş, kira gibi her ay tekrarlananları bir kez “her ay tekrarla” diye eklemen yeterli.</div></section>`:''}
   <section>
     <div class="sec-head"><h2>Kategoriler ve bütçe</h2><small>Çizgi = aylık limit</small></div>
-    <div class="card">${rows ? `<div class="bars">${rows}</div>` : `<div class="note">Harcama ekledikçe kategoriler burada görünür. Limit koymak için Ayarlar’a geç.</div>`}</div>
+    <div class="card">${rows ? `<div class="bars">${rows}</div>` : `<div class="note">Henüz limitli kategori yok. Limit koymak için Ayarlar’a geç.</div>`}${plain}</div>
   </section>
   <section class="trend">
-    <div class="sec-head"><h2>Son 6 ay</h2><small>Gelir ve gider</small></div>
+    <div class="sec-head"><h2>${chartMonths().length>1?'Son '+chartMonths().length+' ay':'Bu ay'}</h2><small>Gelir ve gider</small></div>
     <div class="card">${trendSVG()}
       <div class="legend"><span><i style="background:var(--in)"></i>Gelir</span><span><i style="background:var(--out)"></i>Gider</span></div>
     </div>
   </section>`;
 }
 
+function firstYM(){
+  let f = null; const take = ym => { if(ym && (!f || ym<f)) f = ym; };
+  for(const [ym,m] of Object.entries(S.months)) if((m.items||[]).length || (m.sav||[]).length) take(ym);
+  for(const r of S.settings.recurring) take(r.from);
+  return f;
+}
+function chartMonths(){
+  const f = firstYM(); const out = [];
+  for(let i=5;i>=0;i--){ const ym = ymAdd(view.ym,-i); if(!f || ym>=f) out.push(ym); }
+  return out.length ? out : [view.ym];
+}
 function trendSVG(){
-  const months = Array.from({length:6},(_,i)=>ymAdd(view.ym, i-5));
+  const months = chartMonths(), n = months.length;
   const data = months.map(ym=>({ym, ...totals(ym)}));
   const max = Math.max(1000, ...data.flatMap(d=>[d.inc,d.out]));
   const nice = (()=>{ const p=Math.pow(10,Math.floor(Math.log10(max))); for(const k of [1,2,2.5,5,10]) if(k*p>=max) return k*p; return 10*p; })();
-  const W=340,H=170,L=38,B=24,T=8, ih=H-B-T, gw=(W-L)/6, bw=Math.min(16,gw/3.2);
+  const W=340,H=170,L=38,B=24,T=8, ih=H-B-T, gw=(W-L)/n, bw=Math.min(n<4?22:16,gw/3.2);
   const y = v => T + ih - v/nice*ih;
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Son altı ayın gelir ve gider grafiği">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Aylara göre gelir ve gider grafiği">`;
   for(let i=0;i<=2;i++){ const v=nice*i/2; s+=`<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${tlShort(v)}</text>`; }
   data.forEach((d,i)=>{
     const cx = L + gw*i + gw/2, cur = d.ym===view.ym;
@@ -429,7 +448,7 @@ function renderSavings(){
   const h = holdings(), r = S.rates;
   const total = ASSETS.reduce((a,x)=>a+(h[x.id]||0)*rate(x.id), 0);
   const missing = ASSETS.some(x=>h[x.id] && !rate(x.id));
-  const months = Array.from({length:6},(_,i)=>ymAdd(view.ym,i-5));
+  const months = chartMonths();
   const list = savFor(view.ym).slice().sort((a,b)=>b.date.localeCompare(a.date));
   const tgt = S.settings.savTarget||0;
   return `
@@ -440,7 +459,7 @@ function renderSavings(){
   <section><div class="assets">${ASSETS.map(a=>{ const q=h[a.id]||0; return `<div class="asset"><span class="label">${a.name}</span><span class="q num">${q<0?'−':''}${qtyFmt(a.id,q)}</span><small class="num">${a.id==='TRY'?'Nakit / hesap':rate(a.id)?'≈ '+tl.format(q*rate(a.id)):'Kur yok'}</small></div>`; }).join('')}</div></section>
   <section>
     <div class="sec-head"><h2>Aylara göre</h2><small>✓ birikim yapıldı</small></div>
-    <div class="card"><div class="streak">${months.map(ym=>{ const v=savMonthTL(ym); const ok = tgt ? v>=tgt : v>0;
+    <div class="card"><div class="streak" style="grid-template-columns:repeat(${months.length},minmax(0,1fr))">${months.map(ym=>{ const v=savMonthTL(ym); const ok = tgt ? v>=tgt : v>0;
       return `<div><b class="${ok?'ok':v<0?'neg':''}" title="${esc(ymLabel(ym))}: ${esc(tl.format(v))}">${ok?'✓':v<0?'↓':v>0?'·':'–'}</b><span class="${ym===view.ym?'cur':''}">${AYLAR[+ym.slice(5)-1].slice(0,3)}</span></div>`; }).join('')}</div>
     ${tgt?`<div class="note" style="margin-top:10px">Hedef: ayda ${tl.format(tgt)}. Hedefin altında kalan aylar nokta ile gösterilir.</div>`:''}</div>
   </section>
