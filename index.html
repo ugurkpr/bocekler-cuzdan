@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#FFF6EA">
+<meta name="theme-color" content="#FFFAEB">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,27 +17,27 @@
 <style>
 /* Layout: tek sütun telefon uygulaması — üstte ay seçici, ortada sekme içeriği, altta sabit sekme çubuğu + ekle düğmesi */
 :root{
-  --bg:#FFF6EA; --surface:#FFFFFF; --sunk:#FBEAD5; --line:#F0DAC0;
-  --ink:#2A1A0E; --muted:#7D6250;
-  --accent:#C85F00; --accent-ink:#FFFFFF; --accent-soft:#FFE2C2;
-  --hero:linear-gradient(135deg,#F28A12 0%,#C9520A 100%);
-  --in:#1F9D55; --out:#E5484D; --warn:#F5A300;
+  --bg:#FFFAEB; --surface:#FFFFFF; --sunk:#FDF0C9; --line:#F3E3B2;
+  --ink:#262006; --muted:#76683A;
+  --accent:#F2B600; --accent-ink:#241C00; --accent-text:#9A6E00; --accent-soft:#FFEDB0;
+  --hero:linear-gradient(135deg,#FFD83D 0%,#F5A800 100%);
+  --in:#1E9E57; --out:#E5484D; --warn:#F08C00;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#140E09; --surface:#20170F; --sunk:#2C2016; --line:#3B2C1F;
-  --ink:#FFF1E2; --muted:#C4A78D;
-  --accent:#FF9F43; --accent-ink:#1E1208; --accent-soft:#4A2E12;
-  --hero:linear-gradient(135deg,#FFB053 0%,#F07A1A 100%);
-  --in:#3DD68C; --out:#FF6B6B; --warn:#FFC53D; color-scheme:dark}}
+  --bg:#0C0C0F; --surface:#18181E; --sunk:#23232B; --line:#30303A;
+  --ink:#F8F6EE; --muted:#A9A69C;
+  --accent:#FFD23F; --accent-ink:#1A1500; --accent-text:#FFD23F; --accent-soft:#3A3212;
+  --hero:linear-gradient(135deg,#FFE066 0%,#FFB300 100%);
+  --in:#3DD68C; --out:#FF6B6B; --warn:#FF9F1A; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#140E09; --surface:#20170F; --sunk:#2C2016; --line:#3B2C1F;
-  --ink:#FFF1E2; --muted:#C4A78D;
-  --accent:#FF9F43; --accent-ink:#1E1208; --accent-soft:#4A2E12;
-  --hero:linear-gradient(135deg,#FFB053 0%,#F07A1A 100%);
-  --in:#3DD68C; --out:#FF6B6B; --warn:#FFC53D; color-scheme:dark}
+  --bg:#0C0C0F; --surface:#18181E; --sunk:#23232B; --line:#30303A;
+  --ink:#F8F6EE; --muted:#A9A69C;
+  --accent:#FFD23F; --accent-ink:#1A1500; --accent-text:#FFD23F; --accent-soft:#3A3212;
+  --hero:linear-gradient(135deg,#FFE066 0%,#FFB300 100%);
+  --in:#3DD68C; --out:#FF6B6B; --warn:#FF9F1A; color-scheme:dark}
 
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px)}
@@ -55,7 +55,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 /* header */
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px 14px}
 .brand{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05;letter-spacing:-.01em;min-width:0}
-.brand small{display:block;font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.brand small{display:block;font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
 .month{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
 .month button{border:0;background:none;width:34px;height:34px;border-radius:50%;font-size:18px;line-height:1}
 .month button:hover{background:var(--sunk)}
@@ -116,7 +116,7 @@ section{margin-top:22px}
 .item .mid small{color:var(--muted);font-size:13px}
 .amt{font-weight:600;white-space:nowrap}
 .amt.in{color:var(--in)} .amt.out{color:var(--ink)}
-.rec{font-size:11px;color:var(--accent);font-weight:600;margin-left:6px}
+.rec{font-size:11px;color:var(--accent-text);font-weight:600;margin-left:6px}
 
 .empty{text-align:center;color:var(--muted);padding:26px 14px}
 .empty b{display:block;color:var(--ink);font-family:var(--display);font-size:17px;margin-bottom:4px}
@@ -133,6 +133,11 @@ section{margin-top:22px}
 .pstats div{background:var(--sunk);border-radius:12px;padding:10px;display:grid;gap:2px}
 .pstats b{font-family:var(--display);font-size:18px}
 .pstats small{font-size:12px;color:var(--muted)}
+.swatches{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 8px}
+.swatch{border:0;background:none;display:grid;justify-items:center;gap:6px;padding:0;font-size:12px;font-weight:600;color:var(--muted)}
+.swatch i{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-style:normal;font-size:20px;font-weight:700;box-shadow:inset 0 0 0 1px rgb(0 0 0 / .08)}
+.swatch[aria-pressed="true"]{color:var(--ink)}
+.swatch[aria-pressed="true"] i{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
 .seg.seg3{grid-template-columns:repeat(3,1fr)}
 .set-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .set-row:first-child{border-top:0;padding-top:0}
@@ -157,7 +162,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center}
 nav.tabs button.tab{border:0;background:none;padding:8px 0;font-size:12px;font-weight:600;color:var(--muted);display:grid;justify-items:center;gap:2px}
 nav.tabs button.tab svg{width:22px;height:22px}
-nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
+nav.tabs button.tab[aria-current="page"]{color:var(--accent-text)}
 .fab{position:fixed;z-index:6;right:max(16px,calc((100vw - 560px)/2 + 16px));bottom:calc(84px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:20px;border:0;background:var(--hero);color:var(--accent-ink);font-size:32px;line-height:1;box-shadow:0 8px 22px color-mix(in srgb,var(--accent) 45%,transparent)}
 .fab:active{transform:scale(.95)}
 
@@ -202,7 +207,7 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 .rates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .calc{font-size:14px;color:var(--muted)}
 /* payments */
-.alert{display:grid;gap:6px;width:100%;text-align:left;background:color-mix(in srgb,var(--warn) 13%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
+.alert{display:grid;gap:6px;width:100%;text-align:left;background:color-mix(in srgb,var(--accent) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:var(--r);padding:12px 14px;margin-bottom:14px}
 .alert.late{background:color-mix(in srgb,var(--out) 9%,var(--surface));border-color:color-mix(in srgb,var(--out) 40%,transparent)}
 .alert b{font-weight:600}
 .alert div{display:flex;justify-content:space-between;gap:8px;font-size:14px}
@@ -235,7 +240,7 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent)}
 .ynav b{font-family:var(--display);font-size:24px}
 .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .mgrid button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:14px 4px;font-weight:600}
-.mgrid button.now{border-color:var(--accent);color:var(--accent)}
+.mgrid button.now{border-color:var(--accent);color:var(--accent-text)}
 .mgrid button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(156px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
@@ -931,6 +936,10 @@ function renderSettings(){
     </div>
   </div></section>
   <section>
+    <div class="sec-head"><h2>Renk</h2><small>Tüm uygulama bu renge göre değişir</small></div>
+    <div class="card"><div class="swatches">${Object.entries(PALETTES).map(([id,p])=>{ const on=(S.settings.color||'sari')===id; return `<button class="swatch" data-color-pick="${id}" aria-pressed="${on}"><i style="background:${p.light.hero};color:${p.light.accentInk}">${on?'✓':''}</i>${p.name}</button>`; }).join('')}</div></div>
+  </section>
+  <section>
     <div class="sec-head"><h2>Görünüm</h2></div>
     <div class="seg seg3" role="group" aria-label="Tema">
       <button data-theme-pick="system" aria-pressed="${th==='system'}">Telefona göre</button>
@@ -983,11 +992,18 @@ function catUsed(id){
   return S.settings.recurring.some(r=>r.cat===id) || Object.values(S.months).some(m=>m.items.some(i=>i.cat===id));
 }
 
+const PALETTES = {"sari": {"name": "Sarı", "light": {"bg": "#FFFAEB", "surface": "#FFFFFF", "sunk": "#FDF0C9", "line": "#F3E3B2", "ink": "#262006", "muted": "#76683A", "accent": "#F2B600", "accentInk": "#241C00", "accentText": "#9A6E00", "accentSoft": "#FFEDB0", "hero": "linear-gradient(135deg,#FFD83D 0%,#F5A800 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F08C00"}, "dark": {"bg": "#0C0C0F", "surface": "#18181E", "sunk": "#23232B", "line": "#30303A", "ink": "#F8F6EE", "muted": "#A9A69C", "accent": "#FFD23F", "accentInk": "#1A1500", "accentText": "#FFD23F", "accentSoft": "#3A3212", "hero": "linear-gradient(135deg,#FFE066 0%,#FFB300 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FF9F1A"}}, "turuncu": {"name": "Turuncu", "light": {"bg": "#FFF6EC", "surface": "#FFFFFF", "sunk": "#FDE7D0", "line": "#F3D6B8", "ink": "#2A1A0E", "muted": "#7D6250", "accent": "#C65400", "accentInk": "#FFFFFF", "accentText": "#B65200", "accentSoft": "#FFE2C2", "hero": "linear-gradient(135deg,#E06400 0%,#B54300 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#0D0B0C", "surface": "#1A1618", "sunk": "#252023", "line": "#342C30", "ink": "#FFF3EA", "muted": "#BBA79C", "accent": "#FF8A1F", "accentInk": "#1F0F00", "accentText": "#FF9A3D", "accentSoft": "#4A2A10", "hero": "linear-gradient(135deg,#FFA040 0%,#FF6A00 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FFC53D"}}, "kirmizi": {"name": "Kırmızı", "light": {"bg": "#FFF4F4", "surface": "#FFFFFF", "sunk": "#FDE2E2", "line": "#F5CDCD", "ink": "#2B0F10", "muted": "#7E4F50", "accent": "#D7263D", "accentInk": "#FFFFFF", "accentText": "#B81D33", "accentSoft": "#FFD9DD", "hero": "linear-gradient(135deg,#DC2A3C 0%,#B0102A 100%)", "in": "#1E9E57", "out": "#B8234A", "warn": "#F5A300"}, "dark": {"bg": "#0E0A0C", "surface": "#1C1216", "sunk": "#281A1F", "line": "#38242B", "ink": "#FFEFF1", "muted": "#C9A3A9", "accent": "#FF4D5E", "accentInk": "#2A0006", "accentText": "#FF6B7A", "accentSoft": "#4A1820", "hero": "linear-gradient(135deg,#FF7070 0%,#FF3352 100%)", "in": "#3DD68C", "out": "#FF8FA3", "warn": "#FFC53D"}}, "pembe": {"name": "Pembe", "light": {"bg": "#FFF4F9", "surface": "#FFFFFF", "sunk": "#FCE1EE", "line": "#F6CCDF", "ink": "#2E0D1C", "muted": "#85546A", "accent": "#D6336C", "accentInk": "#FFFFFF", "accentText": "#B8245A", "accentSoft": "#FFDCEA", "hero": "linear-gradient(135deg,#DB3D7C 0%,#B5154F 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#100810", "surface": "#1F1220", "sunk": "#2B182C", "line": "#3D223F", "ink": "#FFEFF7", "muted": "#D0A2BE", "accent": "#FF6FA8", "accentInk": "#2B0016", "accentText": "#FF85B6", "accentSoft": "#4A1A3A", "hero": "linear-gradient(135deg,#FF85B6 0%,#E91E63 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FFC53D"}}, "mor": {"name": "Mor", "light": {"bg": "#F8F4FF", "surface": "#FFFFFF", "sunk": "#EBE1FC", "line": "#DDD0F5", "ink": "#1E1033", "muted": "#6B5A8A", "accent": "#6D28D9", "accentInk": "#FFFFFF", "accentText": "#6D28D9", "accentSoft": "#EADDFF", "hero": "linear-gradient(135deg,#7E46EA 0%,#5B21B6 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#0B0816", "surface": "#171028", "sunk": "#21183A", "line": "#30234F", "ink": "#F4EEFF", "muted": "#AFA0D0", "accent": "#A78BFA", "accentInk": "#160A33", "accentText": "#B79CFF", "accentSoft": "#2E1F55", "hero": "linear-gradient(135deg,#C7A6FF 0%,#9D6CFA 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FFC53D"}}, "lacivert": {"name": "Lacivert", "light": {"bg": "#F3F6FD", "surface": "#FFFFFF", "sunk": "#E2E9F8", "line": "#CFDAF0", "ink": "#0E1530", "muted": "#57618A", "accent": "#1F3A93", "accentInk": "#FFFFFF", "accentText": "#1F3A93", "accentSoft": "#DCE5FB", "hero": "linear-gradient(135deg,#3360E0 0%,#14246B 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#060A18", "surface": "#0F1730", "sunk": "#17213F", "line": "#23305A", "ink": "#EEF2FF", "muted": "#9AA6CF", "accent": "#5B8CFF", "accentInk": "#061033", "accentText": "#7FA4FF", "accentSoft": "#1B2B5C", "hero": "linear-gradient(135deg,#8AAAFF 0%,#5C82FF 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FFC53D"}}, "turkuaz": {"name": "Turkuaz", "light": {"bg": "#F0FAFA", "surface": "#FFFFFF", "sunk": "#D7F1F1", "line": "#BFE5E5", "ink": "#08201F", "muted": "#4C7372", "accent": "#0E7C86", "accentInk": "#FFFFFF", "accentText": "#0B6A73", "accentSoft": "#C9F0F0", "hero": "linear-gradient(135deg,#0B8790 0%,#086470 100%)", "in": "#1E9E57", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#041112", "surface": "#0B1E20", "sunk": "#11292C", "line": "#1A3A3E", "ink": "#E8FBFB", "muted": "#92BDBD", "accent": "#2DD4D9", "accentInk": "#022224", "accentText": "#2DD4D9", "accentSoft": "#0F3C3F", "hero": "linear-gradient(135deg,#4FEAEE 0%,#0EA5B0 100%)", "in": "#3DD68C", "out": "#FF6B6B", "warn": "#FFC53D"}}, "yesil": {"name": "Yeşil", "light": {"bg": "#F2FBF5", "surface": "#FFFFFF", "sunk": "#DCF3E5", "line": "#C6E8D3", "ink": "#0C2416", "muted": "#4F7360", "accent": "#0F7D4D", "accentInk": "#FFFFFF", "accentText": "#0F7D4D", "accentSoft": "#CFF3DF", "hero": "linear-gradient(135deg,#14935A 0%,#0B6B42 100%)", "in": "#0F7D4D", "out": "#E5484D", "warn": "#F5A300"}, "dark": {"bg": "#050F0A", "surface": "#0D1C14", "sunk": "#14281D", "line": "#1E392A", "ink": "#EAFBF1", "muted": "#93BBA5", "accent": "#2EE59D", "accentInk": "#032015", "accentText": "#2EE59D", "accentSoft": "#10402B", "hero": "linear-gradient(135deg,#47F2AE 0%,#12B76A 100%)", "in": "#2EE59D", "out": "#FF6B6B", "warn": "#FFC53D"}}};
+const TOKENS = {bg:'--bg',surface:'--surface',sunk:'--sunk',line:'--line',ink:'--ink',muted:'--muted',accent:'--accent',accentInk:'--accent-ink',accentText:'--accent-text',accentSoft:'--accent-soft',hero:'--hero',in:'--in',out:'--out',warn:'--warn'};
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme()); } catch(e){}
 function applyTheme(){
-  const t = (S.settings && S.settings.theme) || 'system', root = document.documentElement;
-  if(t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
-  const dark = t==='dark' || (t==='system' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#140E09' : '#FFF6EA');
+  const pal = PALETTES[(S.settings && S.settings.color) || 'sari'] || PALETTES.sari;
+  const t0 = (S.settings && S.settings.theme) || 'system';
+  const dk = t0==='dark' || (t0==='system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const v = pal[dk ? 'dark' : 'light'], st = document.documentElement.style;
+  for(const k in TOKENS) st.setProperty(TOKENS[k], v[k]);
+  st.colorScheme = dk ? 'dark' : 'light';
+  if(t0==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t0);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', v.bg);
 }
 function bindSettings(){
   document.getElementById('profName').addEventListener('change', e => { S.settings.profile = {...(S.settings.profile||{}), name: e.target.value.trim()}; saveSettings(); toast('Adın kaydedildi'); });
@@ -1004,6 +1020,7 @@ function bindSettings(){
     img.onerror = () => toast('Bu fotoğraf açılamadı.');
     img.src = url;
   });
+  main.querySelectorAll('[data-color-pick]').forEach(b => b.onclick = () => { S.settings.color = b.dataset.colorPick; saveSettings(); render(); toast(PALETTES[b.dataset.colorPick].name + ' seçildi'); });
   main.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => { S.settings.theme = b.dataset.themePick; saveSettings(); render(); });
   main.querySelectorAll('[data-budget]').forEach(inp => inp.addEventListener('change', () => {
     const c = S.settings.cats.find(x=>x.id===inp.dataset.budget);
