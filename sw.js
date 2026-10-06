@@ -1,6 +1,6 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v28';
-const FILES = ['./', './index.html', './banka.html', './saglik.html', './ortak.js', './gidalar.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
+const CACHE = 'bocekler-v29';
+const FILES = ['./', './index.html', './banka.html', './saglik.html', './ortak.js', './gidalar.js', './ikon-banka.jpg', './ikon-saglik.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
 
 self.addEventListener('install', e => {
   // cache:'reload' → tarayıcının eski kopyasını değil, sunucudaki güncel dosyayı al

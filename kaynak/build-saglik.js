@@ -2,7 +2,7 @@
 const fs = require('fs'), path = require('path'), D = path.join(__dirname, '..');
 const bank = fs.readFileSync(path.join(D, 'banka.html'), 'utf8');
 let src = fs.readFileSync(path.join(__dirname, 'saglik.src.html'), 'utf8');
-const head = fs.readFileSync(path.join(D, 'index.html'), 'utf8').split('<title>')[0];
+const head = fs.readFileSync(path.join(D, 'index.html'), 'utf8').split('<title>')[0].replace('<link rel="icon" href="icon-192.png">', '<link rel="icon" href="ikon-saglik.jpg">');
 const css = bank.match(/<style>([\s\S]*?)<\/style>/)[1];
 const swipe = bank.slice(bank.indexOf('// Pencereyi aşağı çekerek kapatma'), bank.indexOf("document.addEventListener('keydown', e => { if(e.key==='Escape'"));
 let engine = bank.slice(bank.indexOf('let tipOn = false;'), bank.indexOf('new MutationObserver(() => {\n  const q = id'));

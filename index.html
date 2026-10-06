@@ -65,8 +65,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-
 .tiles{display:grid;gap:14px}
 .tile{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:18px;border-radius:22px;text-decoration:none;color:inherit;min-height:132px;overflow:hidden;transition:transform .12s}
 .tile:active{transform:scale(.98)}
-.tile .ico{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:rgb(255 255 255 / .35)}
-.tile .ico svg{width:30px;height:30px}
+.tile .ico{width:84px;height:84px;border-radius:24px;overflow:hidden;background:rgb(255 255 255 / .35);box-shadow:0 6px 18px rgb(0 0 0 / .18),0 0 0 3px rgb(255 255 255 / .55)}
+.tile .ico img{width:100%;height:100%;object-fit:cover;display:block}
 .tile b{display:block;font-family:var(--display);font-size:24px;line-height:1.1}
 .tile .sub{display:block;font-size:14px;margin-top:4px;opacity:.85}
 .tile .stat{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:14px;font-variant-numeric:tabular-nums}
@@ -138,13 +138,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-
   </header>
   <main class="tiles">
     <a class="tile bank" href="banka.html">
-      <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="3"/><path d="M2 10h20M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg></span>
+      <span class="ico" aria-hidden="true"><img src="ikon-banka.jpg" alt="" width="84" height="84"></span>
       <span><b>Mobil Bank</b><span class="sub">Gelir, gider, birikim, kartlar</span><span class="stat" id="bankStat"></span></span>
       <span class="chev" aria-hidden="true">›</span>
       <span class="badge" id="bankBadge" hidden></span>
     </a>
     <a class="tile health" href="saglik.html">
-      <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.6-9.3-9.6C1.4 7.6 3.9 4 7.4 4c2 0 3.6 1.1 4.6 2.7C13 5.1 14.6 4 16.6 4c3.5 0 6 3.6 4.7 7.4C19.5 16.4 12 21 12 21z"/><path d="M7 12h3l1.5-3 2 6 1.5-3h2"/></svg></span>
+      <span class="ico" aria-hidden="true"><img src="ikon-saglik.jpg" alt="" width="84" height="84"></span>
       <span><b>Sağlık</b><span class="sub">Kalori, kilo, su, uyku, tarifler</span><span class="stat" id="healthStat"></span></span>
       <span class="chev" aria-hidden="true">›</span>
     </a>
