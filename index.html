@@ -495,7 +495,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.24 · 6 Ekim 2026';
+const APP_VERSION = '1.25 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -569,7 +569,8 @@ const asset = id => ASSETS.find(a=>a.id===id) || ASSETS[4];
 const rate = id => id==='TRY' ? 1 : (Number(S.rates[id])||0);
 const qtyFmt = (id,q) => { q=Math.abs(q); if(id==='TRY') return tl.format(q); const n=q.toLocaleString('tr-TR',{maximumFractionDigits:id==='CEYREK'?0:2}); return id==='USD'?'$'+n : id==='EUR'?'€'+n : id==='GRA'? n+' gr' : n+' adet'; };
 const savFor = ym => (S.months[ym] && S.months[ym].sav) || [];
-const savMonthTL = ym => savFor(ym).reduce((a,x)=>a + x.dir*x.qty*x.rate, 0);
+// "Önceden birikmiş" (old) kayıtlar o ayın gelirinden ayrılmış sayılmaz; sadece toplam birikime eklenir
+const savMonthTL = ym => savFor(ym).reduce((a,x)=>a + (x.old ? 0 : x.dir*x.qty*x.rate), 0);
 function holdings(){ const h={}; for(const m of Object.values(S.months)) for(const x of (m.sav||[])) h[x.asset]=(h[x.asset]||0)+x.dir*x.qty; return h; }
 const fmtAt = at => { if(!at) return ''; const d=new Date(String(at).replace(' ','T')); return isNaN(d) ? String(at) : d.toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); };
 async function fetchRates(manual){
@@ -797,9 +798,13 @@ function openSpendSheet(){
     <div class="items">${x.todayAll.map(e=>{ const c = cat(e.cat), on = countsDaily(e), fixed = e.rec || e.instNo;
       return `<button class="item" data-dtog="${esc(e.srcId || e.id)}" ${fixed ? 'disabled' : ''}>${catDot(c)}<span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${fixed ? 'Tekrarlayan / taksit · günlük hakka sayılmaz' : on ? 'Bugünün hakkından düşüyor' : 'Ayın kalanına yayıldı'}</small></span><span class="st ${on ? 'soon' : 'paid'}">${on ? 'Günlük' : 'Aya yayıldı'}</span></button>`; }).join('')}</div>
     <div class="note">Biriktirip bugün girdiğin eski ödemeleri ya da kira, fatura gibi sabit ödemeleri “Aya yayıldı” yap. Bunlar bugünün hakkından değil, ayın kalan parasından düşülür.</div>` : ''}
+    ${x.savedNow > 0 && x.pool <= 0 ? `<div class="card" style="display:grid;gap:10px;border-color:var(--alarm)"><b>Birikimler bu ayın parasından düşülüyor</b><small class="note">Bu ay girdiğin ${tl.format(x.savedNow)} birikim, bu ayın gelirinden ayrılmış sayılıyor. Elinde zaten olan altın, döviz ya da parayı girdiysen bunları “önceden birikmiş” say; toplam birikimin değişmez, günlük hakkın düzelir.</small><button class="btn" id="spOld">Bu ayki birikimleri önceden birikmiş say</button></div>` : ''}
     <div class="note">Kredi kartı harcamaların zaten gider olarak sayıldığı için kart ekstresi ödemesi ayrıca düşülmez. Bugün hakkından az harcarsan artan para sonraki günlere eklenir.</div>
   </div></div>`;
   sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
+  const so = document.getElementById('spOld'); if(so) so.onclick = () => {
+    let n = 0; for(const v of savFor(todayYM)) if(v.dir > 0 && !v.old){ v.old = true; n++; }
+    saveMonth(todayYM); render(); openSpendSheet(); toast(`${n} birikim önceden birikmiş sayıldı`); };
   sheetRoot.querySelectorAll('[data-dtog]').forEach(b => b.onclick = () => {
     const it = findItem(b.dataset.dtog); if(!it) return;
     it.nodaily = countsDaily(it);   // sayılıyorsa artık sayma, sayılmıyorsa say
@@ -987,7 +992,7 @@ function renderSavings(){
     <div class="sec-head"><h2>${ymLabel(view.ym)} hareketleri</h2></div>
     ${list.length ? `<div class="items">${list.map(x=>`<button class="item" data-sedit="${esc(x.id)}">
       <span class="dot">${x.asset==='GRA'||x.asset==='CEYREK'?'Au':asset(x.asset).unit}</span>
-      <span class="mid"><b>${esc(x.note || asset(x.asset).name)}</b><small>${new Date(x.date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}${x.asset==='TRY' ? '' : ' · '+esc(tl.format(x.rate))+' kurla'}${x.goal && goals().find(g=>g.id===x.goal) ? ' · '+esc(goals().find(g=>g.id===x.goal).name) : ''}</small></span>
+      <span class="mid"><b>${esc(x.note || asset(x.asset).name)}</b><small>${new Date(x.date+'T12:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}${x.asset==='TRY' ? '' : ' · '+esc(tl.format(x.rate))+' kurla'}${x.old ? ' · önceden birikmiş' : ''}${x.goal && goals().find(g=>g.id===x.goal) ? ' · '+esc(goals().find(g=>g.id===x.goal).name) : ''}</small></span>
       <span class="amt num ${x.dir>0?'in':'out'}">${x.dir>0?'+':'−'}${qtyFmt(x.asset,x.qty)}</span></button>`).join('')}</div>`
       : `<div class="card empty"><b>Bu ay birikim hareketi yok</b>Altın, döviz aldıysan ya da kenara para koyduysan aşağıdan ekle.</div>`}
     <div class="btns" style="margin-top:12px"><button class="btn" id="addSav" style="flex:1">Birikim ekle</button></div>
@@ -1021,7 +1026,7 @@ function bindSavings(){
 
 function openSavSheet(entry, preset, goalId){
   const editing = !!entry;
-  const st = entry ? {...entry} : { dir:1, asset:preset||'GRA', qty:'', rate: rate(preset||'GRA')||'', date: view.ym===todayYM ? todayISO : `${view.ym}-01`, note:'', goal: goalId||null };
+  const st = entry ? {...entry, old: !!entry.old} : { dir:1, asset:preset||'GRA', qty:'', rate: rate(preset||'GRA')||'', date: view.ym===todayYM ? todayISO : `${view.ym}-01`, note:'', goal: goalId||null, old: !Object.values(S.months).some(m=>(m.sav||[]).length) };
   const draw = () => {
     const a = asset(st.asset);
     sheetRoot.innerHTML = `<div class="scrim" data-close></div>
@@ -1046,10 +1051,11 @@ function openSavSheet(entry, preset, goalId){
         <div class="field"><label class="label" for="sDate">Tarih</label><input type="date" id="sDate" value="${st.date}"></div>
         <div class="field"><label class="label" for="sNote">Not</label><input id="sNote" maxlength="60" placeholder="İsteğe bağlı" value="${esc(st.note||'')}"></div>
       </div>
+      ${st.dir>0 ? `<label class="field" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input id="sOld" type="checkbox" style="width:22px;height:22px;margin-top:2px;flex:none" ${st.old?'checked':''}><span><b>Önceden birikmiş (elimde olan)</b><br><small class="note">İşaretlersen toplam birikime eklenir ama bu ayın gelirinden ayrılmış sayılmaz; günlük harcama hakkından düşmez. Bu ay maaştan ayırdığın parayı eklerken işareti kaldır.</small></span></label>` : ''}
       <button class="btn" id="sSave">${editing?'Değişiklikleri kaydet':'Kaydet'}</button>
       ${editing?'<button class="btn ghost" id="sDel" style="color:var(--out)">Sil</button>':''}
     </div></div>`;
-    const keep = () => { st.qty=document.getElementById('sQty').value; const r=document.getElementById('sRate'); if(r) st.rate=r.value; st.date=document.getElementById('sDate').value; st.note=document.getElementById('sNote').value; };
+    const keep = () => { st.qty=document.getElementById('sQty').value; const r=document.getElementById('sRate'); if(r) st.rate=r.value; st.date=document.getElementById('sDate').value; st.note=document.getElementById('sNote').value; const so=document.getElementById('sOld'); if(so) st.old=so.checked; };
     const calc = () => { keep(); const q=parseAmt(st.qty), r = st.asset==='TRY'?1:parseAmt(st.rate); document.getElementById('sCalc').textContent = q&&r&&st.asset!=='TRY' ? `Karşılığı ≈ ${tl.format(q*r)}` : ''; };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{ keep(); st.dir=+b.dataset.dir; draw(); });
@@ -1065,7 +1071,7 @@ function openSavSheet(entry, preset, goalId){
       if(!/^\d{4}-\d{2}-\d{2}$/.test(st.date)) return toast('Tarihi seç.');
       const ym = st.date.slice(0,7);
       if(editing){ const om=monthDoc(entry.date.slice(0,7)); om.sav=om.sav.filter(x=>x.id!==entry.id); saveMonth(entry.date.slice(0,7)); }
-      monthDoc(ym).sav.push({id: editing?entry.id:uid(), dir:st.dir, asset:st.asset, qty, rate:r, date:st.date, note:st.note.trim(), goal: st.goal||null});
+      monthDoc(ym).sav.push({id: editing?entry.id:uid(), dir:st.dir, asset:st.asset, qty, rate:r, date:st.date, note:st.note.trim(), goal: st.goal||null, ...(st.dir>0 && st.old ? {old:true} : {})});
       saveMonth(ym); view.ym=ym; closeSheet(); render(); toast(editing?'Güncellendi':'Birikim kaydedildi');
     };
     const del = document.getElementById('sDel');
