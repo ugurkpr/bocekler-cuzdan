@@ -72,8 +72,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-
 .tile .stat{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:14px;font-variant-numeric:tabular-nums}
 .tile .stat span strong{font-weight:600}
 .tile .chev{font-size:28px;opacity:.6}
-.tile.bank{background:var(--hero);color:#241C00}
-.tile.health{background:linear-gradient(135deg,#9BE7B4 0%,#3DBF7A 100%);color:#062814}
+.tile.bank{background:var(--hero);color:var(--accent-ink)}
+.tile.health{background:linear-gradient(135deg,#14935A 0%,#0B6B42 100%);color:#fff}
 .badge{position:absolute;top:12px;right:14px;background:#E5484D;color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:3px 9px}
 .links{display:flex;gap:10px;flex-wrap:wrap}
 .links a{flex:1;min-width:140px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:inherit;text-decoration:none;font-weight:600}
@@ -170,6 +170,7 @@ function draw(){
   if(pr.photo) document.getElementById('me').src = pr.photo;
   const M = ['Fıstıkları say, kışa hazır ol.', 'Bir bardak su iç, sincap da içiyor.', 'Küçük birikimler büyük fıstık yığınları yapar.', 'Bugün ne yediğini yazmayı unutma.', 'Kartın son ödeme gününe göz at.'];
   document.getElementById('motto').textContent = M[(now.getDate() + now.getMonth()) % M.length];
+  for(const [cls, b] of [['bank','banka'],['health','saglik']]){ const p = Bocekler.PALETTES[Bocekler.renkOf(b, st)].light, el = document.querySelector('.tile.' + cls); el.style.background = p.hero; el.style.color = p.accentInk; }
   const sn = Bocekler.snaps(), b = sn.banka, s = sn.saglik, today = now.toDateString();
   document.getElementById('bankStat').innerHTML = b ? `<span>Bu ay kalan <strong>${(b.kalan<0?'−':'')+esc(tl.format(Math.abs(b.kalan)))}</strong></span>${b.gunluk != null ? `<span>Bugün <strong>${esc(tl.format(b.gunluk))}</strong> harcayabilirsin</span>` : ''}` : '';
   const bb = document.getElementById('bankBadge'); bb.hidden = !(b && b.uyari); if(b && b.uyari) bb.textContent = b.uyari === 1 ? '1 ödeme' : `${b.uyari} ödeme`;

@@ -23,6 +23,7 @@
 <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/750x1334.jpg">
 <link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1242x2208.jpg">
 <title>Böcekler · Mobil Bank</title>
+<script src="ortak.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
@@ -462,7 +463,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '2.1 · 7 Ekim 2026';
+const APP_VERSION = '2.2 · 7 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -1822,7 +1823,7 @@ function renderSettings(){
     </div>
   </div></section>
   <section>
-    <div class="sec-head"><h2>Renk</h2><small>Tüm uygulama bu renge göre değişir</small></div>
+    <div class="sec-head"><h2>Mobil Bank rengi</h2><small>Sağlık rengi Profil’den seçilir</small></div>
     <div class="card"><div class="swatches">${Object.entries(PALETTES).map(([id,p])=>{ const on=(S.settings.color||'sari')===id; return `<button class="swatch" data-color-pick="${id}" aria-pressed="${on}"><i style="background:${p.light.hero};color:${p.light.accentInk}">${on?'✓':''}</i>${p.name}</button>`; }).join('')}</div></div>
   </section>
   <section>

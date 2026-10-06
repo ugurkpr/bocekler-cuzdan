@@ -5,8 +5,12 @@ const PALETTES = {"sari": {"name": "Sarı", "light": {"bg": "#FFFAEB", "surface"
 const TOKENS = {bg:'--bg',surface:'--surface',sunk:'--sunk',line:'--line',ink:'--ink',muted:'--muted',accent:'--accent',accentInk:'--accent-ink',accentText:'--accent-text',accentSoft:'--accent-soft',alarm:'--alarm',mid:'--mid',hero:'--hero',in:'--in',out:'--out',warn:'--warn'};
 const BANK_KEY = "cuzdan-defteri-v1";
 const bankSettings = () => { try { return (JSON.parse(localStorage.getItem(BANK_KEY) || "null") || {}).settings || {}; } catch(e){ return {}; } };
-function applyTheme(){
-  const s = bankSettings(), pal = PALETTES[s.color || "sari"] || PALETTES.sari, t0 = s.theme || "system";
+// Her bölümün kendi rengi: Mobil Bank altın sarısı (para, birikim), Sağlık yeşil (sağlık, tazelik). Profil'den değiştirilir.
+const VARSAYILAN = {banka: "sari", saglik: "yesil"};
+const bolumAdi = () => /saglik\.html$/.test(location.pathname) ? "saglik" : "banka";
+const renkOf = (bolum, s) => { s = s || bankSettings(); const id = bolum === "saglik" ? (s.colorSaglik || VARSAYILAN.saglik) : (s.color || VARSAYILAN.banka); return PALETTES[id] ? id : VARSAYILAN[bolum]; };
+function applyTheme(bolum){
+  const s = bankSettings(), pal = PALETTES[renkOf(bolum || bolumAdi(), s)], t0 = s.theme || "system";
   const dk = t0 === "dark" || (t0 === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   const v = pal[dk ? "dark" : "light"], st = document.documentElement.style;
   for(const k in TOKENS) st.setProperty(TOKENS[k], v[k]);
@@ -15,10 +19,70 @@ function applyTheme(){
   const m = document.querySelector("meta[name=theme-color]"); if(m) m.setAttribute("content", v.bg);
   return dk;
 }
-try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme); } catch(e){}
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => applyTheme()); } catch(e){}
+
+/* Bölüm geçişi: üstteki ev simgesine basınca alttan açılan pencere */
+const SAYFALAR = [
+  {id: "banka", ad: "Mobil Bank", alt: "Gelir, gider, birikim, kartlar", url: "banka.html", ikon: "ikon-banka.jpg"},
+  {id: "saglik", ad: "Sağlık", alt: "Kalori, kilo, su, uyku, tarifler", url: "saglik.html", ikon: "ikon-saglik.jpg"}
+];
+function gecisCss(){
+  if(document.getElementById("gecis-css")) return;
+  const st = document.createElement("style"); st.id = "gecis-css";
+  st.textContent = `#gecis{position:fixed;inset:0;z-index:70}
+#gecis .gs{position:absolute;inset:0;background:rgb(0 0 0 / .45);opacity:0;transition:opacity .2s}
+#gecis .gp{position:absolute;left:0;right:0;bottom:0;background:var(--surface);color:var(--ink);border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 30px rgb(0 0 0 / .2)}
+#gecis.on .gs{opacity:1} #gecis.on .gp{transform:none}
+#gecis .gi{max-width:560px;margin:0 auto;display:grid;gap:14px}
+#gecis .gg{height:26px;display:grid;place-items:center;touch-action:none;cursor:grab}
+#gecis .gg::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--line)}
+#gecis .gh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#gecis .gh b{font-family:var(--display);font-size:20px}
+#gecis .gh button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:12px;min-height:44px;padding:0 14px;font:inherit;font-weight:600}
+#gecis .gt{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#gecis .gt a{position:relative;display:grid;gap:8px;padding:14px;border-radius:18px;text-decoration:none;min-height:150px;align-content:start}
+#gecis .gt a img{width:58px;height:58px;border-radius:17px;box-shadow:0 4px 12px rgb(0 0 0 / .18),0 0 0 2px rgb(255 255 255 / .5)}
+#gecis .gt a b{font-family:var(--display);font-size:19px;line-height:1.1}
+#gecis .gt a small{font-size:12.5px;opacity:.85;line-height:1.3}
+#gecis .gt a em{position:absolute;top:10px;right:10px;font-style:normal;font-size:11px;font-weight:700;background:rgb(255 255 255 / .85);color:#1b1b1b;border-radius:999px;padding:3px 8px}
+#gecis .gl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#gecis .gl a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:14px;background:var(--sunk);color:inherit;text-decoration:none;font-weight:600}
+#gecis .gl a[aria-current]{outline:2px solid var(--accent)}
+@media (prefers-reduced-motion: reduce){#gecis .gs,#gecis .gp{transition:none}}`;
+  document.head.appendChild(st);
+}
+function gecis(){
+  if(document.getElementById("gecis")) return;
+  gecisCss();
+  const s = bankSettings(), dk = document.documentElement.style.colorScheme === "dark", burada = /saglik\.html$/.test(location.pathname) ? "saglik" : /banka\.html$/.test(location.pathname) ? "banka" : /profil\.html$/.test(location.pathname) ? "profil" : "ana";
+  const esc = x => String(x).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const box = document.createElement("div"); box.id = "gecis"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Bölüm değiştir");
+  box.innerHTML = `<div class="gs"></div><div class="gp"><div class="gi"><div class="gg"></div>
+    <div class="gh"><b>Nereye gidelim?</b><button type="button" data-gk>Kapat</button></div>
+    <div class="gt">${SAYFALAR.map(p => { const pal = PALETTES[renkOf(p.id, s)].light; return `<a href="${p.url}" style="background:${pal.hero};color:${pal.accentInk}"${burada === p.id ? ' aria-current="page"' : ""}>${burada === p.id ? "<em>Buradasın</em>" : ""}<img src="${p.ikon}" alt=""><b>${esc(p.ad)}</b><small>${esc(p.alt)}</small></a>`; }).join("")}</div>
+    <div class="gl"><a href="./"${burada === "ana" ? ' aria-current="page"' : ""}>🏠 Ana ekran</a><a href="profil.html"${burada === "profil" ? ' aria-current="page"' : ""}>👤 Profil</a></div>
+  </div></div>`;
+  document.body.appendChild(box);
+  requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add("on")));
+  const panel = box.querySelector(".gp");
+  const kapat = () => { box.classList.remove("on"); panel.style.transform = ""; setTimeout(() => box.remove(), 260); document.removeEventListener("keydown", esc2); };
+  const esc2 = e => { if(e.key === "Escape") kapat(); };
+  document.addEventListener("keydown", esc2);
+  box.querySelector(".gs").onclick = kapat; box.querySelector("[data-gk]").onclick = kapat;
+  box.querySelectorAll("a[aria-current]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); kapat(); }));
+  // aşağı çekerek kapatma
+  let y0 = null, dy = 0;
+  panel.addEventListener("pointerdown", e => { if(e.target.closest("a,button")) return; y0 = e.clientY; dy = 0; panel.style.transition = "none"; panel.setPointerCapture(e.pointerId); });
+  panel.addEventListener("pointermove", e => { if(y0 == null) return; dy = Math.max(0, e.clientY - y0); panel.style.transform = `translateY(${dy}px)`; });
+  const birak = () => { if(y0 == null) return; y0 = null; panel.style.transition = ""; if(dy > 90) kapat(); else panel.style.transform = ""; };
+  panel.addEventListener("pointerup", birak); panel.addEventListener("pointercancel", birak);
+}
+// Bölümlerin sol üstündeki ev simgesi: doğrudan ana ekrana gitmek yerine geçiş penceresini açar
+document.addEventListener("click", e => { const a = e.target.closest("a.brand.home"); if(!a) return; e.preventDefault(); gecis(); });
+
 // Bölümler birbirine kısa özet bırakır (ana ekrandaki kutucuklar için)
 const snap = (k, v) => { try { const all = JSON.parse(localStorage.getItem("bocekler-ozet") || "{}"); all[k] = {...v, at: Date.now()}; localStorage.setItem("bocekler-ozet", JSON.stringify(all)); } catch(e){} };
 const snaps = () => { try { return JSON.parse(localStorage.getItem("bocekler-ozet") || "{}"); } catch(e){ return {}; } };
-window.Bocekler = { PALETTES, applyTheme, bankSettings, snap, snaps };
+window.Bocekler = { PALETTES, applyTheme, bankSettings, snap, snaps, renkOf, gecis };
 applyTheme();
 })();
