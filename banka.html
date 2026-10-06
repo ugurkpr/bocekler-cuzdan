@@ -68,7 +68,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px 14px}
 .brand{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.05;letter-spacing:-.01em;min-width:0}
 .brand.home{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none;min-height:44px;margin-left:-4px}
-.brand .homei{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--sunk);color:var(--accent-text);font-size:22px;line-height:1;font-family:var(--body);padding-bottom:3px}
+.brand .homei{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}
+.brand.home:active .homei{transform:scale(.94)}
 .brand small{display:block;font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
 .month{display:flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px}
 .month button{border:0;background:none;width:40px;height:40px;border-radius:50%;font-size:18px;line-height:1}
@@ -434,7 +435,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <div class="wrap">
   <header class="top">
-    <a class="brand home" href="./" aria-label="Böcekler ana ekranına dön"><span class="homei" aria-hidden="true">‹</span><span>Böcekler<small>Mobil Bank</small></span></a>
+    <a class="brand home" href="./" aria-label="Böcekler ana ekranına dön"><span class="homei" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></span><span>Böcekler<small>Mobil Bank</small></span></a>
     <div class="top-r">
       <div class="month" role="group" aria-label="Ay seçimi">
         <button id="prevM" aria-label="Önceki ay">‹</button>
@@ -461,7 +462,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '2.0 · 6 Ekim 2026';
+const APP_VERSION = '2.1 · 7 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -2442,6 +2443,8 @@ main.addEventListener('click', e => {
 });
 
 init();
+// Profil sayfasından geri dönünce (sayfa önbellekten gelirse) güncel profil ve rengi oku
+addEventListener('pageshow', e => { if(e.persisted) location.reload(); });
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();
