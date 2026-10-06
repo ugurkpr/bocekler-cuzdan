@@ -503,7 +503,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.26 · 6 Ekim 2026';
+const APP_VERSION = '1.27 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -1036,7 +1036,8 @@ function renderSavings(){
   </section>
   <section>
     <div class="sec-head"><h2>Aylık birikim hedefi</h2><small>0 = hedef yok</small></div>
-    <div class="card"><input class="num" id="savTarget" inputmode="decimal" data-money autocomplete="off" value="${tgt?fmtIn(tgt):''}" placeholder="Örn. 5.000" aria-label="Aylık birikim hedefi"></div>
+    <div class="card"><input class="num" id="savTarget" inputmode="decimal" data-money autocomplete="off" value="${tgt?fmtIn(tgt):''}" placeholder="Örn. 5.000" aria-label="Aylık birikim hedefi">
+      <div class="note" style="margin-top:8px">Her ay ne kadar biriktirmek istediğini yaz. Günlük harcama hakkı bu tutarı ayın başından ayırır; hedefe ulaştığın aylar ✓ ile işaretlenir.</div></div>
   </section>`;
 }
 
@@ -1342,6 +1343,7 @@ function openIouSheet(x){
         <div class="field"><label class="label" for="iDate">Tarih</label><input id="iDate" type="date" value="${st.date}"></div>
         <div class="field"><label class="label" for="iDue">Vade (isteğe bağlı)</label><input id="iDue" type="date" value="${st.due||''}"></div>
       </div>
+      <div class="note" style="margin-top:-6px">Vade, borcun en geç ödeneceği gün; geçince listede kırmızı görünür. Taksitle ödeniyorsa vade yerine aşağıdaki aylık taksiti kullan.</div>
       <div class="field"><label class="label" for="iNote">Not</label><input id="iNote" maxlength="60" placeholder="Örn. Konser bileti" value="${esc(st.note||'')}"></div>
       <div class="two">
         <div class="field"><label class="label" for="iMon">Aylık taksit</label><input id="iMon" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Tek seferde" value="${st.monthly?fmtIn(st.monthly):''}"></div>
@@ -1608,7 +1610,8 @@ function openDebtSheet(d, kind){
       ${!editing ? `<div class="two">
         <div class="field"><label class="label" for="dStmt">Şu anki ekstre borcu</label><input id="dStmt" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="İsteğe bağlı" value="${st.stmt?fmtIn(st.stmt):''}"></div>
         <div class="field"><label class="label" for="dBal">Güncel toplam borç</label><input id="dBal" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="İsteğe bağlı" value="${st.bal?fmtIn(st.bal):''}"></div>
-      </div>` : ''}
+      </div>
+      <div class="note">Kartta şu an borcun varsa bankada yazanı gir: ekstre borcu bu ayki ödemen, toplam borç gelecek taksitler dahil hepsi. Boş bırakırsan sadece bundan sonra girdiğin harcamalardan hesaplanır.</div>` : ''}
       <div class="note">Kesim günü ekstrede yazar. Boş bırakırsan son ödeme gününden 10 gün öncesi sayılır. Asgari oran bankaya ve limite göre değişir, ekstrende yazanı seç.</div>` : ''}
       ${loan ? `<div class="two">
         <div class="field"><label class="label" for="dAmt">Aylık taksit (₺)</label><input id="dAmt" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Örn. 5.250" value="${st.amt?fmtIn(st.amt):''}"></div>
@@ -2128,7 +2131,7 @@ function openSheet(entry, presetType){
       <div class="futnote" id="futNote"></div>
       ${editing && entry.rec
         ? `<div class="note">↻ Bu tekrarlayan bir kayıt. Değişiklikler bu aydan sonraki her ayı da etkiler.</div>`
-        : editing ? '' : `<label class="check"><input type="checkbox" id="fRep" ${st.repeat?'checked':''}> Her ay tekrarla (maaş, kira, abonelik)</label>`}
+        : editing ? '' : `<label class="check"><input type="checkbox" id="fRep" ${st.repeat?'checked':''}> <span>Her ay tekrarla (maaş, kira, abonelik)<br><span class="note" style="font-size:12px">Her ay aynı gün kendiliğinden eklenir. Tutar değişirse o ayki kaydı düzenlersin; istersen bir ayı atlar ya da durdurursun.</span></span></label>`}
       <button class="btn" id="fSave">${editing ? 'Değişiklikleri kaydet' : st.t==='in' && st.iou ? 'Alacaktan düş' : 'Kaydet'}</button>
       ${editing && !entry.rec ? `<button class="btn ghost" id="fCopy">Bugüne kopyala (tekrar ekle)</button>` : ''}
       ${editing && !entry.rec && !entry.srcId && entry.date > todayISO ? `<button class="btn ghost" id="fNow">${st.t==='in'?'Bugün geldi':'Bugün ödendi'} olarak işaretle</button>` : ''}
