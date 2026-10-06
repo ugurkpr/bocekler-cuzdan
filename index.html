@@ -98,6 +98,7 @@ section{margin-top:22px}
 
 /* trend */
 .trend svg{display:block;width:100%;height:auto}
+.trend .hit{cursor:pointer}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 
@@ -243,9 +244,20 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent-text)}
 .mgrid button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(156px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+/* açılış: sincap fıstığını kemirir */
+#splash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-content:center;gap:22px;background:#F9B64B;transition:opacity .35s ease, transform .35s ease}
+#splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+#splash .pic{width:min(62vw,260px);aspect-ratio:1;border-radius:28%;overflow:hidden;box-shadow:0 18px 40px rgb(120 60 0 / .28)}
+#splash video,#splash img{width:100%;height:100%;object-fit:cover;display:block}
+#splash .nm{font-family:var(--display);font-weight:700;font-size:30px;color:#3A2208;text-align:center;line-height:1.05;letter-spacing:-.01em}
+#splash .nm small{display:block;font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin-top:4px}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <div class="pic"><video id="splashVid" src="splash.mp4" poster="icon-512.png" muted playsinline autoplay preload="auto"></video></div>
+  <div class="nm">Böcekler<small>Cüzdan</small></div>
+</div>
 
 <div class="wrap">
   <header class="top">
@@ -477,7 +489,7 @@ function renderSummary(){
     <div class="card">${rows ? `<div class="bars">${rows}</div>` : `<div class="note">Henüz limitli kategori yok. Limit koymak için Ayarlar’a geç.</div>`}${plain}</div>
   </section>
   <section class="trend">
-    <div class="sec-head"><h2>${chartMonths().length>1?'Son '+chartMonths().length+' ay':'Bu ay'}</h2><small>Gelir ve gider</small></div>
+    <div class="sec-head"><h2>${chartMonths().length>1?'Son '+chartMonths().length+' ay':'Bu ay'}</h2><small>Bir aya dokun, o aya geç</small></div>
     <div class="card">${trendSVG()}
       <div class="legend"><span><i style="background:var(--in)"></i>Gelir</span><span><i style="background:var(--out)"></i>Gider</span></div>
     </div>
@@ -492,7 +504,9 @@ function firstYM(){
 }
 function chartMonths(){
   const f = firstYM(); const out = [];
-  for(let i=5;i>=0;i--){ const ym = ymAdd(view.ym,-i); if(!f || ym>=f) out.push(ym); }
+  let end = view.ym > todayYM ? view.ym : todayYM;
+  if(view.ym < ymAdd(end,-5)) end = view.ym;
+  for(let i=5;i>=0;i--){ const ym = ymAdd(end,-i); if(!f || ym>=f || ym===view.ym) out.push(ym); }
   return out.length ? out : [view.ym];
 }
 function trendSVG(){
@@ -506,9 +520,11 @@ function trendSVG(){
   for(let i=0;i<=2;i++){ const v=nice*i/2; s+=`<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${tlShort(v)}</text>`; }
   data.forEach((d,i)=>{
     const cx = L + gw*i + gw/2, cur = d.ym===view.ym;
+    if(cur) s += `<rect x="${L+gw*i+3}" y="2" width="${gw-6}" height="${H-4}" rx="10" fill="var(--accent-soft)" opacity=".55"/>`;
     s += `<rect x="${cx-bw-1}" y="${y(d.inc)}" width="${bw}" height="${Math.max(0,ih+T-y(d.inc))}" rx="3" fill="var(--in)" opacity="${cur?1:.55}"/>`;
     s += `<rect x="${cx+1}" y="${y(d.out)}" width="${bw}" height="${Math.max(0,ih+T-y(d.out))}" rx="3" fill="var(--out)" opacity="${cur?1:.55}"/>`;
     s += `<text x="${cx}" y="${H-6}" text-anchor="middle" font-size="11" fill="${cur?'var(--ink)':'var(--muted)'}" font-weight="${cur?600:400}">${AYLAR[+d.ym.slice(5)-1].slice(0,3)}</text>`;
+    s += `<rect class="hit" data-pick-month="${d.ym}" x="${L+gw*i}" y="0" width="${gw}" height="${H}" fill="transparent"><title>${ymLabel(d.ym)}</title></rect>`;
   });
   return s + `</svg>`;
 }
@@ -1236,6 +1252,8 @@ document.getElementById('monthLbl').onclick = () => { if(mode!=='loading') openM
 document.getElementById('addBtn').onclick = () => { if(mode==='loading') return; view.tab==='birikim' ? openSavSheet(null) : view.tab==='odeme' ? openDebtSheet(null,'card') : openSheet(null); };
 document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { view.tab=b.dataset.tab; render(); window.scrollTo(0,0); });
 main.addEventListener('click', e => {
+  const pm = e.target.closest('[data-pick-month]');
+  if(pm){ if(pm.dataset.pickMonth!==view.ym){ view.ym = pm.dataset.pickMonth; view.day = null; render(); window.scrollTo({top:0, behavior:'smooth'}); toast(ymLabel(view.ym)); } return; }
   const g = e.target.closest('[data-goto]'); if(g){ view.tab=g.dataset.goto; if(g.dataset.ym) view.ym=g.dataset.ym; render(); window.scrollTo(0,0); return; }
   const dy = e.target.closest('[data-day]'); if(dy){ view.day = dy.dataset.day && dy.dataset.day!==view.day ? dy.dataset.day : null; render(); return; }
   const find = id => debts().find(x=>x.id===id);
@@ -1250,6 +1268,18 @@ main.addEventListener('click', e => {
   const entry = entriesFor(view.ym).find(x=>x.id===b.dataset.edit); if(entry) openSheet(entry);
 });
 
+// Açılış ekranı: video bitince (en geç 4 sn) ya da dokununca kaybolur
+(() => {
+  const sp = document.getElementById('splash'), v = document.getElementById('splashVid');
+  let done = false;
+  const hide = () => { if(done) return; done = true; sp.classList.add('out'); setTimeout(()=>sp.remove(), 400); };
+  sp.addEventListener('click', hide);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ try { v.pause(); } catch(e){} setTimeout(hide, 700); return; }
+  v.addEventListener('ended', hide);
+  v.addEventListener('error', () => setTimeout(hide, 600));
+  const p = v.play && v.play(); if(p && p.catch) p.catch(() => setTimeout(hide, 900));
+  setTimeout(hide, 4500);
+})();
 init();
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});

@@ -1,5 +1,5 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v7';
+const CACHE = 'bocekler-v8';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -20,6 +20,8 @@ self.addEventListener('fetch', e => {
     }));
     return;
   }
+  // Açılış videosu: telefonlar videoyu parça parça ister, tarayıcının kendisine bırak
+  if (url.pathname.endsWith('.mp4')) return;
   // Kur verisi her zaman canlı alınır, önbelleğe girmez
   if (url.origin !== location.origin && !url.hostname.startsWith('fonts.')) return;
   // Sayfanın kendisi: önce internet (güncel sürüm), yoksa kayıtlı kopya
