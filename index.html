@@ -341,6 +341,14 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 .debtbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .debtbtns .btn:first-child{grid-column:1/-1}
 .instcalc b{color:var(--ink)}
+/* beklenen (tarihi gelmemiş) kayıtlar */
+.pend{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;width:100%;text-align:left;font:inherit;color:inherit;border:1px dashed color-mix(in srgb,var(--accent-ink) 45%,transparent);background:color-mix(in srgb,var(--accent-ink) 8%,transparent);border-radius:12px;padding:9px 12px;font-size:13.5px;cursor:pointer}
+.pend .label{margin-right:6px}
+.pend b{font-weight:700;font-variant-numeric:tabular-nums}
+.item.pending{opacity:.75}
+.item.pending .amt{color:var(--muted)}
+.pendtag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;background:var(--accent-soft);color:var(--accent-text);vertical-align:1px}
+.futnote{font-size:13px;color:var(--accent-text);font-weight:500}
 </style>
 </head>
 <body>
@@ -561,7 +569,7 @@ function entriesFor(ym){
 const subName = (catId, subId) => { const c = S.settings.cats.find(x=>x.id===catId); const x = c && (c.subs||[]).find(y=>y.id===subId); return x ? x.name : ''; };
 function subTotals(ym, catId){
   const out = {};
-  for(const e of entriesFor(ym)) if(e.t==='out' && e.cat===catId){ const k = e.sub && subName(catId, e.sub) ? e.sub : '_'; out[k] = (out[k]||0) + e.amt; }
+  for(const e of entriesFor(ym)) if(e.t==='out' && e.cat===catId && !isPending(e)){ const k = e.sub && subName(catId, e.sub) ? e.sub : '_'; out[k] = (out[k]||0) + e.amt; }
   return out;
 }
 // Özet'te kategorinin altında alt başlık dağılımı (en az bir alt başlıklı kayıt varsa)
@@ -571,12 +579,15 @@ function subLines(ym, c){
   if(!keys.some(k=>k!=='_')) return '';
   return `<div class="subs">${keys.map(k=>`<button class="sub tap" data-catgo="${esc(c.id)}" data-sub="${k}"><span>${k==='_' ? 'Alt başlıksız' : esc(subName(c.id,k))}</span><span>${tl.format(t[k])}</span></button>`).join('')}</div>`;
 }
+// Gerçekleşenler (tarihi bugün ya da önce) sayılır; tarihi gelmemişler "beklenen" olarak ayrı tutulur
+const isPending = e => e.date > todayISO;
 function totals(ym){
-  let inc=0, out=0; const byCat={};
+  let inc=0, out=0, pin=0, pout=0; const byCat={};
   for(const e of entriesFor(ym)){
+    if(isPending(e)){ if(e.t==='in') pin+=e.amt; else pout+=e.amt; continue; }
     if(e.t==='in') inc+=e.amt; else { out+=e.amt; byCat[e.cat]=(byCat[e.cat]||0)+e.amt; }
   }
-  return {inc, out, byCat};
+  return {inc, out, byCat, pin:r2(pin), pout:r2(pout)};
 }
 
 /* ---------- render ---------- */
@@ -602,7 +613,7 @@ function barGrad(ratio){
   return p <= .5 ? `linear-gradient(90deg, var(--accent), ${end})` : `linear-gradient(90deg, var(--accent), var(--mid) 60%, ${end})`;
 }
 function renderSummary(){
-  const {inc,out,byCat} = totals(view.ym);
+  const {inc,out,byCat,pin,pout} = totals(view.ym);
   const left = inc - out;
   const hasAny = entriesFor(view.ym).length > 0;
   const limited = S.settings.cats.filter(c=>c.t==='out' && c.budget>0);
@@ -628,6 +639,7 @@ function renderSummary(){
     <div class="row">
       <button class="cell tap" data-goto="liste"><span class="label">Gelir</span><b class="num">${tl.format(inc)}</b></button>
       <button class="cell tap" data-goto="liste"><span class="label">Gider</span><b class="num">${tl.format(out)}</b></button>
+      ${pin || pout ? `<button class="pend tap" data-goto="liste"><span><span class="label">Beklenen</span>${pin ? `<b>+${tl.format(pin)}</b> gelir` : ''}${pin && pout ? ' · ' : ''}${pout ? `<b>−${tl.format(pout)}</b> gider` : ''}</span><span>Ay sonu tahmini <b>${(left+pin-pout)<0?'−':''}${tl.format(Math.abs(r2(left+pin-pout)))}</b></span></button>` : ''}
     </div>
   </div>
   <section><button class="card reportcard tap" data-report="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><b>${ymLabel(view.ym)} raporu</b><span class="chev">›</span><small>Nereye ne gitti, geçen aya göre ne değişti</small></button></section>
@@ -814,9 +826,9 @@ function renderList(){
     const bg = !sel && v ? ` style="background:color-mix(in srgb,var(--out) ${Math.round(12+38*v/max)}%,var(--sunk))"` : '';
     cells += `<button class="${cls}" data-day="${iso}" aria-pressed="${sel}"${bg} aria-label="${d} ${AYLAR[m-1]}, ${v?tl.format(v)+' harcama':'harcama yok'}">${d}<small>${v?tlShort(v):''}</small></button>`;
   }
-  const spent = Object.values(outBy).reduce((a,b)=>a+b,0);
+  const spent = Object.entries(outBy).filter(([d])=>d<=todayISO).reduce((a,[,b])=>a+b,0);
   const elapsed = view.ym<todayYM ? dim : view.ym===todayYM ? now.getDate() : 0;
-  const top = Object.entries(outBy).sort((a,b)=>b[1]-a[1])[0];
+  const top = Object.entries(outBy).filter(([d])=>d<=todayISO).sort((a,b)=>b[1]-a[1])[0];
   const stats = (elapsed && spent) || top ? `<div class="daystats">${elapsed&&spent?`<span>Günlük ortalama <b class="num">${tl.format(Math.round(spent/elapsed))}</b></span>`:''}${top?`<span>En çok harcanan gün <b>${dayLabel(top[0],{day:'numeric',month:'long'})}</b> <span class="num">(${tl.format(top[1])})</span></span>`:''}</div>` : '';
   const catChip = view.cat ? `<div style="margin-top:12px"><button class="chip filterchip" data-catgo="" aria-pressed="true">${esc(cat(view.cat).name)}${view.sub ? ' › '+(view.sub==='_' ? 'Alt başlıksız' : esc(subName(view.cat,view.sub))) : ''} <span aria-hidden="true">✕</span></button> <span class="note">sadece bunlar gösteriliyor</span></div>` : '';
   const head = view.day
@@ -831,9 +843,9 @@ function renderList(){
     shown.forEach(e => (groups[e.date] ||= []).push(e));
     body = Object.entries(groups).map(([d,es]) => `
     <div class="day"><h3><span>${d===todayISO?'Bugün · ':''}${dayLabel(d)}</span><span class="num">${outBy[d]?'−'+tl.format(outBy[d]):''}${inBy[d]?(outBy[d]?' · ':'')+'+'+tl.format(inBy[d]):''}</span></h3><div class="items">
-    ${es.map(e => { const c=cat(e.cat); return `<button class="item" data-edit="${esc(e.id)}">
+    ${es.map(e => { const c=cat(e.cat); return `<button class="item${isPending(e)?' pending':''}" data-edit="${esc(e.id)}">
       <span class="dot">${esc(c.name.charAt(0))}</span>
-      <span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${esc(c.name)}${subName(e.cat,e.sub) ? ' › '+esc(subName(e.cat,e.sub)) : ''}${e.pay && cardById(e.pay) ? ' · '+esc(cardById(e.pay).name) : ''}${e.instNo ? ` · <b>${e.instNo}/${e.inst} taksit</b> (${tl.format(e.total)})` : ''}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
+      <span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${esc(c.name)}${subName(e.cat,e.sub) ? ' › '+esc(subName(e.cat,e.sub)) : ''}${e.pay && cardById(e.pay) ? ' · '+esc(cardById(e.pay).name) : ''}${e.instNo ? ` · <b>${e.instNo}/${e.inst} taksit</b> (${tl.format(e.total)})` : ''}${e.rec?'<span class="rec">↻ her ay</span>':''}${isPending(e) ? `<span class="pendtag">${e.t==='in'?'Bekleniyor':'Planlandı'}</span>` : ''}</small></span>
       <span class="amt num ${e.t}">${e.t==='in'?'+':'−'}${tl.format(e.amt)}</span></button>`; }).join('')}
     </div></div>`).join('');
   }
@@ -1201,7 +1213,7 @@ async function enableNotifications(){
 /* ---------- aylık rapor ---------- */
 function reportData(ym){
   const cur = totals(ym), pym = ymAdd(ym,-1), prev = totals(pym);
-  const outs = entriesFor(ym).filter(e=>e.t==='out');
+  const outs = entriesFor(ym).filter(e=>e.t==='out' && !isPending(e));
   const fixed = outs.filter(e=>e.rec).reduce((a,e)=>a+e.amt,0);
   const top = [...outs].sort((a,b)=>b.amt-a.amt).slice(0,5);
   const cats = Object.entries(cur.byCat).sort((a,b)=>b[1]-a[1]).map(([id,v])=>({c:cat(id), v, p: cur.out ? v/cur.out : 0, prev: prev.byCat[id]||0}));
@@ -1258,6 +1270,7 @@ function openReport(ym){
       ${r.top.length ? `<div class="rp-sec"><h3>En büyük harcamalar</h3>${r.top.map(e=>`<div class="rp-row"><span>${esc(e.note || subName(e.cat,e.sub) || cat(e.cat).name)}<br><span class="note">${dayLabel(e.date,{day:'numeric',month:'long'})} · ${esc(cat(e.cat).name)}</span></span><span class="r">${tl.format(e.amt)}</span></div>`).join('')}</div>` : ''}
       ${r.limited.length ? `<div class="rp-sec"><h3>Bütçe</h3><div class="rp-note">${r.limited.length} limitten <b>${r.limited.length - r.over.length}</b> tanesi tutuldu.${r.over.length ? ` Aşılan: ${r.over.map(c=>`<b class="up">${esc(c.name)}</b> (${tl.format((r.cur.byCat[c.id]||0)-c.budget)} fazla)`).join(', ')}.` : ' Hiçbir limit aşılmadı.'}</div></div>` : ''}
       <div class="rp-sec"><h3>Diğer</h3>
+        ${r.cur.pin || r.cur.pout ? `<div class="rp-row"><span>Beklenen (tarihi gelmemiş)</span><span class="r">${r.cur.pin ? '+'+tl.format(r.cur.pin) : ''}${r.cur.pin && r.cur.pout ? ' · ' : ''}${r.cur.pout ? '−'+tl.format(r.cur.pout) : ''}<small>ay sonu tahmini ${tl.format(r2(r.left + r.cur.pin - r.cur.pout))}</small></span></div>` : ''}
         ${r.elapsed && r.cur.out ? `<div class="rp-row"><span>Günlük ortalama harcama</span><span class="r">${tl.format(Math.round(r.cur.out/r.elapsed))}</span></div>` : ''}
         ${r.peak ? `<div class="rp-row"><span>En çok harcanan gün</span><span class="r">${dayLabel(r.peak[0],{day:'numeric',month:'long'})}<small>${tl.format(r.peak[1])}</small></span></div>` : ''}
         ${r.dTot ? `<div class="rp-row"><span>Kart ve kredi ödemeleri</span><span class="r">${tl.format(r.dTot)}<small>${tl.format(r.dPaid)} ödendi</small></span></div>` : ''}
@@ -1496,7 +1509,7 @@ function importData(ev){
     document.getElementById('cancelImport').onclick = () => { area.innerHTML=''; ev.target.value=''; };
     document.getElementById('doImport').onclick = () => {
       const old = Object.keys(S.months);
-      S = { settings: {cats:d.settings.cats, recurring:d.settings.recurring||[], savTarget:d.settings.savTarget||0, debts:d.settings.debts||[]}, months: {}, rates: d.rates||S.rates||{} };
+      S = { settings: {...defaultSettings(), ...d.settings, cats:d.settings.cats, recurring:d.settings.recurring||[], savTarget:d.settings.savTarget||0, debts:d.settings.debts||[]}, months: {}, rates: d.rates||S.rates||{} };
       for(const [ym,m] of Object.entries(d.months)) if(/^\d{4}-\d{2}$/.test(ym)) S.months[ym] = {items:m.items||[], skip:m.skip||[], sav:m.sav||[], pay:m.pay||{}};
       if(mode==='db'){
         queueWrite('settings', S.settings);
@@ -1551,10 +1564,12 @@ function openSheet(entry){
         <div class="field"><label class="label" for="fDate">Tarih</label><input type="date" id="fDate" value="${st.date}"></div>
         <div class="field"><label class="label" for="fNote">Not</label><input id="fNote" maxlength="60" placeholder="İsteğe bağlı" value="${esc(st.note||'')}"></div>
       </div>
+      <div class="futnote" id="futNote"></div>
       ${editing && entry.rec
         ? `<div class="note">↻ Bu tekrarlayan bir kayıt. Değişiklikler bu aydan sonraki her ayı da etkiler.</div>`
         : editing ? '' : `<label class="check"><input type="checkbox" id="fRep" ${st.repeat?'checked':''}> Her ay tekrarla (maaş, kira, abonelik)</label>`}
       <button class="btn" id="fSave">${editing?'Değişiklikleri kaydet':'Kaydet'}</button>
+      ${editing && !entry.rec && !entry.srcId && entry.date > todayISO ? `<button class="btn ghost" id="fNow">${st.t==='in'?'Bugün geldi':'Bugün ödendi'} olarak işaretle</button>` : ''}
       ${editing ? (entry.rec
         ? `<div class="btns"><button class="btn ghost" id="fSkip" style="flex:1">Sadece bu ay sil</button><button class="btn ghost" id="fStop" style="flex:1;color:var(--out)">Tekrarı durdur</button></div>`
         : `<button class="btn ghost" id="fDel" style="color:var(--out)">Kaydı sil</button>`) : ''}
@@ -1579,6 +1594,9 @@ function openSheet(entry){
       const d = document.getElementById('fDate').value || todayISO;
       el.innerHTML = !v ? '' : n<=1 ? `Tek çekim · ${esc(cardById(st.pay).name)} ekstresine ${tl.format(v)} olarak girer.` : `<b>${n} × ${tl.format(instPart({amt:v,inst:n},1))}</b> · her ay giderlere bu kadar yansır · son taksit ${ymLabel(ymAdd(d.slice(0,7), n-1))}`; };
     document.getElementById('fAmt').addEventListener('input', calc); calc();
+    const fut = () => { const d = document.getElementById('fDate').value, el = document.getElementById('futNote'); if(el) el.textContent = d > todayISO ? `Bu tarih henüz gelmedi. Kayıt ${dayLabel(d,{day:'numeric',month:'long'})} gelene kadar “beklenen” olarak görünür, kalana eklenmez.` : ''; };
+    document.getElementById('fDate').addEventListener('change', fut); document.getElementById('fDate').addEventListener('input', fut); fut();
+    const fn = document.getElementById('fNow'); if(fn) fn.onclick = () => { keep(); st.date = todayISO; save(st, entry); };
     document.getElementById('fSave').onclick = () => { keep(); save(st, entry); };
     const del = document.getElementById('fDel');
     if(del) del.onclick = () => { if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='Silmek için tekrar dokun'; return; } removeItem(entry); };
@@ -1656,7 +1674,8 @@ function save(st, entry){
     monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), date:st.date, note:st.note.trim()});
     saveMonth(ym);
   }
-  view.ym = ym; closeSheet(); render(); toast(entry ? 'Güncellendi' : 'Kaydedildi');
+  view.ym = ym; closeSheet(); render();
+  toast(st.date > todayISO ? `Kaydedildi · ${dayLabel(st.date,{day:'numeric',month:'long'})} ${st.t==='in'?'gelir olarak bekleniyor':'için planlandı'}` : entry ? 'Güncellendi' : 'Kaydedildi');
 }
 function removeItem(entry){
   const ym = entry.date.slice(0,7); const m = monthDoc(ym);
