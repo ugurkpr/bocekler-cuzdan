@@ -495,7 +495,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.23 · 6 Ekim 2026';
+const APP_VERSION = '1.24 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -661,13 +661,13 @@ async function init(){
 const cat = id => S.settings.cats.find(c=>c.id===id) || {id, name:'Silinmiş kategori', t:'out', budget:0};
 const CAT_COLORS = ['#F59E0B','#F97316','#EF4444','#EC4899','#8B5CF6','#6366F1','#3B82F6','#06B6D4','#14B8A6','#10B981','#84CC16','#A16207','#64748B'];
 const CAT_ICONS = ['🛒','🏠','💡','🚌','🚗','⛽','🍔','☕','🍕','🎉','🎬','🎮','👕','👟','💄','💊','🏥','🦷','📺','📱','💻','📦','🎁','🐾','👶','📚','🎓','✈️','🏖️','🏋️','💳','🏦','💼','💸','💰','📈','🧾','🔧','🧹','💐'];
-const CAT_DEF = {market:['🛒','#10B981'],kira:['🏠','#8B5CF6'],fatura:['💡','#F59E0B'],ulasim:['🚌','#3B82F6'],yemek:['🍔','#F97316'],eglence:['🎉','#EC4899'],giyim:['👕','#06B6D4'],saglik:['💊','#EF4444'],abonelik:['📺','#6366F1'],diger:['📦','#64748B'],maas:['💼','#10B981'],havale:['📲','#06B6D4'],ek:['💸','#14B8A6'],digergelir:['🎁','#84CC16'],kredi:['🏦','#A16207'],kartodeme:['💳','#64748B']};
+const CAT_DEF = {market:['🛒','#10B981'],kira:['🏠','#8B5CF6'],fatura:['💡','#F59E0B'],ulasim:['🚌','#3B82F6'],yemek:['🍔','#F97316'],eglence:['🎉','#EC4899'],giyim:['👕','#06B6D4'],saglik:['💊','#EF4444'],abonelik:['📺','#6366F1'],diger:['📦','#64748B'],maas:['💼','#10B981'],havale:['📲','#06B6D4'],ek:['💸','#14B8A6'],digergelir:['🎁','#84CC16'],kredi:['🏦','#A16207'],kartodeme:['💳','#64748B'],borcode:['🤝','#0EA5E9']};
 const catIcon = c => c.icon || (CAT_DEF[c.id]||[])[0] || (c.t==='in' ? '💰' : '📦');
 function catColor(c){ if(c.color) return c.color; if(CAT_DEF[c.id]) return CAT_DEF[c.id][1]; let h=0; for(const ch of String(c.id)) h=(h*31+ch.charCodeAt(0))>>>0; return CAT_COLORS[h % CAT_COLORS.length]; }
 const catDot = c => `<span class="dot cdot" style="--cc:${catColor(c)}" aria-hidden="true">${catIcon(c)}</span>`;
 // Günlük harcama hakkına sayılır mı: sabit giderler (kira, fatura, abonelik, kredi, kart ödemesi), tekrarlayanlar ve taksitler sayılmaz;
 // bunlar ayın kalanından düşülür, kalan günlere yayılır. Kayıt bazında "nodaily" ile değiştirilebilir.
-const NON_DAILY = ['kira','fatura','abonelik','kredi','kartodeme'];
+const NON_DAILY = ['kira','fatura','abonelik','kredi','kartodeme','borcode'];
 const catDaily = c => c.daily !== undefined ? !!c.daily : !NON_DAILY.includes(c.id);
 const countsDaily = e => e.t==='out' && !e.rec && !e.instNo && (e.nodaily !== undefined ? !e.nodaily : catDaily(cat(e.cat)));
 const ci = c => `<span class="cico" aria-hidden="true">${catIcon(c)}</span>`;
@@ -745,6 +745,7 @@ function nextIncome(){
 function safeSpend(){
   const t = totals(todayYM), left = r2(t.inc - t.out);
   const loans = r2(debts().filter(d=>d.kind==='loan' && instNo(d,todayYM) && todayYM>=d.from && !(payOf(d,todayYM)||{}).paid).reduce((a,d)=>a+amtOf(d,todayYM),0));
+  const iouDue = iouDueThisMonth();
   const savedNow = savMonthTL(todayYM), tgt = S.settings.savTarget||0;
   const sav = r2(tgt > 0 ? Math.max(tgt, savedNow) : savedNow);
   const todayAll = entriesFor(todayYM).filter(e=>e.t==='out' && e.date===todayISO);
@@ -752,9 +753,9 @@ function safeSpend(){
   const todayFixed = r2(todayAll.filter(e=>!countsDaily(e)).reduce((a,e)=>a+e.amt,0));
   const daysLeft = daysIn(todayYM) - now.getDate() + 1;
   const start = r2(left + todaySpent);   // sabit/birikmiş ödemeler düşülmüş kalır, sadece günlük harcamalar geri eklenir
-  const pool = r2(start + t.pin - t.pout - loans - sav);
+  const pool = r2(start + t.pin - t.pout - loans - iouDue - sav);
   const daily = r2(Math.max(0, pool) / daysLeft);
-  return {left, start, pin:t.pin, pout:t.pout, loans, sav, savedNow, tgt, todayAll, todaySpent, todayFixed, daysLeft, pool, daily, todayLeft: r2(daily - todaySpent)};
+  return {left, start, pin:t.pin, pout:t.pout, loans, iouDue, sav, savedNow, tgt, todayAll, todaySpent, todayFixed, daysLeft, pool, daily, todayLeft: r2(daily - todaySpent)};
 }
 function spendCard(){
   if(view.ym !== todayYM || !entriesFor(todayYM).length) return '';
@@ -784,6 +785,7 @@ function openSpendSheet(){
       ${x.pin ? row('+ Beklenen gelirler', '+'+tl.format(x.pin)) : ''}
       ${x.pout ? row('− Planlanan giderler', '−'+tl.format(x.pout)) : ''}
       ${x.loans ? row('− Ödenmemiş kredi taksitleri', '−'+tl.format(x.loans)) : ''}
+      ${x.iouDue ? row('− Ödenmemiş borç taksitleri', '−'+tl.format(x.iouDue)) : ''}
       ${x.sav ? row(x.tgt ? `− Birikim (hedef ${tl.format(x.tgt)})` : '− Bu ay birikime ayrılan', (x.sav<0?'+':'−')+tl.format(Math.abs(x.sav))) : ''}
       ${row('= Ay sonuna kadar harcanabilir', (x.pool<0?'−':'')+tl.format(Math.abs(x.pool)), 'total')}
       ${row(`÷ Kalan gün (bugün dahil)`, x.daysLeft)}
@@ -1234,10 +1236,15 @@ function alertsNow(){
     for(const d of debts()){ if(!instNo(d,ym)) continue; const st = statusOf(d,ym); if(st.cls==='late'||st.cls==='today'||st.cls==='soon') out.push({d, ym, st, due:dueOf(d,ym)}); }
   return out.sort((a,b)=>a.due.localeCompare(b.due));
 }
+function iouAlerts(){ const out = [];
+  for(const x of ious()){ if(x.dir!=='ver' || x.closed) continue; const m = iouMonth(x, todayYM); if(!m || m.rest <= 0) continue;
+    const n = dayDiff(todayISO, m.date); if(n <= 3) out.push({x, m, n}); }
+  return out; }
 function alertsHTML(){
-  const a = alertsNow(); if(!a.length) return '';
-  const late = a.some(x=>x.st.cls==='late');
-  return `<button class="alert ${late?'late':''}" data-goto="odeme" data-ym="${a[0].ym}"><b>${late?'Geciken ödeme var':'Yaklaşan ödemeler'}</b>${a.map(x=>{ const v=amtOf(x.d,x.ym); return `<div><span>${esc(x.d.name)} · ${dayLabel(x.due,{day:'numeric',month:'short'})}</span><span class="num">${x.st.txt}${v?' · '+tl.format(v):''}</span></div>`; }).join('')}</button>`;
+  const a = alertsNow(), b = iouAlerts(); if(!a.length && !b.length) return '';
+  const late = a.some(x=>x.st.cls==='late') || b.some(x=>x.n<0);
+  if(!a.length) return `<button class="alert ${late?'late':''}" data-goiou="1"><b>${late?'Geciken ödeme var':'Yaklaşan ödemeler'}</b>${b.map(y=>`<div><span>${esc(y.x.person)} borcu · ${dayLabel(y.m.date,{day:'numeric',month:'short'})}</span><span class="num">${y.n<0?`${-y.n} gün gecikti`:y.n===0?'bugün':`${y.n} gün kaldı`} · ${tl.format(y.m.rest)}</span></div>`).join('')}</button>`;
+  return `<button class="alert ${late?'late':''}" data-goto="odeme" data-ym="${a[0].ym}"><b>${late?'Geciken ödeme var':'Yaklaşan ödemeler'}</b>${a.map(x=>{ const v=amtOf(x.d,x.ym); return `<div><span>${esc(x.d.name)} · ${dayLabel(x.due,{day:'numeric',month:'short'})}</span><span class="num">${x.st.txt}${v?' · '+tl.format(v):''}</span></div>`; }).join('')}${b.map(y=>`<div><span>${esc(y.x.person)} borcu · ${dayLabel(y.m.date,{day:'numeric',month:'short'})}</span><span class="num">${y.n<0?`${-y.n} gün gecikti`:y.n===0?'bugün':`${y.n} gün kaldı`} · ${tl.format(y.m.rest)}</span></div>`).join('')}</button>`;
 }
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator;
@@ -1245,14 +1252,35 @@ const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator;
 /* ---------- alacak / verecek ---------- */
 const ious = () => S.settings.ious || (S.settings.ious = []);
 const iouLeft = x => r2(x.amt - (x.pays||[]).reduce((a,p)=>a+p.amt,0));
+// Aylık taksitli borç: o ay ödenecek = min(taksit, ay başındaki kalan); o ay yapılan ödemeler düşülür
+function iouMonth(x, ym){
+  if(!x.monthly || ym < (x.first || x.date || todayISO).slice(0,7)) return null;
+  const pays = x.pays||[], leftStart = r2(x.amt - pays.filter(p=>p.date.slice(0,7) < ym).reduce((a,p)=>a+p.amt,0));
+  if(leftStart <= 0) return null;
+  const due = r2(Math.min(x.monthly, leftStart)), paid = r2(pays.filter(p=>p.date.slice(0,7)===ym).reduce((a,p)=>a+p.amt,0));
+  return {due, paid, rest: r2(Math.max(0, due - paid)), date: `${ym}-${pad(Math.min(x.day||1, daysIn(ym)))}`};
+}
+const iouExp = x => x.dir==='ver' && x.exp !== false;   // borç ödemeleri o ayın giderine yazılır
+function iouPay(x, amt, date, extra){
+  const p = {id:uid(), date, amt};
+  if(iouExp(x)){ const ym = date.slice(0,7); p.exp = uid();
+    monthDoc(ym).items.push({id:p.exp, t:'out', amt, cat:ensureCat('borcode','Borç ödemesi'), date, note:`${x.person} borcu`, ...(extra||{})}); saveMonth(ym); }
+  (x.pays = x.pays||[]).push(p); x.closed = iouLeft(x) <= 0; saveSettings(); return p;
+}
+function iouUnpay(x, pid){ const p = (x.pays||[]).find(q=>q.id===pid); if(!p) return;
+  if(p.exp) removeItemById(p.exp);
+  x.pays = x.pays.filter(q=>q.id!==pid); x.closed = iouLeft(x) <= 0; saveSettings(); }
+const iouDueThisMonth = () => r2(ious().filter(x=>iouExp(x) && !x.closed).reduce((a,x)=>a+((iouMonth(x,todayYM)||{}).rest||0),0));
 function iouSection(){
   const open = ious().filter(x=>!x.closed && iouLeft(x) > 0), closed = ious().filter(x=>x.closed || iouLeft(x) <= 0);
   const al = r2(open.filter(x=>x.dir==='al').reduce((a,x)=>a+iouLeft(x),0)), ver = r2(open.filter(x=>x.dir==='ver').reduce((a,x)=>a+iouLeft(x),0));
   const row = x => { const left = iouLeft(x), late = x.due && x.due < todayISO && left > 0;
     return `<button class="item" data-iou="${esc(x.id)}"><span class="dot cdot" style="--cc:${x.dir==='al'?'var(--in)':'var(--alarm)'}">${esc((x.person||'?').charAt(0).toLocaleUpperCase('tr'))}</span>
-      <span class="mid"><b>${esc(x.person)}</b><small>${x.dir==='al'?'Sana borçlu':'Sen borçlusun'}${x.note ? ' · '+esc(x.note) : ''}${x.due ? ` · <span class="${late?'overdue':''}">${late ? 'vadesi geçti ' : 'vade '}${dayLabel(x.due,{day:'numeric',month:'short'})}</span>` : ''}</small></span>
+      <span class="mid"><b>${esc(x.person)}</b><small>${x.dir==='al'?'Sana borçlu':'Sen borçlusun'}${x.note ? ' · '+esc(x.note) : ''}${(() => { const m = iouMonth(x, todayYM); if(!x.monthly) return ''; if(!m) return ` · aylık ${tl.format(x.monthly)}`;
+        const late = m.rest > 0 && m.date < todayISO;
+        return ` · aylık ${tl.format(x.monthly)}<br>${m.rest <= 0 ? '<span style="color:var(--in)">✓ bu ayın taksidi ödendi</span>' : `<span class="${late?'overdue':''}">bu ay ${tl.format(m.rest)} · ${late?'gecikti, ':''}${dayLabel(m.date,{day:'numeric',month:'short'})}</span>`}`; })()}${x.due ? ` · <span class="${late?'overdue':''}">${late ? 'vadesi geçti ' : 'vade '}${dayLabel(x.due,{day:'numeric',month:'short'})}</span>` : ''}</small></span>
       <span class="amt num ${x.dir==='al'?'in':'out'}">${tl.format(left)}</span></button>`; };
-  return `<section><div class="sec-head"><h2>Alacak / verecek</h2><small>Gelir-gidere eklenmez</small></div>
+  return `<section><div class="sec-head"><h2>Alacak / verecek</h2><small>Ödediğin borç gidere yazılır</small></div>
     ${open.length || closed.length ? `<div class="iouhead"><div class="al"><small>Alacağın</small><b>${tl.format(al)}</b></div><div><small>Borcun</small><b>${tl.format(ver)}</b></div></div>` : ''}
     ${open.length ? `<div class="items">${open.sort((a,b)=>(a.due||'9999').localeCompare(b.due||'9999')).map(row).join('')}</div>` : `<div class="card empty"><b>Açık alacak ya da borç yok</b>Arkadaşına verdiğin ya da birinden aldığın borcu ekle, kim ne kadar ödedi takip et.</div>`}
     ${closed.length ? `<details class="charges" style="margin-top:10px"><summary>Kapananlar (${closed.length})</summary>${closed.map(x=>`<div class="chg" data-iou="${esc(x.id)}" role="button" tabindex="0"><span>${esc(x.person)}<br><small>${x.dir==='al'?'Alacak':'Borç'}${x.note?' · '+esc(x.note):''}</small></span><span class="r">${tl.format(x.amt)}<br><small>kapandı</small></span></div>`).join('')}</details>` : ''}
@@ -1260,10 +1288,10 @@ function iouSection(){
   </section>`;
 }
 function openIouSheet(x){
-  const editing = !!x, st = x ? {...x} : {dir:'al', person:'', amt:'', date:todayISO, due:'', note:''};
+  const editing = !!x, st = x ? {...x, monthly: x.monthly||'', day: x.day||'', exp: x.exp !== false} : {dir:'al', person:'', amt:'', date:todayISO, due:'', note:'', monthly:'', day:'', exp:true};
   const people = [...new Set(ious().map(i=>i.person).filter(Boolean))];
   const draw = () => {
-    const left = editing ? iouLeft(x) : 0;
+    const left = editing ? iouLeft(x) : 0, mon = editing ? iouMonth(x, todayYM) : null;
     sheetRoot.innerHTML = `<div class="scrim" data-close></div>
     <div class="sheet" role="dialog" aria-modal="true" aria-label="Alacak verecek"><div class="in">
       <div class="grab"></div>
@@ -1276,29 +1304,40 @@ function openIouSheet(x){
         <div class="field"><label class="label" for="iDue">Vade (isteğe bağlı)</label><input id="iDue" type="date" value="${st.due||''}"></div>
       </div>
       <div class="field"><label class="label" for="iNote">Not</label><input id="iNote" maxlength="60" placeholder="Örn. Konser bileti" value="${esc(st.note||'')}"></div>
+      <div class="two">
+        <div class="field"><label class="label" for="iMon">Aylık taksit</label><input id="iMon" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Tek seferde" value="${st.monthly?fmtIn(st.monthly):''}"></div>
+        <div class="field"><label class="label" for="iDay">Her ayın günü</label><input id="iDay" class="num" type="number" inputmode="numeric" min="1" max="31" placeholder="Örn. 15" value="${st.day||''}"></div>
+      </div>
+      ${st.dir==='ver' ? `<label class="field" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input id="iExp" type="checkbox" style="width:22px;height:22px;margin-top:2px" ${st.exp?'checked':''}><span><b>Ödemelerimi aylık gidere yaz</b><br><small class="note">Her ödeme o ayın giderlerine “Borç ödemesi” olarak eklenir ve ayın kalan parasından düşülür. Borç aldığın parayı zaten harcama olarak girdiysen kapat, iki kez sayılmasın.</small></span></label>` : ''}
       <button class="btn" id="iSave">${editing ? 'Kaydet' : 'Ekle'}</button>
       ${editing ? `<div class="card" style="display:grid;gap:10px">
         <div class="bd-row" style="border:0;padding:0"><span>Kalan</span><span>${tl.format(left)}</span></div>
-        ${(x.pays||[]).length ? `<div class="paylist">${x.pays.map(p=>`<div class="chg"><span>${dayLabel(p.date,{day:'numeric',month:'long'})}</span><span class="r">${tl.format(p.amt)} <button class="chip" data-pdel="${esc(p.id)}" aria-label="Ödemeyi sil">✕</button></span></div>`).join('')}</div>` : ''}
-        ${left > 0 ? `<div class="two"><input id="pAmt2" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Ödenen tutar"><button class="btn" id="pAdd">Ödeme ekle</button></div>
-        <button class="btn ghost" id="pAll">Tamamı ödendi (${tl.format(left)})</button>` : '<div class="note">Bu kayıt kapandı.</div>'}
+        ${(x.pays||[]).length ? `<div class="paylist">${x.pays.map(p=>`<div class="chg"><span>${dayLabel(p.date,{day:'numeric',month:'long'})}${p.exp ? '<br><small>gidere yazıldı</small>' : ''}</span><span class="r">${tl.format(p.amt)} <button class="chip" data-pdel="${esc(p.id)}" aria-label="Ödemeyi sil">✕</button></span></div>`).join('')}</div>` : ''}
+        ${left > 0 ? `${mon && mon.rest > 0 ? `<button class="btn" id="pMon">Bu ayın taksidi ödendi (${tl.format(mon.rest)})</button>` : ''}
+        <div class="two"><input id="pAmt2" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Ödenen tutar"><input id="pDate" type="date" value="${todayISO}" aria-label="Ödeme tarihi"></div>
+        <button class="btn ${mon && mon.rest > 0 ? 'ghost' : ''}" id="pAdd">Ödeme ekle</button>
+        <button class="btn ghost" id="pAll">Tamamı ödendi (${tl.format(left)})</button>
+        ${iouExp(x) ? '<div class="note">Ödemeler o ayın giderine “Borç ödemesi” olarak yazılır. Ödemeyi silersen gider de silinir.</div>' : ''}` : '<div class="note">Bu kayıt kapandı.</div>'}
       </div>
-      <button class="btn ghost" id="iDel" style="color:var(--out)">Sil</button>` : '<div class="note">Bu kayıt gelirine ya da giderine eklenmez, sadece kim kime ne kadar borçlu takibi içindir.</div>'}
+      <button class="btn ghost" id="iDel" style="color:var(--out)">Sil</button>` : `<div class="note">${st.dir==='ver' ? 'Borç eklemek gidere yazılmaz; sadece ödediğin taksitler o ayın giderine eklenir.' : 'Alacak gelirine eklenmez; kim sana ne kadar borçlu takibi içindir.'}</div>`}
     </div></div>`;
-    const keep = () => { st.person = document.getElementById('iPerson').value; st.amt = document.getElementById('iAmt').value; st.date = document.getElementById('iDate').value; st.due = document.getElementById('iDue').value; st.note = document.getElementById('iNote').value; };
+    const keep = () => { st.person = document.getElementById('iPerson').value; st.amt = document.getElementById('iAmt').value; st.date = document.getElementById('iDate').value; st.due = document.getElementById('iDue').value; st.note = document.getElementById('iNote').value; st.monthly = document.getElementById('iMon').value; st.day = document.getElementById('iDay').value; const ie = document.getElementById('iExp'); if(ie) st.exp = ie.checked; };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-iodir]').forEach(b=>b.onclick=()=>{ keep(); st.dir=b.dataset.iodir; draw(); });
     document.getElementById('iSave').onclick = () => { keep();
       const person = st.person.trim(), amt = parseAmt(st.amt);
       if(!person) return toast('Kişinin adını yaz.'); if(!amt) return toast('Tutarı yaz.');
-      const rec = {dir:st.dir, person, amt, date:st.date||todayISO, due:st.due||'', note:st.note.trim()};
+      const monthly = parseAmt(st.monthly) || 0, day = Math.min(31, Math.max(1, parseInt(st.day,10) || +(st.date||todayISO).slice(8)));
+      const rec = {dir:st.dir, person, amt, date:st.date||todayISO, due:st.due||'', note:st.note.trim(), monthly, day: monthly ? day : 0, exp: st.dir==='ver' ? !!st.exp : undefined};
       if(editing){ Object.assign(x, rec); x.closed = iouLeft(x) <= 0; } else ious().push({id:uid(), pays:[], closed:false, ...rec});
       saveSettings(); closeSheet(); render(); toast(editing ? 'Kaydedildi' : 'Eklendi'); };
     if(!editing) return;
-    const addPay = v => { x.pays = x.pays || []; x.pays.push({id:uid(), date:todayISO, amt:v}); x.closed = iouLeft(x) <= 0; saveSettings(); render(); draw(); toast(x.closed ? 'Kapandı' : 'Ödeme eklendi'); };
+    const pdate = () => { const v = (document.getElementById('pDate')||{}).value; return /^\d{4}-\d{2}-\d{2}$/.test(v||'') ? v : todayISO; };
+    const addPay = (v, date) => { iouPay(x, v, date || pdate()); render(); draw(); toast((x.closed ? 'Kapandı' : 'Ödeme eklendi') + (iouExp(x) ? ' · gidere yazıldı' : '')); };
+    const pm = document.getElementById('pMon'); if(pm) pm.onclick = () => addPay(Math.min(mon.rest, iouLeft(x)), todayISO);
     const pa = document.getElementById('pAdd'); if(pa) pa.onclick = () => { const v = parseAmt(document.getElementById('pAmt2').value); if(!v) return toast('Tutarı yaz.'); addPay(Math.min(v, iouLeft(x))); };
     const pl = document.getElementById('pAll'); if(pl) pl.onclick = () => addPay(iouLeft(x));
-    sheetRoot.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ x.pays = x.pays.filter(p=>p.id!==b.dataset.pdel); x.closed = iouLeft(x) <= 0; saveSettings(); render(); draw(); });
+    sheetRoot.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ iouUnpay(x, b.dataset.pdel); render(); draw(); });
     const del = document.getElementById('iDel'); del.onclick = () => { if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='Silmek için tekrar dokun'; return; }
       S.settings.ious = ious().filter(i=>i.id!==x.id); saveSettings(); closeSheet(); render(); toast('Silindi'); };
   };
@@ -2022,6 +2061,9 @@ function openSheet(entry, presetType){
       ${st.t==='in' && !editing && ious().some(x=>x.dir==='al' && !x.closed && iouLeft(x)>0) ? `<div class="field"><span class="label">Biri sana olan borcunu mu ödedi?</span><div class="chips">
         ${ious().filter(x=>x.dir==='al' && !x.closed && iouLeft(x)>0).map(x=>`<button class="chip" data-iourep="${esc(x.id)}" aria-pressed="${st.iou===x.id}">${esc(x.person)} · ${tl.format(iouLeft(x))}</button>`).join('')}
       </div>${st.iou ? `<span class="note">Bu tutar ${esc((ious().find(x=>x.id===st.iou)||{}).person||'')} alacağından düşülür. Parayı verdiğinde gider yazılmadığı için <b>gelire eklenmez</b>.</span>` : ''}</div>` : ''}
+      ${st.t==='out' && !editing && ious().some(x=>x.dir==='ver' && !x.closed && iouLeft(x)>0) ? `<div class="field"><span class="label">Birine olan borcunu mu ödüyorsun?</span><div class="chips">
+        ${ious().filter(x=>x.dir==='ver' && !x.closed && iouLeft(x)>0).map(x=>`<button class="chip" data-iouver="${esc(x.id)}" aria-pressed="${st.iouv===x.id}">${esc(x.person)} · ${tl.format(iouLeft(x))}</button>`).join('')}
+      </div>${st.iouv ? `<span class="note">Bu tutar ${esc((ious().find(x=>x.id===st.iouv)||{}).person||'')} borcundan düşülür${iouExp(ious().find(x=>x.id===st.iouv)||{}) ? ' ve gider olarak yazılır' : ', gidere yazılmaz (bu borçta kapalı)'}.</span>` : ''}</div>` : ''}
       ${st.t==='out' && cards().length ? `<div class="field"><span class="label">Ödeme</span><div class="chips">
         <button class="chip" data-paym="cash" aria-pressed="${st.pay==='cash'}">Nakit / banka kartı</button>
         ${cards().map(c=>`<button class="chip" data-paym="${esc(c.id)}" aria-pressed="${st.pay===c.id}">${esc(c.name)}</button>`).join('')}
@@ -2068,6 +2110,8 @@ function openSheet(entry, presetType){
     const ok = document.getElementById('fNewSubOk'); if(ok) ok.onclick = addSub;
     const ni = document.getElementById('fNewSub'); if(ni) ni.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); addSub(); } });
     sheetRoot.querySelectorAll('[data-iourep]').forEach(b=>b.onclick=()=>{ keep(); st.iou = st.iou===b.dataset.iourep ? null : b.dataset.iourep; if(st.iou && !st.amt){ st.amt = iouLeft(ious().find(x=>x.id===st.iou)); } draw(); });
+    sheetRoot.querySelectorAll('[data-iouver]').forEach(b=>b.onclick=()=>{ keep(); st.iouv = st.iouv===b.dataset.iouver ? null : b.dataset.iouver;
+      if(st.iouv){ const x = ious().find(i=>i.id===st.iouv), m = iouMonth(x, todayYM); if(!st.amt) st.amt = m && m.rest > 0 ? m.rest : iouLeft(x); st.cat = ensureCat('borcode','Borç ödemesi'); if(!st.note) st.note = x.person+' borcu'; } draw(); });
     sheetRoot.querySelectorAll('[data-paym]').forEach(b=>b.onclick=()=>{ keep(); st.pay=b.dataset.paym; if(st.pay==='cash') st.inst=1; draw(); });
     sheetRoot.querySelectorAll('[data-inst]').forEach(b=>b.onclick=()=>{ keep(); st.inst=+b.dataset.inst; draw(); });
     const rep = document.getElementById('fRep'); if(rep) rep.addEventListener('change', () => { keep(); if(st.repeat) st.inst = 1; draw(); });
@@ -2159,6 +2203,14 @@ function save(st, entry){
     saveSettings(); closeSheet(); render();
     return toast(`${x.person} alacağından ${tl.format(v)} düşüldü${x.closed ? ', kapandı' : ''} (gelire eklenmedi)`);
   }
+  if(st.t==='out' && st.iouv && !entry){
+    const x = ious().find(i=>i.id===st.iouv), amt = parseAmt(st.amt);
+    if(!x) return; if(!amt) return toast('Tutarı yaz.');
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(st.date) ? st.date : todayISO, v = Math.min(amt, iouLeft(x));
+    iouPay(x, v, date, {cat: st.cat || ensureCat('borcode','Borç ödemesi'), sub: st.sub||null, ...payFields(st), ...dailyField(st), note: st.note.trim() || x.person+' borcu'});
+    view.ym = date.slice(0,7); closeSheet(); render();
+    return toast(`${x.person} borcundan ${tl.format(v)} düşüldü${x.closed ? ', kapandı' : ''}${iouExp(x) ? ' · gidere yazıldı' : ''}`);
+  }
   if(st.t==='out' && st.pay && S.settings.lastPay !== st.pay){ S.settings.lastPay = st.pay; saveSettings(); }
   const amt = parseAmt(st.amt);
   if(!amt) return toast('Tutarı yaz (örn. 1.250,50).');
@@ -2174,6 +2226,7 @@ function save(st, entry){
     const om = monthDoc(oldYm); om.items = om.items.filter(i=>i.id!==entry.id);
     const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), ...dailyField(st), date:st.date, note:st.note.trim()});
     saveMonth(oldYm); if(ym!==oldYm) saveMonth(ym);
+    for(const x of ious()) for(const p of (x.pays||[])) if(p.exp===entry.id){ p.amt = amt; p.date = st.date; x.closed = iouLeft(x) <= 0; saveSettings(); }
   } else if(st.repeat){
     S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, pay: st.t==='out' && st.pay!=='cash' ? st.pay : null, note:st.note.trim(), day, from:ym});
     saveSettings();
@@ -2185,6 +2238,7 @@ function save(st, entry){
   toast(st.date > todayISO ? `Kaydedildi · ${dayLabel(st.date,{day:'numeric',month:'long'})} ${st.t==='in'?'gelir olarak bekleniyor':'için planlandı'}` : entry ? 'Güncellendi' : 'Kaydedildi');
 }
 function removeItem(entry){
+  for(const x of ious()) if((x.pays||[]).some(p=>p.exp===entry.id)){ x.pays = x.pays.filter(p=>p.exp!==entry.id); x.closed = iouLeft(x) <= 0; saveSettings(); }
   const ym = entry.date.slice(0,7); const m = monthDoc(ym);
   m.items = m.items.filter(i=>i.id!==entry.id); saveMonth(ym); closeSheet(); render(); toast('Kayıt silindi');
 }
