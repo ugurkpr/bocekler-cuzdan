@@ -99,9 +99,9 @@ section{margin-top:22px}
 .plain{display:grid;gap:0;margin-top:14px;padding-top:6px;border-top:1px solid var(--line)}
 .plain:first-child{margin-top:0;padding-top:0;border-top:0}
 .plain .label{margin-bottom:4px}
-.bar-top{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:6px}
+.bar-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;font-size:14px;margin-bottom:6px}
 .bar-top span:first-child{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-top span:last-child{color:var(--muted);white-space:nowrap}
+.bar-top span:last-child{color:var(--muted);white-space:nowrap;margin-left:auto}
 .track{position:relative;height:10px;border-radius:6px;background:var(--sunk);overflow:visible}
 .fill{height:100%;border-radius:6px;background:var(--accent);transition:width .4s ease}
 .limit{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.55;border-radius:1px}
@@ -165,6 +165,14 @@ section{margin-top:22px}
 
 input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
 textarea{min-height:90px;font-size:12px;font-family:ui-monospace,Menlo,monospace}
+#tips{position:fixed;inset:0;z-index:90}
+#tips .tip-spot{position:fixed;border-radius:16px;box-shadow:0 0 0 9999px rgb(0 0 0 / .62);transition:all .25s ease;pointer-events:none}
+#tips .tip-box{position:fixed;background:var(--surface);color:var(--ink);border:1px solid color-mix(in oklch, var(--accent), transparent 45%);border-radius:16px;padding:14px 16px;box-shadow:0 12px 32px rgb(0 0 0 / .3);display:grid;gap:6px;transition:top .25s ease,left .25s ease}
+#tips .tip-box small{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+#tips .tip-box b{font-family:var(--display);font-size:18px;line-height:1.2}
+#tips .tip-box p{margin:0;font-size:14.5px;line-height:1.45}
+#tips .tip-box .btns{display:flex;gap:8px;margin-top:6px} #tips .tip-box .btn{flex:1;min-height:44px}
+@media (prefers-reduced-motion: reduce){ #tips .tip-spot,#tips .tip-box{transition:none} }
 .btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:var(--sunk);color:var(--ink)}
 .btn.danger{background:var(--out);color:#fff}
@@ -495,7 +503,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.25 · 6 Ekim 2026';
+const APP_VERSION = '1.26 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -529,7 +537,7 @@ function formatMoneyInput(el, ev){
   let raw = v.replace(/[^\d,]/g,'');
   const ci = raw.indexOf(',');
   let int = ci<0 ? raw : raw.slice(0,ci), dec = ci<0 ? null : raw.slice(ci+1).replace(/,/g,'').slice(0,2);
-  int = int.replace(/^0+(?=\d)/,'');
+  int = int.replace(/^0+(?=\d)/,'').slice(0, 9);   // en fazla 999.999.999
   if(int==='' && dec!==null) int = '0';
   const out = int.replace(/\B(?=(\d{3})+(?!\d))/g,'.') + (dec!==null ? ','+dec : '');
   let pos = 0, seen = 0;
@@ -542,7 +550,7 @@ document.addEventListener('focusin', e => { if(e.target.matches && e.target.matc
 const dayLabel = (iso, opt={day:'numeric',month:'long',weekday:'long'}) => new Date(iso+'T12:00').toLocaleDateString('tr-TR', opt);
 const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const parseAmt = v => { if(typeof v==='number') return isFinite(v)&&v>0 ? Math.round(v*100)/100 : null; v=String(v).trim().replace(/[\s₺$€]/g,'').replace(/\./g,'').replace(',','.'); const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.round(n*100)/100 : null; };
+const parseAmt = v => { if(typeof v==='number') return isFinite(v)&&v>0&&v<1e9 ? Math.round(v*100)/100 : null; v=String(v).trim().replace(/[\s₺$€]/g,'').replace(/\./g,'').replace(',','.'); const n=parseFloat(v); return isFinite(n)&&n>0&&n<1e9 ? Math.round(n*100)/100 : null; };
 
 const defaultSettings = () => ({
   cats: [
@@ -590,8 +598,28 @@ let col = null;
 
 /* ---------- storage ---------- */
 const LS_KEY = 'cuzdan-defteri-v1';
+// Bozuk ya da elle değiştirilmiş veri uygulamayı çökertmesin: beklenmeyen kayıtlar ayıklanır
+function cleanData(d){
+  const arr = v => Array.isArray(v) ? v.filter(x => x && typeof x === 'object') : [];
+  const num = v => typeof v === 'number' && isFinite(v), iso = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+  const st = d.settings;
+  st.cats = arr(st.cats).filter(c => c.id != null && typeof c.name === 'string' && (c.t==='in' || c.t==='out')).map(c => ({...c, id:String(c.id), subs:arr(c.subs)}));
+  const missing = ['in','out'].filter(t => !st.cats.some(c => c.t===t));
+  for(const def of defaultSettings().cats) if(missing.includes(def.t) && !st.cats.some(c => c.id===def.id)) st.cats.push(def);
+  for(const k of ['recurring','debts','goals','ious']) st[k] = arr(st[k]);
+  st.recurring = st.recurring.filter(r => (r.t==='in' || r.t==='out') && num(r.amt));
+  for(const x of st.ious) x.pays = arr(x.pays).filter(p => num(p.amt) && iso(p.date));
+  const months = {};
+  for(const [ym, m] of Object.entries(d.months && typeof d.months === 'object' ? d.months : {})){
+    if(!/^\d{4}-\d{2}$/.test(ym) || !m || typeof m !== 'object') continue;
+    months[ym] = {...m, items: arr(m.items).filter(i => (i.t==='in' || i.t==='out') && num(i.amt) && iso(i.date)), skip: Array.isArray(m.skip) ? m.skip : [],
+      sav: arr(m.sav).filter(x => num(x.qty) && num(x.rate) && iso(x.date)), pay: m.pay && typeof m.pay === 'object' && !Array.isArray(m.pay) ? m.pay : {}};
+  }
+  d.months = months; d.rates = d.rates && typeof d.rates === 'object' ? d.rates : {};
+  return d;
+}
 function loadLocal(){
-  try { const raw = localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); if(d&&d.settings){ S=d; S.rates=S.rates||{}; S.settings.debts=S.settings.debts||[]; S.settings.goals=S.settings.goals||[]; S.settings.ious=S.settings.ious||[];
+  try { const raw = localStorage.getItem(LS_KEY); if(raw){ const d=JSON.parse(raw); if(d&&d.settings){ S=cleanData(d); S.rates=S.rates||{}; S.settings.debts=S.settings.debts||[]; S.settings.goals=S.settings.goals||[]; S.settings.ious=S.settings.ious||[];
       if(!S.settings.havaleAdded){ S.settings.havaleAdded = true; if(!S.settings.cats.some(c=>c.id==='havale')){ const i = S.settings.cats.findIndex(c=>c.id==='maas'); S.settings.cats.splice(i<0 ? S.settings.cats.length : i+1, 0, {id:'havale', name:'Gelen para', t:'in', budget:0}); } } } } } catch(e){}
 }
 function saveLocal(){
@@ -728,6 +756,7 @@ function render(){
   if(view.tab==='ayar') bindSettings();
   if(view.tab==='birikim') bindSavings();
   if(view.tab==='odeme') bindDebts();
+  maybeTips(currentTipKey());
 }
 
 // Çubuk temanın rengiyle başlar; limitin yarısından sonra ucu uyarı rengine kayar, aşınca tamamen o renk olur
@@ -945,7 +974,7 @@ function openGoalSheet(g){
       <div class="field"><label class="label" for="gName">Hedef</label><input id="gName" maxlength="40" placeholder="Örn. Yaz tatili, araba, düğün" value="${esc(st.name)}"></div>
       <div class="two">
         <div class="field"><label class="label" for="gTarget">Tutar (₺)</label><input id="gTarget" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Örn. 40.000" value="${st.target?fmtIn(st.target):''}"></div>
-        <div class="field"><label class="label" for="gMonth">Ne zamana?</label><input id="gMonth" type="month" value="${st.month||''}"></div>
+        <div class="field"><label class="label" for="gMonth">Ne zamana?</label><input id="gMonth" type="month" min="${todayYM}" value="${st.month||''}"></div>
       </div>
       ${editing ? `<div class="note">Şu ana kadar bu hedefe ayrılan: <b style="color:var(--ink)">${tl.format(goalSaved(g))}</b>. Birikim eklerken bu hedefi seçince buraya eklenir.</div>` : `<div class="note">Birikim eklerken bu hedefi seçersen otomatik ilerler. Altın ve döviz bugünkü kurla hesaplanır.</div>`}
       <button class="btn" id="gSave">${editing?'Kaydet':'Hedefi ekle'}</button>
@@ -955,6 +984,7 @@ function openGoalSheet(g){
     document.getElementById('gSave').onclick = () => {
       const name = document.getElementById('gName').value.trim(), target = parseAmt(document.getElementById('gTarget').value), month = document.getElementById('gMonth').value;
       if(!name) return toast('Hedefe bir ad ver.'); if(!target) return toast('Hedef tutarını yaz.');
+      if(month && month < todayYM && (!editing || month !== g.month)) return toast('Hedef tarihi geçmiş bir ay olamaz.');
       if(editing) Object.assign(g, {name, target, month}); else goals().push({id:uid(), name, target, month});
       saveSettings(); closeSheet(); render(); toast(editing ? 'Hedef güncellendi' : 'Hedef eklendi');
     };
@@ -1069,6 +1099,9 @@ function openSavSheet(entry, preset, goalId){
       if(!qty) return toast('Miktarı yaz.');
       if(!r) return toast('Birim fiyatı yaz.');
       if(!/^\d{4}-\d{2}-\d{2}$/.test(st.date)) return toast('Tarihi seç.');
+      if(st.asset==='CEYREK' && qty % 1) return toast('Çeyrek altın adedi tam sayı olmalı.');
+      if(st.dir < 0){ const have = r2((holdings()[st.asset]||0) - (editing && entry.asset===st.asset ? entry.dir*entry.qty : 0));
+        if(qty > have + 1e-9) return toast(have > 0 ? `Elinde ${qtyFmt(st.asset, have)} var, daha fazlasını bozduramazsın.` : `Elinde ${asset(st.asset).name} yok. Önce birikim olarak ekle.`); }
       const ym = st.date.slice(0,7);
       if(editing){ const om=monthDoc(entry.date.slice(0,7)); om.sav=om.sav.filter(x=>x.id!==entry.id); saveMonth(entry.date.slice(0,7)); }
       monthDoc(ym).sav.push({id: editing?entry.id:uid(), dir:st.dir, asset:st.asset, qty, rate:r, date:st.date, note:st.note.trim(), goal: st.goal||null, ...(st.dir>0 && st.old ? {old:true} : {})});
@@ -1488,6 +1521,7 @@ function openCardPaySheet(d, ym, mode){
         const mn = blank(st.min) ? null : (parseAmt(st.min) ?? (String(st.min).trim()==='0' ? 0 : null));
         const bal = blank(st.bal) ? null : parseAmt(st.bal);
         if(stmt===null || (!blank(st.min) && mn===null) || (!blank(st.bal) && bal===null)) return toast('Tutarları kontrol et.');
+        if(bal != null && bal < stmt) return toast('Kartın toplam borcu, ekstre borcundan az olamaz.');
         const base = cardStmt(d, ym), p = m.pay[d.id] || {};
         const stmtOv = Math.abs(stmt - base.computed) < 0.005 && p.stmt == null ? null : stmt;
         const minOv = mn === null || Math.abs(mn - r2(stmt * (d.minRate||0.2))) < 0.005 ? null : mn;
@@ -1509,6 +1543,8 @@ function openCardPaySheet(d, ym, mode){
       keep();
       const paid = String(st.paid).trim()==='' ? 0 : parseAmt(st.paid);
       if(paid===null) return toast('Tutarı kontrol et.');
+      const most = Math.max(s.total, s.rec.bal || 0);
+      if(paid > most + 0.005) return toast(`Ödeme borçtan fazla olamaz (en fazla ${tl.format(most)}).`);
       const old = m.pay[d.id] || {};
       if(old.exp) removeItemById(old.exp);
       const pdate = /^\d{4}-\d{2}-\d{2}$/.test(st.pdate||'') ? st.pdate : defPayDate(d, ym);
@@ -1616,6 +1652,7 @@ function openDebtSheet(d, kind){
         const amt = parseAmt(st.amt), count = parseInt(st.count,10);
         if(!amt) return toast('Aylık taksiti yaz.');
         if(!(count>=1)) return toast('Taksit sayısını yaz.');
+        if(count > 360) return toast('Taksit sayısı en fazla 360 olabilir.');
         if(!/^\d{4}-\d{2}$/.test(st.start)) return toast('İlk taksit ayını seç.');
         Object.assign(rec, {amt, count, start:st.start});
       }
@@ -1861,6 +1898,7 @@ function renderSettings(){
     <div class="card" style="display:grid;gap:10px">
       <div class="set-row" style="padding:0;border:0"><span class="name">Sürüm</span><span class="meta num">${APP_VERSION}</span></div>
       <button class="btn ghost" id="updBtn">Güncellemeyi kontrol et</button>
+      <button class="btn ghost" id="tipsAgain">İpuçlarını yeniden göster</button>
       <div class="note">Yeni bir özellik göremiyorsan buna dokun. Uygulama en son sürümü indirip yeniden açılır, kayıtların silinmez.</div>
     </div>
   </section>`;
@@ -1906,6 +1944,8 @@ function openCatSheet(c){
     document.getElementById('cSave').onclick = () => {
       keep();
       const name = st.name.trim(); if(!name) return toast('Kategori adı yaz.');
+      const ct = editing ? c.t : st.t;
+      if(S.settings.cats.some(k=>k!==c && k.t===ct && k.name.toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))) return toast('Bu adda bir kategori zaten var.');
       const raw = String(st.budget||'').trim(), budget = raw==='' ? 0 : parseAmt(raw);
       if(raw!=='' && budget===null) return toast('Geçerli bir limit yaz.');
       const subs = st.subs.map(x=>({id:x.id, name:x.name.trim()})).filter(x=>x.name);
@@ -1964,6 +2004,7 @@ function bindSettings(){
   main.querySelectorAll('[data-color-pick]').forEach(b => b.onclick = () => { S.settings.color = b.dataset.colorPick; saveSettings(); render(); toast(PALETTES[b.dataset.colorPick].name + ' seçildi'); });
   main.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => { S.settings.theme = b.dataset.themePick; saveSettings(); render(); });
   document.getElementById('addCat').onclick = () => openCatSheet(null);
+  document.getElementById('tipsAgain').onclick = () => { try { localStorage.removeItem(TIP_KEY); } catch(e){} toast('İpuçları her bölümü ilk açışında yeniden gösterilecek'); window.scrollTo(0,0); setTimeout(() => maybeTips('ayar'), 400); };
   document.getElementById('updBtn').onclick = async () => {
     toast('Güncelleme kontrol ediliyor…');
     try { const r = await navigator.serviceWorker?.getRegistration(); if(r) await r.update(); } catch(e){}
@@ -2009,7 +2050,7 @@ function importData(ev){
   rd.onload = () => {
     let d; try { d = JSON.parse(rd.result); } catch(e){ return toast('Dosya okunamadı. Bu uygulamanın yedeği mi?'); }
     if(!d || !d.settings || !Array.isArray(d.settings.cats) || typeof d.months!=='object') return toast('Bu dosya bir Böcekler Cüzdan yedeği değil.');
-    const n = Object.values(d.months).reduce((a,m)=>a+(m.items||[]).length,0);
+    const n = Object.values(d.months).reduce((a,m)=>a+(m && Array.isArray(m.items) ? m.items.length : 0),0);
     const area = document.getElementById('dataArea');
     area.innerHTML = `<div class="field"><span class="note">${esc(d.exported||'')} tarihli yedekte ${n} kayıt var. Yüklersen mevcut kayıtlarının yerine geçer.</span>
       <div class="btns"><button class="btn danger" id="doImport">Yedeği yükle</button><button class="btn ghost" id="cancelImport">Vazgeç</button></div></div>`;
@@ -2017,7 +2058,8 @@ function importData(ev){
     document.getElementById('doImport').onclick = () => {
       const old = Object.keys(S.months);
       S = { settings: {...defaultSettings(), ...d.settings, cats:d.settings.cats, recurring:d.settings.recurring||[], savTarget:d.settings.savTarget||0, debts:d.settings.debts||[], goals:d.settings.goals||[], ious:d.settings.ious||[]}, months: {}, rates: d.rates||S.rates||{} };
-      for(const [ym,m] of Object.entries(d.months)) if(/^\d{4}-\d{2}$/.test(ym)) S.months[ym] = {items:m.items||[], skip:m.skip||[], sav:m.sav||[], pay:m.pay||{}};
+      for(const [ym,m] of Object.entries(d.months)) if(/^\d{4}-\d{2}$/.test(ym) && m && typeof m==='object') S.months[ym] = {items:m.items||[], skip:m.skip||[], sav:m.sav||[], pay:m.pay||{}};
+      cleanData(S);
       if(mode==='db'){
         queueWrite('settings', S.settings);
         for(const ym of Object.keys(S.months)) queueWrite('m-'+ym, S.months[ym]);
@@ -2220,6 +2262,7 @@ function save(st, entry){
   if(st.t==='out' && st.pay && S.settings.lastPay !== st.pay){ S.settings.lastPay = st.pay; saveSettings(); }
   const amt = parseAmt(st.amt);
   if(!amt) return toast('Tutarı yaz (örn. 1.250,50).');
+  if(st.t==='out' && st.pay && st.pay!=='cash' && (st.inst||1) > 1 && amt < st.inst) return toast('Taksit başına en az 1 ₺ düşmeli.');
   if(!st.cat) return toast('Bir kategori seç.');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(st.date)) return toast('Tarihi seç.');
   const ym = st.date.slice(0,7), day = +st.date.slice(8);
@@ -2248,6 +2291,138 @@ function removeItem(entry){
   const ym = entry.date.slice(0,7); const m = monthDoc(ym);
   m.items = m.items.filter(i=>i.id!==entry.id); saveMonth(ym); closeSheet(); render(); toast('Kayıt silindi');
 }
+
+/* ---------- tek seferlik ipuçları: her sekme ve form ilk açıldığında bölümleri sırayla tanıtır ---------- */
+const TIP_KEY = 'ipuclari-v1';
+const tipSeen = () => { try { return JSON.parse(localStorage.getItem(TIP_KEY) || '{}') || {}; } catch(e){ return {}; } };
+const tipMark = k => { try { const s = tipSeen(); s[k] = 1; localStorage.setItem(TIP_KEY, JSON.stringify(s)); } catch(e){} };
+const byHead = txt => () => [...document.querySelectorAll('main .sec-head h2')].find(h => h.textContent.trim().startsWith(txt))?.closest('section');
+const near = (id, sel) => () => document.getElementById(id)?.closest(sel);
+const TIPS = {
+  ozet: [
+    ['.hero', 'Ayın özeti', 'Bu ay girdiğin gelir ve giderler, elinde kalan para. Gelir ya da Gider kutusundaki + ile hızlıca kayıt ekleyebilirsin.'],
+    [() => document.getElementById('monthLbl')?.parentElement, 'Ay seçimi', 'Oklarla önceki ya da sonraki aya geç. Ayın adına dokunursan istediğin ay ve yıla doğrudan gidersin.'],
+    ['[data-spend]', 'Bugün ne kadar harcayabilirim?', 'Kalan parayı ayın kalan günlerine böler. Kira, fatura, kredi taksiti ve birikim önceden ayrılır. Dokun, hesabın ayrıntısını gör.'],
+    ['[data-report]', 'Aylık rapor', 'Paran nereye gitti, geçen aya göre ne değişti. Raporu paylaşabilirsin de.'],
+    [byHead('Kategoriler'), 'Bütçe çubukları', 'Kategorine aylık limit koyduysan harcadıkça çubuk dolar, limite yaklaşınca rengi değişir.'],
+    ['.trend', 'Aylara göre', 'Grafikte bir aya dokunursan o aya geçersin.'],
+    ['#addBtn', 'Yeni kayıt', 'Gelir ya da gider eklemek için dokun. Birikim sekmesinde birikim, Ödemeler’de kart ekler.']
+  ],
+  liste: [
+    ['main .card', 'Günlük takvim', 'Her günün altında o gün harcadığın toplam yazar. Bir güne dokunursan sadece o günün kayıtları kalır, tekrar dokununca hepsi gelir.'],
+    ['.day', 'Kayıtlar', 'Bir kayda dokunarak düzenleyebilir ya da silebilirsin. Tarihi gelmemiş kayıtlar “bekleniyor” olarak ayrı görünür.']
+  ],
+  birikim: [
+    ['.hero', 'Toplam birikim', 'Altın, döviz ve TL birikimlerinin bugünkü kurla toplam değeri.'],
+    ['.assets', 'Varlıkların', 'Bir varlığa dokunarak alım ya da bozdurma ekle. Elinde zaten olanları eklerken “Önceden birikmiş” işaretli kalsın, bu ayın gelirinden düşmez.'],
+    [byHead('Hedefler'), 'Hedefler', 'Tatil, araba gibi bir hedef koy. Birikim eklerken hedefi seçersen ne kadar kaldığını görürsün.'],
+    [byHead('Aylara göre'), 'Birikim yapılan aylar', 'Birikim yaptığın aylar ✓ ile işaretlenir.'],
+    [byHead('Kurlar'), 'Kurlar', 'Kurlar internetten gelir. Farklı bir fiyattan aldıysan elle değiştirebilirsin.'],
+    [byHead('Aylık birikim'), 'Aylık birikim hedefi', 'Her ay ne kadar biriktirmek istediğini yaz. Günlük harcama hakkı bu tutarı önceden ayırır.']
+  ],
+  odeme: [
+    ['main .seg', 'İki bölüm', 'Kredi kartları ve krediler bir yanda, arkadaşlarınla alacak / verecek diğer yanda.'],
+    ['.debtlist', 'Kartların ve kredilerin', 'Karta dokun: ekstre borcunu, asgari ödemeyi ve yaptığın ödemeyi gir. Kartla girdiğin harcamalar ve taksitler ekstreye kendiliğinden eklenir.'],
+    [() => [...document.querySelectorAll('main .btns')].find(b => /Kart ekle/.test(b.textContent)), 'Kart ya da kredi ekle', 'Son ödeme ve hesap kesim gününü gir. Ödeme yaklaşınca Özet’te uyarı çıkar.'],
+    [byHead('Hatırlatıcılar'), 'Hatırlatıcılar', 'Son ödeme günleri için telefonunun takvimine hatırlatıcı ekleyebilirsin.']
+  ],
+  iou: [
+    ['.iouhead', 'Alacak ve borç', 'Sana borçlu olanların ve senin borçlu olduklarının toplamı.'],
+    ['[data-addiou]', 'Alacak / verecek ekle', 'Birine borç verdiysen ya da aldıysan ekle. Aylık taksitle ödüyorsan taksiti ve gününü yaz; ödediğin taksitler o ayın giderine yazılır.']
+  ],
+  ayar: [
+    ['main section .card', 'Profil', 'Adını ve fotoğrafını değiştirebilirsin.'],
+    [byHead('Renk'), 'Renk ve görünüm', 'Uygulamanın rengini ve açık / koyu görünümü buradan seç.'],
+    [byHead('Gider kategorileri'), 'Kategoriler', 'Bir kategoriye dokun: adını, simgesini, rengini, aylık limitini ve alt başlıklarını (Netflix, Spotify gibi) düzenle.'],
+    [byHead('Veriler'), 'Yedek al', 'Kayıtların sadece bu telefonda durur. Ayda bir yedek alıp iCloud Drive’a ya da Google Drive’a kaydet. Telefon değişince yedekten yüklersin.'],
+    [byHead('Uygulama'), 'Güncelleme ve ipuçları', 'Yeni sürüm gelince uygulamayı kapatıp açman yeter. Bu ipuçlarını tekrar görmek istersen buradan açabilirsin.']
+  ],
+  'form-kayit': [
+    ['#fAmt', 'Tutar', 'Yazarken binlik noktalar kendiliğinden konur. Kuruş için virgül kullan.'],
+    [() => document.querySelector('.sheet [data-cat]')?.parentElement, 'Kategori', 'Bir kategori seç. Listede yoksa “+ Kategori” ile hemen ekle.'],
+    [() => document.querySelector('.sheet [data-paym]')?.closest('.field'), 'Ödeme şekli', 'Kredi kartıyla ödediysen kartı seç, taksit sayısını da seçebilirsin. Harcama o kartın ekstresine eklenir.'],
+    [near('fDate', '.field'), 'Tarih', 'İleri bir tarih seçersen kayıt “bekleniyor” olur, günü gelene kadar toplamlara katılmaz.'],
+    [near('fNoDaily', 'label'), 'Günlük hakka sayma', 'Kira, fatura ya da biriktirip bugün girdiğin eski bir ödemeyse işaretle. Bugünün harcama hakkından değil, ayın kalanından düşer.'],
+    [near('fRep', 'label'), 'Her ay tekrarla', 'Maaş, kira, abonelik gibi her ay olan kayıtlar için işaretle, her ay kendiliğinden eklenir.']
+  ],
+  'form-birikim': [
+    ['.sheet .seg', 'Biriktirdim / Bozdurdum', 'Aldıysan ya da kenara koyduysan “Biriktirdim”, sattıysan “Bozdurdum”.'],
+    [near('sRate', '.field'), 'Birim fiyat', 'Güncel kur kendiliğinden gelir. Farklı fiyattan aldıysan onu yaz.'],
+    [near('sOld', 'label'), 'Önceden birikmiş', 'Elinde zaten olanları eklerken işaretli bırak, günlük harcama hakkından düşmez. Bu ay maaştan ayırdığın parada işareti kaldır.']
+  ],
+  'form-iou': [
+    ['.sheet .seg', 'Kim kime borçlu?', 'Sen birine borç verdiysen “Bana borçlu”, sen borç aldıysan “Ben borçluyum”.'],
+    [near('iMon', '.two'), 'Aylık taksit', 'Borç her ay taksitle ödeniyorsa tutarı ve günü yaz. Taksit günü yaklaşınca Özet’te uyarı çıkar.'],
+    [near('iExp', 'label'), 'Gidere yaz', 'Ödediğin taksitler o ayın giderine “Borç ödemesi” olarak eklenir.']
+  ],
+  'form-kart': [
+    [near('dDay', '.field'), 'Son ödeme günü', 'Ekstrenin son ödeme günü. Yaklaşınca uyarı çıkar.'],
+    [near('dCut', '.field'), 'Hesap kesim günü', 'Bu günden sonraki harcamalar bir sonraki ekstreye geçer.'],
+    [near('dLimit', '.field'), 'Limit', 'Kartının limiti. Ne kadarını kullandığını görmek için.'],
+    [near('dBal', '.field'), 'Toplam borç', 'Taksitler dahil karttaki bütün borç. Bilmiyorsan boş bırakabilirsin.']
+  ],
+  'form-kredi': [
+    [near('dAmt', '.field'), 'Aylık taksit', 'Her ay ödediğin kredi taksiti.'],
+    [near('dCount', '.field'), 'Taksit sayısı', 'Toplam kaç ay ödeyeceğin.'],
+    [near('dStart', '.field'), 'İlk taksit', 'İlk taksidi ödediğin ay. Kaçıncı taksitte olduğunu buna göre hesaplar.']
+  ],
+  'form-odeme': [
+    [() => document.getElementById('qAll')?.parentElement, 'Hızlı seçim', 'Borcun tamamını ya da asgariyi tek dokunuşla seç, ya da tutarı kendin yaz.'],
+    [near('cExp', 'label'), 'Giderlere ekle', 'Kart harcamalarını zaten tek tek giriyorsan işaretleme, yoksa iki kez sayılır.']
+  ],
+  'form-kategori': [
+    [near('cBudget', '.field'), 'Aylık limit', 'Bu kategoride ayda en fazla ne kadar harcamak istediğini yaz. Limite yaklaşınca çubuğun rengi değişir.'],
+    [near('cDaily', 'label'), 'Günlük hakka say', 'Kira, fatura gibi sabit giderlerde işareti kaldır, günlük harcama hakkından düşmesin.'],
+    ['#cAddSub', 'Alt başlıklar', 'Örneğin Abonelikler altında Netflix, Spotify. Raporda hangisine ne gittiğini görürsün.']
+  ]
+};
+let tipOn = false;
+function tipPick(sel){ const el = typeof sel === 'function' ? sel() : document.querySelector(sel); return el && el.getClientRects().length ? el : null; }
+function maybeTips(key){
+  if(!key || tipOn || mode === 'loading' || !TIPS[key] || tipSeen()[key]) return;
+  if(/[?&]test\b/.test(location.search) && !window.__tipsTest) return;
+  if(document.getElementById('splash')) return setTimeout(() => maybeTips(currentTipKey()), 700);
+  if(!key.startsWith('form-') && document.querySelector('#sheetRoot .sheet')) return;
+  tipOn = true;
+  setTimeout(() => {
+    if(!key.startsWith('form-') && key !== currentTipKey()){ tipOn = false; return maybeTips(currentTipKey()); }   // bu arada sekme değiştiyse
+    const steps = TIPS[key].filter(s => tipPick(s[0])); if(!steps.length){ tipOn = false; return; } runTips(key, steps); }, key.startsWith('form-') ? 450 : 250);
+}
+const currentTipKey = () => view.tab === 'odeme' && view.pseg === 'iou' ? 'iou' : view.tab;
+function runTips(key, steps){
+  try { document.activeElement && document.activeElement.blur(); } catch(e){}   // klavye açılıp ipucunu örtmesin
+  const ov = document.createElement('div'); ov.id = 'tips'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+  ov.innerHTML = '<div class="tip-spot"></div><div class="tip-box" aria-live="polite"></div>';
+  document.body.appendChild(ov);
+  const spot = ov.firstChild, box = ov.lastChild; let i = 0, cur = null;
+  const end = () => { tipMark(key); ov.remove(); tipOn = false; removeEventListener('resize', place); };
+  const place = () => {
+    if(!cur) return; const r = cur.getBoundingClientRect(), pad = 6;
+    Object.assign(spot.style, {left:(r.left-pad)+'px', top:(r.top-pad)+'px', width:(r.width+pad*2)+'px', height:(r.height+pad*2)+'px'});
+    const w = Math.min(340, innerWidth - 32), bh = box.offsetHeight, below = r.bottom + pad + 12, above = r.top - pad - 12 - bh;
+    box.style.width = w + 'px'; box.style.left = Math.max(16, Math.min(innerWidth - w - 16, r.left + r.width/2 - w/2)) + 'px';
+    box.style.top = (below + bh < innerHeight - 12 ? below : above > 12 ? above : Math.max(12, innerHeight - bh - 12)) + 'px';
+  };
+  const show = () => {
+    const [sel, title, text] = steps[i]; cur = tipPick(sel);
+    if(!cur){ if(++i < steps.length) return show(); return end(); }
+    const r0 = cur.getBoundingClientRect(); if(r0.top < 70 || r0.bottom > innerHeight - 90) cur.scrollIntoView({block: r0.height > innerHeight*.5 ? 'start' : 'center'});
+    box.innerHTML = `<small>${i+1} / ${steps.length}</small><b>${esc(title)}</b><p>${esc(text)}</p><div class="btns"><button class="btn ghost" data-tskip>${i === steps.length-1 ? 'Kapat' : 'Geç'}</button><button class="btn" data-tnext>${i === steps.length-1 ? 'Anladım' : 'İleri'}</button></div>`;
+    box.querySelector('[data-tskip]').onclick = end;
+    box.querySelector('[data-tnext]').onclick = () => { if(++i < steps.length) show(); else end(); };
+    requestAnimationFrame(() => requestAnimationFrame(place)); setTimeout(place, 80);
+  };
+  addEventListener('resize', place);
+  ov.addEventListener('click', e => { if(e.target === ov || e.target === spot){ e.stopPropagation(); } });
+  show();
+}
+new MutationObserver(() => {
+  const q = id => document.getElementById(id);
+  if(!document.querySelector('#sheetRoot .sheet')) return;
+  const key = q('fAmt') && !q('fDel') ? 'form-kayit' : q('sQty') && !q('sDel') ? 'form-birikim' : q('iPerson') && !q('iDel') ? 'form-iou'
+    : q('dName') && q('dCut') && !q('dDel') ? 'form-kart' : q('dName') && q('dCount') && !q('dDel') ? 'form-kredi' : q('cPaid') ? 'form-odeme' : q('cName') ? 'form-kategori' : null;
+  maybeTips(key);
+}).observe(sheetRoot, {childList: true});
 
 /* ---------- events ---------- */
 let toastT;
