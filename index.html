@@ -318,6 +318,29 @@ button,.tap{-webkit-user-select:none;user-select:none}
 .stack i{display:block;height:100%}
 .rp-note{font-size:14px;line-height:1.5}
 .rp-note b{font-weight:600}
+/* kredi kartı ekstresi */
+.cardgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cardgrid div{background:var(--sunk);border-radius:12px;padding:8px 10px;display:grid;gap:1px;min-width:0}
+.cardgrid small{color:var(--muted);font-size:12px}
+.cardgrid b{font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cardgrid .hl{background:color-mix(in srgb,var(--accent) 14%,var(--sunk))}
+.warnc{color:var(--alarm)}
+.st.part{background:var(--accent-soft);color:var(--accent-text)}
+.cardnote{font-size:13px;color:var(--muted);line-height:1.45}
+.cardnote b{color:var(--ink);font-weight:600}
+details.charges{border:1px solid var(--line);border-radius:12px;padding:0 12px}
+details.charges summary{min-height:44px;display:flex;align-items:center;justify-content:space-between;font-weight:600;cursor:pointer;list-style:none}
+details.charges summary::-webkit-details-marker{display:none}
+details.charges summary::after{content:'›';transform:rotate(90deg);color:var(--muted);font-size:20px}
+details.charges[open] summary::after{transform:rotate(-90deg)}
+.chg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.chg small{color:var(--muted);font-size:12px}
+.chg .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.quick{display:flex;gap:8px;flex-wrap:wrap}
+.instcalc{font-size:13px;color:var(--muted)}
+.debtbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.debtbtns .btn:first-child{grid-column:1/-1}
+.instcalc b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -401,7 +424,7 @@ document.addEventListener('focusin', e => { if(e.target.matches && e.target.matc
 const dayLabel = (iso, opt={day:'numeric',month:'long',weekday:'long'}) => new Date(iso+'T12:00').toLocaleDateString('tr-TR', opt);
 const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const parseAmt = v => { v=String(v).trim().replace(/[\s₺$€]/g,'').replace(/\./g,'').replace(',','.'); const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.round(n*100)/100 : null; };
+const parseAmt = v => { if(typeof v==='number') return isFinite(v)&&v>0 ? Math.round(v*100)/100 : null; v=String(v).trim().replace(/[\s₺$€]/g,'').replace(/\./g,'').replace(',','.'); const n=parseFloat(v); return isFinite(n)&&n>0 ? Math.round(n*100)/100 : null; };
 
 const defaultSettings = () => ({
   cats: [
@@ -476,11 +499,14 @@ async function flush(id){
   }
   running[id] = false;
 }
+let dataVer = 0;
 function saveMonth(ym){
+  dataVer++;
   if(mode==='db') queueWrite('m-'+ym, S.months[ym] || {items:[],skip:[]});
   else saveLocal();
 }
 function saveSettings(){
+  dataVer++;
   if(mode==='db') queueWrite('settings', S.settings);
   else saveLocal();
 }
@@ -513,12 +539,21 @@ async function init(){
 /* ---------- derived data ---------- */
 const cat = id => S.settings.cats.find(c=>c.id===id) || {id, name:'Silinmiş kategori', t:'out', budget:0};
 const monthDoc = ym => { const m = S.months[ym] || (S.months[ym] = {items:[], skip:[], sav:[], pay:{}}); m.sav = m.sav||[]; m.pay = m.pay||{}; return m; };
+/* taksitli harcamalar: her ay o ayın taksiti kadar gider sayılır */
+const isoAddMonths = (iso, k) => { const ym = ymAdd(iso.slice(0,7), k); return `${ym}-${pad(Math.min(+iso.slice(8), daysIn(ym)))}`; };
+const instPart = (it, k) => { const n = it.inst||1; if(n<=1) return it.amt; const base = Math.floor(it.amt*100/n)/100; return k<n ? base : Math.round((it.amt - base*(n-1))*100)/100; };
+function instItems(){ const a = []; for(const [ym,m] of Object.entries(S.months)) for(const it of (m.items||[])) if((it.inst||1)>1) a.push({ym, it}); return a; }
+function findItem(id){ for(const m of Object.values(S.months)){ const it = (m.items||[]).find(x=>x.id===id); if(it) return it; } return null; }
 function entriesFor(ym){
   const m = S.months[ym] || {items:[], skip:[]};
-  const list = m.items.map(x=>({...x}));
+  const list = m.items.map(x => (x.inst||1)>1 ? {...x, srcId:x.id, total:x.amt, amt:instPart(x,1), instNo:1} : {...x});
+  for(const {ym:iym, it} of instItems()){
+    const k = ymDiff(iym, ym) + 1;
+    if(k>=2 && k<=it.inst) list.push({...it, id:`i:${it.id}:${k}`, srcId:it.id, total:it.amt, amt:instPart(it,k), instNo:k, date:isoAddMonths(it.date, k-1)});
+  }
   for(const r of S.settings.recurring){
     if(ym < r.from || (r.until && ym > r.until) || (m.skip||[]).includes(r.id)) continue;
-    list.push({ id:'r:'+r.id, rid:r.id, t:r.t, amt:r.amt, cat:r.cat, sub:r.sub, note:r.note,
+    list.push({ id:'r:'+r.id, rid:r.id, t:r.t, amt:r.amt, cat:r.cat, sub:r.sub, pay:r.pay, note:r.note,
       date:`${ym}-${pad(Math.min(r.day, daysIn(ym)))}`, rec:true });
   }
   return list.sort((a,b)=> b.date.localeCompare(a.date) || (b.rec?0:1)-(a.rec?0:1));
@@ -547,6 +582,7 @@ function totals(ym){
 /* ---------- render ---------- */
 const main = document.getElementById('main');
 function render(){
+  dataVer++;
   document.getElementById('monthLbl').textContent = ymLabel(view.ym);
   applyTheme();
   document.querySelectorAll('nav .tab').forEach(b => { if(b.dataset.tab===view.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
@@ -797,7 +833,7 @@ function renderList(){
     <div class="day"><h3><span>${d===todayISO?'Bugün · ':''}${dayLabel(d)}</span><span class="num">${outBy[d]?'−'+tl.format(outBy[d]):''}${inBy[d]?(outBy[d]?' · ':'')+'+'+tl.format(inBy[d]):''}</span></h3><div class="items">
     ${es.map(e => { const c=cat(e.cat); return `<button class="item" data-edit="${esc(e.id)}">
       <span class="dot">${esc(c.name.charAt(0))}</span>
-      <span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${esc(c.name)}${subName(e.cat,e.sub) ? ' › '+esc(subName(e.cat,e.sub)) : ''}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
+      <span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${esc(c.name)}${subName(e.cat,e.sub) ? ' › '+esc(subName(e.cat,e.sub)) : ''}${e.pay && cardById(e.pay) ? ' · '+esc(cardById(e.pay).name) : ''}${e.instNo ? ` · <b>${e.instNo}/${e.inst} taksit</b> (${tl.format(e.total)})` : ''}${e.rec?'<span class="rec">↻ her ay</span>':''}</small></span>
       <span class="amt num ${e.t}">${e.t==='in'?'+':'−'}${tl.format(e.amt)}</span></button>`; }).join('')}
     </div></div>`).join('');
   }
@@ -812,11 +848,56 @@ const isoAdd = (iso,n) => { const d=new Date(iso+'T12:00'); d.setDate(d.getDate(
 function instNo(d, ym){ if(d.kind!=='loan') return ym >= d.from ? 1 : 0; const i = ymDiff(d.start, ym); return i>=0 && i<d.count ? i+1 : 0; }
 const dueOf = (d, ym) => `${ym}-${pad(Math.min(d.dueDay, daysIn(ym)))}`;
 const payOf = (d, ym) => ((S.months[ym]||{}).pay||{})[d.id] || null;
-const amtOf = (d, ym) => { const p = payOf(d, ym); return (p && p.amt) || (d.kind==='loan' ? d.amt : 0); };
+const cards = () => debts().filter(d=>d.kind==='card');
+const cardById = id => id ? debts().find(d=>d.id===id && d.kind==='card') : null;
+const cutDayOf = d => d.cutDay || (d.dueDay > 10 ? d.dueDay - 10 : d.dueDay + 18);
+// Ekstre: (önceki kesim, bu kesim] arasındaki harcama/taksitler + önceki aydan devreden borç
+function cutISO(d, ym){ const cd = cutDayOf(d), cm = cd < d.dueDay ? ym : ymAdd(ym,-1); return `${cm}-${pad(Math.min(cd, daysIn(cm)))}`; }
+let _cc = {ver:-1, ch:{}, st:{}};
+const ccache = () => { if(_cc.ver !== dataVer) _cc = {ver:dataVer, ch:{}, st:{}}; return _cc; };
+function cardCharges(d){
+  const c = ccache(); if(c.ch[d.id]) return c.ch[d.id];
+  const out = [];
+  for(const m of Object.values(S.months)) for(const it of (m.items||[])) if(it.t==='out' && it.pay===d.id){
+    const n = it.inst||1; for(let k=1;k<=n;k++) out.push({date:isoAddMonths(it.date,k-1), amt:instPart(it,k), it, k, n});
+  }
+  const horizon = ymAdd(todayYM, 13);
+  for(const r of S.settings.recurring) if(r.t==='out' && r.pay===d.id)
+    for(let ym=r.from; ym<=horizon && (!r.until || ym<=r.until); ym=ymAdd(ym,1)){
+      if(((S.months[ym]||{}).skip||[]).includes(r.id)) continue;
+      out.push({date:`${ym}-${pad(Math.min(r.day,daysIn(ym)))}`, amt:r.amt, it:{note:r.note, cat:r.cat, sub:r.sub, rec:true}, k:1, n:1});
+    }
+  out.sort((a,b)=>a.date.localeCompare(b.date));
+  return c.ch[d.id] = out;
+}
+function cardRec(d, ym){ const p = payOf(d, ym) || {};
+  return { stmt: p.stmt !== undefined ? p.stmt : (p.amt != null ? p.amt : null), min: p.min != null ? p.min : null,
+           paidAmt: p.paidAmt != null ? p.paidAmt : (p.paid ? (p.amt||0) : 0), exp: p.exp || null }; }
+const r2 = v => Math.round(v*100)/100;
+function cardStmt(d, ym){
+  const c = ccache(), key = d.id+'|'+ym; if(c.st[key]) return c.st[key];
+  if(ym < d.from) return c.st[key] = {charges:[], carry:0, computed:0, total:0, min:0, paid:0, left:0, rec:cardRec(d,ym)};
+  const rec = cardRec(d, ym), lo = cutISO(d, ymAdd(ym,-1)), hi = cutISO(d, ym);
+  const charges = cardCharges(d).filter(x => x.date > lo && x.date <= hi);
+  const carry = ymAdd(ym,-1) >= d.from ? cardStmt(d, ymAdd(ym,-1)).left : 0;
+  const computed = r2(charges.reduce((a,x)=>a+x.amt,0) + carry);
+  const total = rec.stmt != null ? rec.stmt : computed;
+  const min = Math.min(total, rec.min != null ? rec.min : r2(total * (d.minRate||0.2)));
+  const paid = rec.paidAmt || 0;
+  return c.st[key] = {charges, carry, computed, total, min, paid, left: Math.max(0, r2(total - paid)), rec};
+}
+const pendingOf = (d, ym) => r2(cardCharges(d).filter(x => x.date > cutISO(d, ym)).reduce((a,x)=>a+x.amt,0));
+const amtOf = (d, ym) => { if(d.kind==='card') return cardStmt(d, ym).total; const p = payOf(d, ym); return (p && p.amt) || d.amt; };
+const paidAmtOf = (d, ym) => d.kind==='card' ? cardStmt(d, ym).paid : ((payOf(d,ym)||{}).paid ? amtOf(d,ym) : 0);
+// "Rahat" sayılır: kartta en az asgari ödenmiş ya da borç yok; kredide taksit ödenmiş
+const settled = (d, ym) => { if(d.kind==='card'){ const s = cardStmt(d, ym); return s.total <= 0 || (s.paid > 0 && s.paid >= s.min); } return !!(payOf(d,ym)||{}).paid; };
 function statusOf(d, ym){
-  const p = payOf(d, ym);
-  if(p && p.paid) return {cls:'paid', txt:'Ödendi'};
   if(ym < d.from) return {cls:'paid', txt:'Takip öncesi'};
+  if(d.kind==='card'){ const s = cardStmt(d, ym);
+    if(s.total <= 0) return {cls:'paid', txt:'Borç yok'};
+    if(s.paid >= s.total) return {cls:'paid', txt:'Ödendi'};
+    if(s.paid > 0 && s.paid >= s.min) return {cls:'part', txt:'Asgari ödendi'};
+  } else if((payOf(d, ym)||{}).paid) return {cls:'paid', txt:'Ödendi'};
   const n = dayDiff(todayISO, dueOf(d, ym));
   if(n < 0) return {cls:'late', txt:`${-n} gün gecikti`};
   if(n === 0) return {cls:'today', txt:'Son gün bugün'};
@@ -840,13 +921,29 @@ const notifOK = () => 'Notification' in window && 'serviceWorker' in navigator;
 function renderDebts(){
   const ym = view.ym, act = debts().filter(d=>instNo(d,ym));
   const total = act.reduce((a,d)=>a+amtOf(d,ym),0);
-  const paid = act.filter(d=>(payOf(d,ym)||{}).paid).reduce((a,d)=>a+amtOf(d,ym),0);
+  const paid = act.reduce((a,d)=>a+paidAmtOf(d,ym),0);
+  const cardItem = d => {
+    const st = statusOf(d,ym), s = cardStmt(d,ym), pend = pendingOf(d,ym), lim = d.limit||0;
+    const due = dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'});
+    return `<div class="card debt"><div class="debt-top"><div><b>${esc(d.name)}</b><small>Son ödeme ${due} · kesim ${cutDayOf(d)}</small></div><span class="st ${st.cls}">${st.txt}</span></div>
+      <div class="cardgrid">
+        <div class="hl"><small>Ekstre borcu</small><b>${tl.format(s.total)}</b></div>
+        <div><small>Asgari ödeme</small><b>${tl.format(s.min)}</b></div>
+        <div><small>Ödenen</small><b>${tl.format(s.paid)}</b></div>
+        <div><small>Kalan borç</small><b class="${s.left>0 && st.cls!=='paid' ? 'warnc' : ''}">${tl.format(s.left)}</b></div>
+      </div>
+      <div class="cardnote">${s.charges.length ? `${s.charges.length} harcama/taksit bu ekstrede` : 'Bu ekstreye harcama girmemiş'}${s.carry ? ` · önceki aydan devreden <b>${tl.format(s.carry)}</b>` : ''}${s.rec.stmt != null ? ' · tutar elle girildi' : ''}${pend ? `<br>Sonraki ekstrelere kalan: <b>${tl.format(pend)}</b> (taksitler dahil)` : ''}${(s.left||pend) ? `<br>Kartın toplam borcu: <b>${tl.format(r2(s.left+pend))}</b>` : ''}${lim ? ` · kullanılabilir limit <b>${tl.format(Math.max(0, r2(lim - s.left - pend)))}</b>` : ''}</div>
+      <div class="btns debtbtns"><button class="btn sm" data-pay="${d.id}">${s.paid ? 'Ödemeyi düzenle' : 'Öde / ekstre'}</button>
+      <button class="btn sm ghost" data-ics="${d.id}">Takvime ekle</button>
+      <button class="btn sm ghost" data-dedit="${d.id}">Düzenle</button></div></div>`;
+  };
   const item = d => {
+    if(d.kind==='card') return cardItem(d);
     const st = statusOf(d,ym), p = payOf(d,ym), a = amtOf(d,ym), n = instNo(d,ym), isPaid = p && p.paid;
     const sub = d.kind==='loan' ? `Taksit ${n}/${d.count} · son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}` : `Son ödeme ${dayLabel(dueOf(d,ym),{day:'numeric',month:'long',weekday:'long'})}`;
     const amt = d.kind==='card' && !a ? `<span class="note">Ekstre tutarı henüz girilmedi</span>` : `<span class="amtbig num">${tl.format(a)}</span>`;
     return `<div class="card debt"><div class="debt-top"><div><b>${esc(d.name)}</b><small>${sub}</small></div><span class="st ${st.cls}">${st.txt}</span></div>${amt}
-      <div class="btns"><button class="btn sm${isPaid?' ghost':''}" data-pay="${d.id}">${isPaid?'Ödemeyi geri al':d.kind==='card'?'Ekstre gir / öde':'Ödendi işaretle'}</button>
+      <div class="btns debtbtns"><button class="btn sm${isPaid?' ghost':''}" data-pay="${d.id}">${isPaid?'Ödemeyi geri al':d.kind==='card'?'Ekstre gir / öde':'Ödendi işaretle'}</button>
       <button class="btn sm ghost" data-ics="${d.id}">Takvime ekle</button>
       <button class="btn sm ghost" data-dedit="${d.id}">Düzenle</button></div></div>`;
   };
@@ -900,6 +997,59 @@ function unpay(d, ym){
   m.pay[d.id] = {amt:p.amt, paid:false};
   saveMonth(ym);
 }
+function openCardPaySheet(d, ym){
+  const s0 = cardStmt(d, ym);
+  const st = { stmt: s0.total, min: s0.min, paid: s0.paid || '', exp: !!s0.rec.exp };
+  const draw = () => {
+    const s = cardStmt(d, ym);
+    sheetRoot.innerHTML = `<div class="scrim" data-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(d.name)} ekstresi"><div class="in">
+      <div class="grab"></div>
+      <div class="sec-head" style="margin:0"><h2>${esc(d.name)}</h2><button class="icon-btn" data-close>Kapat</button></div>
+      <div class="note">${ymLabel(ym)} ekstresi · son ödeme ${dayLabel(dueOf(d,ym))}</div>
+      <div class="two">
+        <div class="field"><label class="label" for="cStmt">Ekstre borcu (₺)</label><input id="cStmt" class="num" inputmode="decimal" data-money autocomplete="off" value="${fmtIn(st.stmt)}"></div>
+        <div class="field"><label class="label" for="cMin">Asgari ödeme (₺)</label><input id="cMin" class="num" inputmode="decimal" data-money autocomplete="off" value="${fmtIn(st.min)}"></div>
+      </div>
+      <div class="cardnote">Harcamalardan hesaplanan: <b>${tl.format(s.computed)}</b>${s.carry ? ` (önceki aydan devreden ${tl.format(s.carry)} dahil)` : ''} · asgari %${Math.round((d.minRate||0.2)*100)}. Bankanın ekstresi farklıysa yukarıdan düzelt.${s.rec.stmt != null || s.rec.min != null ? ' <button class="chip" id="cReset" style="margin-top:6px">Hesaplanan tutarlara dön</button>' : ''}</div>
+      <div class="field"><label class="label" for="cPaid">Ödediğin tutar (₺)</label>
+        <input class="amount-in num" id="cPaid" inputmode="decimal" data-money autocomplete="off" placeholder="0" value="${fmtIn(st.paid)}">
+        <div class="quick"><button class="chip" id="qAll">Tamamı · ${tl.format(parseAmt(st.stmt)||0)}</button><button class="chip" id="qMin">Asgari · ${tl.format(parseAmt(st.min)||0)}</button>${s.paid ? '<button class="chip" id="qZero">Ödenmedi</button>' : ''}</div>
+      </div>
+      <div class="cardnote" id="cLeft"></div>
+      <label class="check"><input type="checkbox" id="cExp" ${st.exp?'checked':''}> Ödemeyi bu ayın giderlerine de ekle</label>
+      <div class="note">Kart harcamalarını zaten tek tek gider olarak giriyorsan bunu işaretleme, yoksa iki kez sayılır.</div>
+      <button class="btn" id="cSave">Kaydet</button>
+      ${s.charges.length ? `<details class="charges"><summary>Bu ekstredeki harcamalar (${s.charges.length})</summary>${s.charges.map(x=>`<div class="chg"><span>${esc(x.it.note || subName(x.it.cat,x.it.sub) || cat(x.it.cat).name)}<br><small>${dayLabel(x.date,{day:'numeric',month:'short'})}${x.n>1 ? ` · ${x.k}/${x.n} taksit` : ''}${x.it.rec ? ' · her ay' : ''}</small></span><span class="r">${tl.format(x.amt)}</span></div>`).join('')}${s.carry ? `<div class="chg"><span>Önceki aydan devreden</span><span class="r">${tl.format(s.carry)}</span></div>` : ''}</details>` : ''}
+    </div></div>`;
+    const keep = () => { st.stmt = document.getElementById('cStmt').value; st.min = document.getElementById('cMin').value; st.paid = document.getElementById('cPaid').value; st.exp = document.getElementById('cExp').checked; };
+    const left = () => { const t = parseAmt(document.getElementById('cStmt').value)||0, p = parseAmt(document.getElementById('cPaid').value)||0, mn = parseAmt(document.getElementById('cMin').value)||0;
+      document.getElementById('cLeft').innerHTML = !t ? '' : p >= t ? '<b>Borcun tamamı kapanıyor.</b>' : `Kalan borç <b>${tl.format(r2(t-p))}</b> bir sonraki ekstreye devreder.${p && p < mn ? ' <b class="warnc">Asgari ödemenin altında, gecikme faizi işleyebilir.</b>' : ''}`; };
+    ['cStmt','cPaid','cMin'].forEach(id => document.getElementById(id).addEventListener('input', left)); left();
+    sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
+    document.getElementById('qAll').onclick = () => { keep(); st.paid = parseAmt(st.stmt)||0; draw(); };
+    document.getElementById('qMin').onclick = () => { keep(); st.paid = parseAmt(st.min)||0; draw(); };
+    const qz = document.getElementById('qZero'); if(qz) qz.onclick = () => { keep(); st.paid = ''; draw(); };
+    const rs = document.getElementById('cReset'); if(rs) rs.onclick = () => { keep(); const m = monthDoc(ym), p = m.pay[d.id]||{}; m.pay[d.id] = {...p, stmt:null, min:null}; delete m.pay[d.id].amt; dataVer++; const s2 = cardStmt(d, ym); st.stmt = s2.total; st.min = s2.min; draw(); };
+    document.getElementById('cSave').onclick = () => {
+      keep();
+      const stmt = String(st.stmt).trim()==='' ? 0 : parseAmt(st.stmt), mn = String(st.min).trim()==='' ? 0 : parseAmt(st.min), paid = String(st.paid).trim()==='' ? 0 : parseAmt(st.paid);
+      if(stmt===null || mn===null || paid===null) return toast('Tutarları kontrol et.');
+      const m = monthDoc(ym), old = m.pay[d.id] || {};
+      if(old.exp) m.items = m.items.filter(i=>i.id!==old.exp);
+      let exp = null;
+      if(st.exp && paid > 0){ exp = uid(); m.items.push({id:exp, t:'out', amt:paid, cat:ensureCat('kartodeme','Kart ödemesi'), date: ym===todayYM ? todayISO : dueOf(d,ym), note:`${d.name} ödemesi`}); }
+      const base = cardStmt(d, ym);  // hesaplanan değerler (elle girilmediyse saklamayız)
+      const stmtOv = Math.abs(stmt - base.computed) < 0.005 ? null : stmt;
+      const defMin = r2(stmt * (d.minRate||0.2));
+      const minOv = Math.abs(mn - defMin) < 0.005 ? null : mn;
+      m.pay[d.id] = {stmt: stmtOv, min: minOv, paidAmt: paid, paidOn: paid ? todayISO : null, exp};
+      saveMonth(ym); closeSheet(); render();
+      toast(!paid ? 'Ekstre kaydedildi' : paid >= stmt ? 'Borcun tamamı ödendi' : paid >= mn ? 'Ödeme kaydedildi, kalan borç devreder' : 'Ödeme kaydedildi');
+    };
+  };
+  draw();
+}
 function openPaySheet(d, ym){
   const st = { amt: amtOf(d,ym) || '', exp: d.kind==='loan' };
   const draw = () => {
@@ -937,6 +1087,12 @@ function openDebtSheet(d, kind){
         <div class="field"><label class="label" for="dDay">Son ödeme günü</label><input id="dDay" class="num" type="number" inputmode="numeric" min="1" max="31" placeholder="Ayın kaçı" value="${st.dueDay}"></div>
         <div class="field"><label class="label" for="dRem">Hatırlatma</label><select id="dRem">${[1,2,3,5,7].map(n=>`<option value="${n}" ${+st.remind===n?'selected':''}>${n} gün önce</option>`).join('')}</select></div>
       </div>
+      ${!loan ? `<div class="two">
+        <div class="field"><label class="label" for="dCut">Hesap kesim günü</label><input id="dCut" class="num" type="number" inputmode="numeric" min="1" max="31" placeholder="Ayın kaçı" value="${st.cutDay||''}"></div>
+        <div class="field"><label class="label" for="dMin">Asgari ödeme oranı</label><select id="dMin">${[0.2,0.3,0.4].map(r=>`<option value="${r}" ${(st.minRate||0.2)===r?'selected':''}>%${r*100}</option>`).join('')}</select></div>
+      </div>
+      <div class="field"><label class="label" for="dLimit">Kart limiti (₺, isteğe bağlı)</label><input id="dLimit" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Örn. 50.000" value="${st.limit?fmtIn(st.limit):''}"></div>
+      <div class="note">Kesim günü ekstrede yazar. Boş bırakırsan son ödeme gününden 10 gün öncesi sayılır. Asgari oran bankaya ve limite göre değişir, ekstrende yazanı seç.</div>` : ''}
       ${loan ? `<div class="two">
         <div class="field"><label class="label" for="dAmt">Aylık taksit (₺)</label><input id="dAmt" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Örn. 5.250" value="${st.amt?fmtIn(st.amt):''}"></div>
         <div class="field"><label class="label" for="dCount">Taksit sayısı</label><input id="dCount" class="num" type="number" inputmode="numeric" min="1" max="480" placeholder="Örn. 24" value="${st.count}"></div>
@@ -947,7 +1103,8 @@ function openDebtSheet(d, kind){
       ${editing ? '<button class="btn ghost" id="dDel" style="color:var(--out)">Sil</button>' : ''}
     </div></div>`;
     const keep = () => { st.name=document.getElementById('dName').value; st.dueDay=document.getElementById('dDay').value; st.remind=+document.getElementById('dRem').value;
-      if(st.kind==='loan'){ st.amt=document.getElementById('dAmt').value; st.count=document.getElementById('dCount').value; st.start=document.getElementById('dStart').value; } };
+      if(st.kind==='loan'){ st.amt=document.getElementById('dAmt').value; st.count=document.getElementById('dCount').value; st.start=document.getElementById('dStart').value; }
+      else { st.cutDay=document.getElementById('dCut').value; st.minRate=+document.getElementById('dMin').value; st.limit=document.getElementById('dLimit').value; } };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>{ keep(); st.kind=b.dataset.kind; draw(); });
     document.getElementById('dSave').onclick = () => {
@@ -956,6 +1113,13 @@ function openDebtSheet(d, kind){
       if(!name) return toast('Bir ad yaz.');
       if(!(day>=1 && day<=31)) return toast('Son ödeme günü 1 ile 31 arasında olmalı.');
       const rec = {kind:st.kind, name, dueDay:day, remind:st.remind||3};
+      if(st.kind==='card'){
+        const cut = String(st.cutDay||'').trim()==='' ? null : parseInt(st.cutDay,10);
+        if(cut!==null && !(cut>=1 && cut<=31)) return toast('Kesim günü 1 ile 31 arasında olmalı.');
+        const lim = String(st.limit||'').trim()==='' ? 0 : parseAmt(st.limit);
+        if(lim===null) return toast('Limiti kontrol et.');
+        Object.assign(rec, {cutDay:cut, minRate:st.minRate||0.2, limit:lim||0});
+      }
       if(st.kind==='loan'){
         const amt = parseAmt(st.amt), count = parseInt(st.count,10);
         if(!amt) return toast('Aylık taksiti yaz.');
@@ -976,7 +1140,7 @@ function openDebtSheet(d, kind){
 /* takvim (.ics) hatırlatıcısı */
 function icsText(d){
   let ym = todayYM;
-  if(dayDiff(todayISO, dueOf(d, ym)) < 0 || (payOf(d, ym)||{}).paid) ym = ymAdd(ym, 1);
+  if(dayDiff(todayISO, dueOf(d, ym)) < 0 || settled(d, ym)) ym = ymAdd(ym, 1);
   const byDay = d.dueDay > 28 ? `BYMONTHDAY=${Array.from({length:d.dueDay-27},(_,i)=>28+i).join(',')};BYSETPOS=-1` : `BYMONTHDAY=${d.dueDay}`;
   let rule = `FREQ=MONTHLY;${byDay}`;
   if(d.kind==='loan'){
@@ -1016,7 +1180,7 @@ async function writeReminders(){
     const list = [];
     for(const ym of [ymAdd(todayYM,-1), todayYM, ymAdd(todayYM,1), ymAdd(todayYM,2)])
       for(const d of debts()){
-        if(!instNo(d,ym) || ym < d.from || (payOf(d,ym)||{}).paid) continue;
+        if(!instNo(d,ym) || ym < d.from || settled(d,ym)) continue;
         const v = amtOf(d,ym);
         list.push({key:d.id+'@'+ym, name:d.name, due:dueOf(d,ym), from:isoAdd(dueOf(d,ym), -(d.remind||3)), amt: v ? tl.format(v) : ''});
       }
@@ -1047,7 +1211,7 @@ function reportData(ym){
   const byDay = {}; outs.forEach(e=>{ byDay[e.date]=(byDay[e.date]||0)+e.amt; });
   const peak = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
   const act = debts().filter(d=>instNo(d,ym));
-  const dTot = act.reduce((a,d)=>a+amtOf(d,ym),0), dPaid = act.filter(d=>(payOf(d,ym)||{}).paid).reduce((a,d)=>a+amtOf(d,ym),0);
+  const dTot = act.reduce((a,d)=>a+amtOf(d,ym),0), dPaid = act.reduce((a,d)=>a+paidAmtOf(d,ym),0);
   const prevHas = entriesFor(pym).length > 0;
   return {ym, pym, cur, prev, prevHas, fixed, top, cats, limited, over, elapsed, peak, sav: savMonthTL(ym), dTot, dPaid, left: cur.inc-cur.out};
 }
@@ -1350,6 +1514,8 @@ const sheetRoot = document.getElementById('sheetRoot');
 function openSheet(entry){
   const editing = !!entry;
   const st = entry ? {...entry} : { t:'out', amt:'', cat:null, date: view.ym===todayYM ? todayISO : `${view.ym}-01`, note:'', rec:false };
+  st.pay = st.pay && cardById(st.pay) ? st.pay : (entry ? 'cash' : (cardById(S.settings.lastPay) ? S.settings.lastPay : 'cash'));
+  st.inst = st.inst || 1;
   if(editing && entry.rec){ const r=S.settings.recurring.find(x=>x.id===entry.rid); st.date = entry.date; st.repeat = true; st.rule = r; }
   st.repeat = st.repeat || false;
   const draw = () => {
@@ -1374,6 +1540,13 @@ function openSheet(entry){
         ${subs.map(x=>`<button class="chip" data-sub="${esc(x.id)}" aria-pressed="${x.id===st.sub}">${esc(x.name)}</button>`).join('')}
         ${st.addingSub ? `<span class="subadd"><input id="fNewSub" maxlength="30" placeholder="${cc.id==='abonelik'?'Örn. Netflix':'Alt başlık adı'}"><button class="chip" id="fNewSubOk" aria-pressed="true">Ekle</button></span>` : `<button class="chip" id="fAddSub">+ Yeni</button>`}
       </div></div>` : ''}
+      ${st.t==='out' && cards().length ? `<div class="field"><span class="label">Ödeme</span><div class="chips">
+        <button class="chip" data-paym="cash" aria-pressed="${st.pay==='cash'}">Nakit / banka kartı</button>
+        ${cards().map(c=>`<button class="chip" data-paym="${esc(c.id)}" aria-pressed="${st.pay===c.id}">${esc(c.name)}</button>`).join('')}
+      </div></div>
+      ${st.pay!=='cash' && !st.repeat && !(editing && entry.rec) ? `<div class="field"><span class="label">Taksit</span><div class="chips">
+        ${[1,2,3,4,6,9,12].map(n=>`<button class="chip" data-inst="${n}" aria-pressed="${(st.inst||1)===n}">${n===1?'Tek çekim':n+' taksit'}</button>`).join('')}
+      </div><div class="instcalc" id="instCalc"></div></div>` : ''}` : ''}
       <div class="two">
         <div class="field"><label class="label" for="fDate">Tarih</label><input type="date" id="fDate" value="${st.date}"></div>
         <div class="field"><label class="label" for="fNote">Not</label><input id="fNote" maxlength="60" placeholder="İsteğe bağlı" value="${esc(st.note||'')}"></div>
@@ -1399,6 +1572,13 @@ function openSheet(entry){
       st.sub = ex.id; st.addingSub = false; draw(); };
     const ok = document.getElementById('fNewSubOk'); if(ok) ok.onclick = addSub;
     const ni = document.getElementById('fNewSub'); if(ni) ni.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); addSub(); } });
+    sheetRoot.querySelectorAll('[data-paym]').forEach(b=>b.onclick=()=>{ keep(); st.pay=b.dataset.paym; if(st.pay==='cash') st.inst=1; draw(); });
+    sheetRoot.querySelectorAll('[data-inst]').forEach(b=>b.onclick=()=>{ keep(); st.inst=+b.dataset.inst; draw(); });
+    const rep = document.getElementById('fRep'); if(rep) rep.addEventListener('change', () => { keep(); if(st.repeat) st.inst = 1; draw(); });
+    const calc = () => { const el = document.getElementById('instCalc'); if(!el) return; const v = parseAmt(document.getElementById('fAmt').value), n = st.inst||1;
+      const d = document.getElementById('fDate').value || todayISO;
+      el.innerHTML = !v ? '' : n<=1 ? `Tek çekim · ${esc(cardById(st.pay).name)} ekstresine ${tl.format(v)} olarak girer.` : `<b>${n} × ${tl.format(instPart({amt:v,inst:n},1))}</b> · her ay giderlere bu kadar yansır · son taksit ${ymLabel(ymAdd(d.slice(0,7), n-1))}`; };
+    document.getElementById('fAmt').addEventListener('input', calc); calc();
     document.getElementById('fSave').onclick = () => { keep(); save(st, entry); };
     const del = document.getElementById('fDel');
     if(del) del.onclick = () => { if(!del.dataset.armed){ del.dataset.armed=1; del.textContent='Silmek için tekrar dokun'; return; } removeItem(entry); };
@@ -1452,7 +1632,9 @@ function closeSheetAnimated(){
 })();
 document.addEventListener('keydown', e => { if(e.key==='Escape' && sheetRoot.innerHTML) closeSheet(); });
 
+const payFields = st => st.t==='out' && st.pay && st.pay!=='cash' ? {pay:st.pay, inst: st.inst>1 ? st.inst : 1} : {};
 function save(st, entry){
+  if(st.t==='out' && st.pay && S.settings.lastPay !== st.pay){ S.settings.lastPay = st.pay; saveSettings(); }
   const amt = parseAmt(st.amt);
   if(!amt) return toast('Tutarı yaz (örn. 1.250,50).');
   if(!st.cat) return toast('Bir kategori seç.');
@@ -1460,18 +1642,18 @@ function save(st, entry){
   const ym = st.date.slice(0,7), day = +st.date.slice(8);
   if(entry && entry.rec){
     const r = S.settings.recurring.find(x=>x.id===entry.rid);
-    Object.assign(r, {t:st.t, amt, cat:st.cat, sub:st.sub||null, note:st.note.trim(), day});
+    Object.assign(r, {t:st.t, amt, cat:st.cat, sub:st.sub||null, pay: st.t==='out' && st.pay!=='cash' ? st.pay : null, note:st.note.trim(), day});
     saveSettings();
   } else if(entry){
     const oldYm = entry.date.slice(0,7);
     const om = monthDoc(oldYm); om.items = om.items.filter(i=>i.id!==entry.id);
-    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, date:st.date, note:st.note.trim()});
+    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), date:st.date, note:st.note.trim()});
     saveMonth(oldYm); if(ym!==oldYm) saveMonth(ym);
   } else if(st.repeat){
-    S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, note:st.note.trim(), day, from:ym});
+    S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, pay: st.t==='out' && st.pay!=='cash' ? st.pay : null, note:st.note.trim(), day, from:ym});
     saveSettings();
   } else {
-    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, date:st.date, note:st.note.trim()});
+    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), date:st.date, note:st.note.trim()});
     saveMonth(ym);
   }
   view.ym = ym; closeSheet(); render(); toast(entry ? 'Güncellendi' : 'Kaydedildi');
@@ -1503,6 +1685,7 @@ main.addEventListener('click', e => {
   const dy = e.target.closest('[data-day]'); if(dy){ view.day = dy.dataset.day && dy.dataset.day!==view.day ? dy.dataset.day : null; render(); return; }
   const find = id => debts().find(x=>x.id===id);
   const pb = e.target.closest('[data-pay]'); if(pb){ const d=find(pb.dataset.pay); if(!d) return;
+    if(d.kind==='card'){ openCardPaySheet(d, view.ym); return; }
     if((payOf(d,view.ym)||{}).paid){ if(!pb.dataset.armed){ pb.dataset.armed=1; pb.textContent='Geri almak için tekrar dokun'; return; } unpay(d,view.ym); render(); toast('Ödeme geri alındı'); }
     else openPaySheet(d, view.ym); return; }
   const ic = e.target.closest('[data-ics]'); if(ic){ const d=find(ic.dataset.ics); if(d) addToCalendar(d); return; }
@@ -1510,7 +1693,9 @@ main.addEventListener('click', e => {
   const ad = e.target.closest('[data-adddebt]'); if(ad){ openDebtSheet(null, ad.dataset.adddebt); return; }
   const sv = e.target.closest('[data-sedit]'); if(sv){ const x=savFor(view.ym).find(y=>y.id===sv.dataset.sedit); if(x) openSavSheet(x); return; }
   const b = e.target.closest('[data-edit]'); if(!b) return;
-  const entry = entriesFor(view.ym).find(x=>x.id===b.dataset.edit); if(entry) openSheet(entry);
+  const entry = entriesFor(view.ym).find(x=>x.id===b.dataset.edit); if(!entry) return;
+  if(entry.srcId){ const orig = findItem(entry.srcId); if(orig) openSheet({...orig}); return; }
+  openSheet(entry);
 });
 
 // Açılış ekranı: video bitince (en geç 4 sn) ya da dokununca kaybolur
