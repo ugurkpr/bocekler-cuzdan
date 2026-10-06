@@ -11,9 +11,22 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1320x2868.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1206x2622.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1284x2778.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1242x2688.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/828x1792.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash/750x1334.jpg">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash/1242x2208.jpg">
 <title>Böcekler Cüzdan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="splash-poster.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <style>
 /* Layout: tek sütun telefon uygulaması — üstte ay seçici, ortada sekme içeriği, altta sabit sekme çubuğu + ekle düğmesi */
 :root{
@@ -367,6 +380,21 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
   <div class="pic"><video id="splashVid" src="splash.mp4" poster="splash-poster.jpg" muted playsinline autoplay preload="auto"></video></div>
   <div class="nm">Böcekler<small>Cüzdan</small></div>
 </div>
+<script>
+(() => {
+  // Fıstıklar: farklı boy, hız ve derinlik; açılışta ekran zaten dolu olsun diye negatif gecikme
+  const nuts = document.getElementById('nuts'), rnd = (a,b) => a + Math.random()*(b-a);
+  // fıstıklar sincabın başına varmadan kaybolur: düşüş yüksekliği = ekran − sincap alanı
+  const end = Math.max(30, Math.round((innerHeight - Math.min(innerWidth*1.22, innerHeight*.88)*.9) / innerHeight * 100));
+  nuts.style.setProperty('--end', end + 'vh');
+  for(let i=0;i<18;i++){
+    const far = i % 2 === 0, el = document.createElement('i'); el.className = 'nut';
+    const s = far ? rnd(13,20) : rnd(22,34), d = far ? rnd(6.5,9) : rnd(4.5,6.5);
+    el.style.cssText = `left:${(i*5.6 + rnd(-2,2)).toFixed(1)}%;--s:${s.toFixed(0)}px;--d:${d.toFixed(1)}s;--dl:${(-rnd(0,d)).toFixed(2)}s;--o:${(far?rnd(.3,.45):rnd(.6,.8)).toFixed(2)};--b:${far?'1.2px':'0px'};--r0:${rnd(0,360).toFixed(0)}deg;--sp:${(rnd(90,220)*(Math.random()<.5?-1:1)).toFixed(0)}deg;--sw:${rnd(-28,28).toFixed(0)}px;--y0:${rnd(2,end-5).toFixed(0)}vh`;
+    nuts.appendChild(el);
+  }
+})();
+</script>
 
 <div class="wrap">
   <header class="top">
@@ -397,7 +425,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.16 · 6 Ekim 2026';
+const APP_VERSION = '1.17 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -1747,17 +1775,6 @@ main.addEventListener('click', e => {
 // Açılış ekranı: video bitince (en geç 4 sn) ya da dokununca kaybolur
 (() => {
   const sp = document.getElementById('splash'), v = document.getElementById('splashVid');
-  // Fıstıklar: farklı boy, hız ve derinlik; açılışta ekran zaten dolu olsun diye negatif gecikme
-  const nuts = document.getElementById('nuts'), rnd = (a,b) => a + Math.random()*(b-a);
-  // fıstıklar sincabın başına varmadan kaybolur: düşüş yüksekliği = ekran − sincap alanı
-  const end = Math.max(30, Math.round((innerHeight - Math.min(innerWidth*1.22, innerHeight*.88)*.9) / innerHeight * 100));
-  nuts.style.setProperty('--end', end + 'vh');
-  for(let i=0;i<18;i++){
-    const far = i % 2 === 0, el = document.createElement('i'); el.className = 'nut';
-    const s = far ? rnd(13,20) : rnd(22,34), d = far ? rnd(6.5,9) : rnd(4.5,6.5);
-    el.style.cssText = `left:${(i*5.6 + rnd(-2,2)).toFixed(1)}%;--s:${s.toFixed(0)}px;--d:${d.toFixed(1)}s;--dl:${(-rnd(0,d)).toFixed(2)}s;--o:${(far?rnd(.3,.45):rnd(.6,.8)).toFixed(2)};--b:${far?'1.2px':'0px'};--r0:${rnd(0,360).toFixed(0)}deg;--sp:${(rnd(90,220)*(Math.random()<.5?-1:1)).toFixed(0)}deg;--sw:${rnd(-28,28).toFixed(0)}px;--y0:${rnd(2,end-5).toFixed(0)}vh`;
-    nuts.appendChild(el);
-  }
   if(/[?&]stay\b/.test(location.search)) return;   // geliştirme: açılış ekranında kal
   let done = false;
   const hide = () => { if(done) return; done = true; sp.classList.add('out'); setTimeout(()=>sp.remove(), 400); };

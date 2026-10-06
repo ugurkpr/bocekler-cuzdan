@@ -1,9 +1,10 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v15';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg'];
+const CACHE = 'bocekler-v17';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache:'reload' → tarayıcının eski kopyasını değil, sunucudaki güncel dosyayı al
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -20,8 +21,8 @@ self.addEventListener('fetch', e => {
     }));
     return;
   }
-  // Açılış videosu: telefonlar videoyu parça parça ister, tarayıcının kendisine bırak
-  if (url.pathname.endsWith('.mp4')) return;
+  // Açılış videosu: telefonda kayıtlı kopyadan, iPhone'un istediği parça (Range) halinde verilir
+  if (url.origin === location.origin && url.pathname.endsWith('/splash.mp4')) { e.respondWith(videoResponse(req)); return; }
   // Kur verisi her zaman canlı alınır, önbelleğe girmez
   if (url.origin !== location.origin && !url.hostname.startsWith('fonts.')) return;
   // Sayfanın kendisi: önce internet (güncel sürüm), yoksa kayıtlı kopya
@@ -36,6 +37,21 @@ self.addEventListener('fetch', e => {
     return hit || net;
   }));
 });
+
+async function videoResponse(req) {
+  const cache = await caches.open(CACHE);
+  let res = await cache.match('./splash.mp4');
+  if (!res) { try { const net = await fetch('./splash.mp4', { cache: 'reload' }); if (net.ok) { await cache.put('./splash.mp4', net.clone()); res = net; } } catch (e) {} }
+  if (!res) return fetch(req);
+  const buf = await res.arrayBuffer(), size = buf.byteLength, range = req.headers.get('range');
+  const head = { 'Content-Type': 'video/mp4', 'Accept-Ranges': 'bytes' };
+  if (!range) return new Response(buf, { status: 200, headers: { ...head, 'Content-Length': String(size) } });
+  const m = /bytes=(\d*)-(\d*)/.exec(range) || [];
+  let start = m[1] ? +m[1] : 0, end = m[2] ? Math.min(+m[2], size - 1) : size - 1;
+  if (!m[1] && m[2]) { start = Math.max(0, size - +m[2]); end = size - 1; }
+  if (start >= size || start > end) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
+  return new Response(buf.slice(start, end + 1), { status: 206, headers: { ...head, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) } });
+}
 
 // Android: telefon izin verdiği sıklıkta (genelde günde bir) yaklaşan ödemeleri kontrol eder
 const pad = n => String(n).padStart(2, '0');
