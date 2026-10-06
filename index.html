@@ -68,6 +68,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 /* summary */
 .hero{background:var(--hero);color:var(--accent-ink);border-radius:20px;padding:18px 18px 16px;display:grid;gap:14px}
 .hero .label{color:inherit;opacity:.75}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.herobtn{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid color-mix(in srgb,var(--accent-ink) 55%,transparent);background:color-mix(in srgb,var(--accent-ink) 12%,transparent);color:inherit;font:inherit;font-weight:700;font-size:14px;border-radius:999px;min-height:40px;padding:0 14px}
+.herobtn svg{width:18px;height:18px}
 .hero .big{font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,46px);line-height:1;letter-spacing:-.02em}
 .hero .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hero .cell{background:color-mix(in srgb,var(--accent-ink) 12%,transparent);border-radius:12px;padding:10px 12px}
@@ -246,14 +249,16 @@ nav.tabs button.tab[aria-current="page"]{color:var(--accent-text)}
 #splash{position:fixed;inset:0;z-index:50;overflow:hidden;background:linear-gradient(180deg,#F9C258 0%,#F5B04A 35%,#F2A644 60%,#F2A644 100%);transition:opacity .4s ease, transform .4s ease}
 #splash.out{opacity:0;transform:scale(1.03);pointer-events:none}
 /* sincap ekranın altına oturur; videonun üst kenarı arka plana yumuşakça karışır, kare kenarı görünmez */
-#splash .pic{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:122vw;aspect-ratio:1;
+#splash{--pic:122vw}
+#splash .pic{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:var(--pic);aspect-ratio:1;
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24%);mask-image:linear-gradient(to bottom,transparent 0,#000 24%)}
 #splash video{width:100%;height:100%;object-fit:cover;display:block}
-#splash .nm{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 11vh);font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,46px);color:#3A2208;text-align:center;line-height:1.02;letter-spacing:-.02em}
+#splash .nm{position:absolute;left:0;right:0;bottom:calc(var(--pic) * .94 + 6px);font-family:var(--display);font-weight:700;font-size:clamp(34px,10vw,46px);color:#3A2208;text-align:center;line-height:1.02;letter-spacing:-.02em}
 #splash .nm small{display:block;font-family:var(--body);font-size:14px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-top:8px}
 /* geniş ekranlarda (tablet, yatay) yanlar da yumuşakça kaybolur */
 @media (min-aspect-ratio: 4/5){
-  #splash .pic{width:min(100vw,88vh);
+  #splash{--pic:min(100vw,88vh)}
+  #splash .pic{
     -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24%),linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%);-webkit-mask-composite:source-in;
     mask-image:linear-gradient(to bottom,transparent 0,#000 24%),linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%);mask-composite:intersect}
 }
@@ -386,6 +391,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
+const APP_VERSION = '1.15 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -635,7 +641,8 @@ function renderSummary(){
 
   return `${alertsHTML()}
   <div class="hero">
-    <div><div class="label">${ymLabel(view.ym)} · kalan</div><div class="big num">${left<0?'−':''}${tl.format(Math.abs(left))}</div></div>
+    <div class="hero-top"><div><div class="label">${ymLabel(view.ym)} · kalan</div><div class="big num">${left<0?'−':''}${tl.format(Math.abs(left))}</div></div>
+      <button class="herobtn tap" data-report="1" aria-label="${ymLabel(view.ym)} raporunu aç"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rapor</button></div>
     <div class="row">
       <button class="cell tap" data-goto="liste"><span class="label">Gelir</span><b class="num">${tl.format(inc)}</b></button>
       <button class="cell tap" data-goto="liste"><span class="label">Gider</span><b class="num">${tl.format(out)}</b></button>
@@ -1368,6 +1375,14 @@ function renderSettings(){
       <input type="file" id="importFile" accept=".json,application/json" hidden></div>
       <div id="dataArea"></div>
     </div>
+  </section>
+  <section>
+    <div class="sec-head"><h2>Uygulama</h2></div>
+    <div class="card" style="display:grid;gap:10px">
+      <div class="set-row" style="padding:0;border:0"><span class="name">Sürüm</span><span class="meta num">${APP_VERSION}</span></div>
+      <button class="btn ghost" id="updBtn">Güncellemeyi kontrol et</button>
+      <div class="note">Yeni bir özellik göremiyorsan buna dokun. Uygulama en son sürümü indirip yeniden açılır, kayıtların silinmez.</div>
+    </div>
   </section>`;
 }
 function openCatSheet(c){
@@ -1464,6 +1479,12 @@ function bindSettings(){
   main.querySelectorAll('[data-color-pick]').forEach(b => b.onclick = () => { S.settings.color = b.dataset.colorPick; saveSettings(); render(); toast(PALETTES[b.dataset.colorPick].name + ' seçildi'); });
   main.querySelectorAll('[data-theme-pick]').forEach(b => b.onclick = () => { S.settings.theme = b.dataset.themePick; saveSettings(); render(); });
   document.getElementById('addCat').onclick = () => openCatSheet(null);
+  document.getElementById('updBtn').onclick = async () => {
+    toast('Güncelleme kontrol ediliyor…');
+    try { const r = await navigator.serviceWorker?.getRegistration(); if(r) await r.update(); } catch(e){}
+    try { const c = await caches.keys(); await Promise.all(c.map(k => caches.delete(k))); } catch(e){}
+    setTimeout(() => location.reload(), 400);
+  };
   document.getElementById('exportBtn').addEventListener('click', exportData);
   document.getElementById('importFile').addEventListener('change', importData);
 }
