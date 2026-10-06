@@ -472,7 +472,7 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '1.19 · 6 Ekim 2026';
+const APP_VERSION = '1.20 · 6 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
@@ -641,6 +641,11 @@ const CAT_DEF = {market:['🛒','#10B981'],kira:['🏠','#8B5CF6'],fatura:['💡
 const catIcon = c => c.icon || (CAT_DEF[c.id]||[])[0] || (c.t==='in' ? '💰' : '📦');
 function catColor(c){ if(c.color) return c.color; if(CAT_DEF[c.id]) return CAT_DEF[c.id][1]; let h=0; for(const ch of String(c.id)) h=(h*31+ch.charCodeAt(0))>>>0; return CAT_COLORS[h % CAT_COLORS.length]; }
 const catDot = c => `<span class="dot cdot" style="--cc:${catColor(c)}" aria-hidden="true">${catIcon(c)}</span>`;
+// Günlük harcama hakkına sayılır mı: sabit giderler (kira, fatura, abonelik, kredi, kart ödemesi), tekrarlayanlar ve taksitler sayılmaz;
+// bunlar ayın kalanından düşülür, kalan günlere yayılır. Kayıt bazında "nodaily" ile değiştirilebilir.
+const NON_DAILY = ['kira','fatura','abonelik','kredi','kartodeme'];
+const catDaily = c => c.daily !== undefined ? !!c.daily : !NON_DAILY.includes(c.id);
+const countsDaily = e => e.t==='out' && !e.rec && !e.instNo && (e.nodaily !== undefined ? !e.nodaily : catDaily(cat(e.cat)));
 const ci = c => `<span class="cico" aria-hidden="true">${catIcon(c)}</span>`;
 const monthDoc = ym => { const m = S.months[ym] || (S.months[ym] = {items:[], skip:[], sav:[], pay:{}}); m.sav = m.sav||[]; m.pay = m.pay||{}; return m; };
 /* taksitli harcamalar: her ay o ayın taksiti kadar gider sayılır */
@@ -718,12 +723,14 @@ function safeSpend(){
   const loans = r2(debts().filter(d=>d.kind==='loan' && instNo(d,todayYM) && todayYM>=d.from && !(payOf(d,todayYM)||{}).paid).reduce((a,d)=>a+amtOf(d,todayYM),0));
   const savedNow = savMonthTL(todayYM), tgt = S.settings.savTarget||0;
   const sav = r2(tgt > 0 ? Math.max(tgt, savedNow) : savedNow);
-  const todaySpent = r2(entriesFor(todayYM).filter(e=>e.t==='out' && e.date===todayISO).reduce((a,e)=>a+e.amt,0));
+  const todayAll = entriesFor(todayYM).filter(e=>e.t==='out' && e.date===todayISO);
+  const todaySpent = r2(todayAll.filter(countsDaily).reduce((a,e)=>a+e.amt,0));
+  const todayFixed = r2(todayAll.filter(e=>!countsDaily(e)).reduce((a,e)=>a+e.amt,0));
   const daysLeft = daysIn(todayYM) - now.getDate() + 1;
-  const start = r2(left + todaySpent);
+  const start = r2(left + todaySpent);   // sabit/birikmiş ödemeler düşülmüş kalır, sadece günlük harcamalar geri eklenir
   const pool = r2(start + t.pin - t.pout - loans - sav);
   const daily = r2(Math.max(0, pool) / daysLeft);
-  return {left, start, pin:t.pin, pout:t.pout, loans, sav, savedNow, tgt, todaySpent, daysLeft, pool, daily, todayLeft: r2(daily - todaySpent)};
+  return {left, start, pin:t.pin, pout:t.pout, loans, sav, savedNow, tgt, todayAll, todaySpent, todayFixed, daysLeft, pool, daily, todayLeft: r2(daily - todaySpent)};
 }
 function spendCard(){
   if(view.ym !== todayYM || !entriesFor(todayYM).length) return '';
@@ -736,7 +743,7 @@ function spendCard(){
     <div class="spend-top"><span class="label">Bugün harcayabileceğin</span><span class="note">ay sonuna ${x.daysLeft} gün ›</span></div>
     <div class="spend-big num ${x.todayLeft<0?'warnc':''}">${x.todayLeft<0?'−':''}${tl.format(Math.abs(x.todayLeft))}</div>
     <div class="track"><div class="fill" style="width:${(used*100).toFixed(1)}%;background:${barGrad(x.daily ? x.todaySpent/x.daily : 2)}"></div></div>
-    <small>Günlük hakkın <b>${tl.format(x.daily)}</b> · bugün <b>${tl.format(x.todaySpent)}</b> harcadın${x.todayLeft<0 ? ', fazlası sonraki günlerden düşer' : ''}${niTxt}</small>
+    <small>Günlük hakkın <b>${tl.format(x.daily)}</b> · bugün <b>${tl.format(x.todaySpent)}</b> harcadın${x.todayLeft<0 ? ', fazlası sonraki günlerden düşer' : ''}${x.todayFixed ? ` · bugün girilen ${tl.format(x.todayFixed)} sabit/birikmiş ödeme aya yayıldı` : ''}${niTxt}</small>
   </button></section>`;
 }
 function openSpendSheet(){
@@ -748,7 +755,8 @@ function openSpendSheet(){
     <div class="sec-head" style="margin:0"><h2>Günlük harcama hakkı</h2><button class="icon-btn" data-close>Kapat</button></div>
     <div class="note">Ay sonuna kadar rahatça harcayabileceğin para, kalan günlere eşit bölünür.</div>
     <div class="card" style="padding:4px 14px">
-      ${row('Bugün başında elindeki', tl.format(x.start))}
+      ${row('Elindeki para (bugünün harcamalarından önce)', tl.format(r2(x.start + x.todayFixed)))}
+      ${x.todayFixed ? row('− Bugün girilen sabit / birikmiş ödemeler', '−'+tl.format(x.todayFixed)) : ''}
       ${x.pin ? row('+ Beklenen gelirler', '+'+tl.format(x.pin)) : ''}
       ${x.pout ? row('− Planlanan giderler', '−'+tl.format(x.pout)) : ''}
       ${x.loans ? row('− Ödenmemiş kredi taksitleri', '−'+tl.format(x.loans)) : ''}
@@ -756,12 +764,22 @@ function openSpendSheet(){
       ${row('= Ay sonuna kadar harcanabilir', (x.pool<0?'−':'')+tl.format(Math.abs(x.pool)), 'total')}
       ${row(`÷ Kalan gün (bugün dahil)`, x.daysLeft)}
       ${row('= Günlük hakkın', tl.format(x.daily), 'total')}
-      ${row('Bugün harcanan', '−'+tl.format(x.todaySpent))}
+      ${row('Bugünkü günlük harcaman', '−'+tl.format(x.todaySpent))}
       ${row('Bugün kalan', (x.todayLeft<0?'−':'')+tl.format(Math.abs(x.todayLeft)), 'total')}
     </div>
+    ${x.todayAll.length ? `<div class="sec-head" style="margin:4px 0 0"><h2 style="font-size:17px">Bugün girilen giderler</h2><small>Dokun: günlüğe say / sayma</small></div>
+    <div class="items">${x.todayAll.map(e=>{ const c = cat(e.cat), on = countsDaily(e), fixed = e.rec || e.instNo;
+      return `<button class="item" data-dtog="${esc(e.srcId || e.id)}" ${fixed ? 'disabled' : ''}>${catDot(c)}<span class="mid"><b>${esc(e.note || subName(e.cat,e.sub) || c.name)}</b><small>${fixed ? 'Tekrarlayan / taksit · günlük hakka sayılmaz' : on ? 'Bugünün hakkından düşüyor' : 'Ayın kalanına yayıldı'}</small></span><span class="st ${on ? 'soon' : 'paid'}">${on ? 'Günlük' : 'Aya yayıldı'}</span></button>`; }).join('')}</div>
+    <div class="note">Biriktirip bugün girdiğin eski ödemeleri ya da kira, fatura gibi sabit ödemeleri “Aya yayıldı” yap. Bunlar bugünün hakkından değil, ayın kalan parasından düşülür.</div>` : ''}
     <div class="note">Kredi kartı harcamaların zaten gider olarak sayıldığı için kart ekstresi ödemesi ayrıca düşülmez. Bugün hakkından az harcarsan artan para sonraki günlere eklenir.</div>
   </div></div>`;
   sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
+  sheetRoot.querySelectorAll('[data-dtog]').forEach(b => b.onclick = () => {
+    const it = findItem(b.dataset.dtog); if(!it) return;
+    it.nodaily = countsDaily(it);   // sayılıyorsa artık sayma, sayılmıyorsa say
+    saveMonth(it.date.slice(0,7)); render(); openSpendSheet();
+    toast(it.nodaily ? 'Aya yayıldı, bugünün hakkından düşmüyor' : 'Bugünün harcamasına sayıldı');
+  });
 }
 
 /* ---------- yedek hatırlatıcısı ---------- */
@@ -1714,7 +1732,7 @@ function renderSettings(){
 }
 function openCatSheet(c){
   const editing = !!c;
-  const st = c ? {name:c.name, t:c.t, budget:c.budget||'', subs:(c.subs||[]).map(x=>({...x})), icon:catIcon(c), color:catColor(c)} : {name:'', t:'out', budget:'', subs:[], icon:'📦', color:CAT_COLORS[6]};
+  const st = c ? {name:c.name, t:c.t, budget:c.budget||'', subs:(c.subs||[]).map(x=>({...x})), icon:catIcon(c), color:catColor(c), daily:catDaily(c)} : {name:'', t:'out', budget:'', subs:[], icon:'📦', color:CAT_COLORS[6], daily:true};
   const SUGGEST = {abonelik:['Netflix','Spotify','YouTube Premium','iCloud','Disney+','Amazon Prime','Exxen','BluTV','ChatGPT','Telefon hattı','İnternet','Spor salonu'],
     fatura:['Elektrik','Su','Doğalgaz','İnternet','Telefon','Aidat'], ulasim:['Yakıt','İstanbulkart','Taksi','Otopark','Araç bakım'],
     market:['Migros','A101','BİM','Şok','CarrefourSA'], yemek:['Kahve','Restoran','Yemek siparişi'], saglik:['İlaç','Muayene','Diş'], maas:['Ana maaş','Prim','İkramiye']};
@@ -1732,6 +1750,7 @@ function openCatSheet(c){
       <div class="field"><span class="label">Renk</span><div class="colorrow">${CAT_COLORS.map(cc=>`<button class="cc" data-cc="${cc}" aria-pressed="${cc===st.color}" style="background:${cc}" aria-label="Renk ${cc}"></button>`).join('')}</div></div>
       <div class="field"><label class="label" for="cName">Adı</label><input id="cName" maxlength="30" placeholder="${st.t==='out'?'Örn. Evcil hayvan':'Örn. Kira geliri'}" value="${esc(st.name)}"></div>
       ${st.t==='out' ? `<div class="field"><label class="label" for="cBudget">Aylık limit (₺)</label><input id="cBudget" class="num" inputmode="decimal" data-money autocomplete="off" placeholder="Boş bırakırsan limit yok" value="${fmtIn(st.budget)}"></div>` : ''}
+      ${st.t==='out' ? `<label class="check"><input type="checkbox" id="cDaily" ${st.daily?'checked':''}> <span>Günlük harcama hakkına dahil<br><span class="note" style="font-size:12px">Kira, fatura gibi sabit giderlerde kapat; bunlar ayın kalanından düşülür.</span></span></label>` : ''}
       <div class="field"><span class="label">Alt başlıklar</span>
         ${st.subs.length ? `<div class="sublist">${st.subs.map((x,i)=>`<div class="subrow"><input data-subname="${i}" maxlength="30" value="${esc(x.name)}" placeholder="Alt başlık adı" aria-label="Alt başlık ${i+1}"><button class="icon-btn danger" data-subdel="${i}" aria-label="${esc(x.name)} alt başlığını sil">✕</button></div>`).join('')}</div>` : `<div class="note">Örneğin Abonelikler altında Netflix, Spotify. Kayıt eklerken seçersin, Özet’te hepsi bu başlığın altında toplanır.</div>`}
         <button class="btn ghost sm" id="cAddSub">+ Alt başlık ekle</button>
@@ -1740,7 +1759,7 @@ function openCatSheet(c){
       <button class="btn" id="cSave">${editing?'Kaydet':'Ekle'}</button>
       ${editing ? `<button class="btn ghost" id="cDel" style="color:var(--out)">Kategoriyi sil</button>` : ''}
     </div></div>`;
-    const keep = () => { st.name = document.getElementById('cName').value; const b = document.getElementById('cBudget'); if(b) st.budget = b.value;
+    const keep = () => { st.name = document.getElementById('cName').value; const b = document.getElementById('cBudget'); if(b) st.budget = b.value; const cdl = document.getElementById('cDaily'); if(cdl) st.daily = cdl.checked;
       sheetRoot.querySelectorAll('[data-subname]').forEach(inp => { st.subs[+inp.dataset.subname].name = inp.value; }); };
     sheetRoot.querySelectorAll('[data-ico]').forEach(b => b.onclick = () => { keep(); st.icon = b.dataset.ico; draw(); });
     sheetRoot.querySelectorAll('[data-cc]').forEach(b => b.onclick = () => { keep(); st.color = b.dataset.cc; draw(); });
@@ -1755,8 +1774,8 @@ function openCatSheet(c){
       const raw = String(st.budget||'').trim(), budget = raw==='' ? 0 : parseAmt(raw);
       if(raw!=='' && budget===null) return toast('Geçerli bir limit yaz.');
       const subs = st.subs.map(x=>({id:x.id, name:x.name.trim()})).filter(x=>x.name);
-      if(editing){ c.name = name; if(c.t==='out') c.budget = budget||0; c.subs = subs; c.icon = st.icon; c.color = st.color; }
-      else S.settings.cats.push({id:uid(), name, t:st.t, budget: st.t==='out' ? (budget||0) : 0, subs, icon:st.icon, color:st.color});
+      if(editing){ c.name = name; if(c.t==='out'){ c.budget = budget||0; c.daily = st.daily; } c.subs = subs; c.icon = st.icon; c.color = st.color; }
+      else S.settings.cats.push({id:uid(), name, t:st.t, budget: st.t==='out' ? (budget||0) : 0, subs, icon:st.icon, color:st.color, ...(st.t==='out' ? {daily: st.daily} : {})});
       saveSettings(); closeSheet(); render(); toast(editing ? 'Kaydedildi' : `${name} eklendi`);
     };
     const del = document.getElementById('cDel');
@@ -1920,6 +1939,8 @@ function openSheet(entry){
         <div class="field"><label class="label" for="fDate">Tarih</label><input type="date" id="fDate" value="${st.date}"></div>
         <div class="field"><label class="label" for="fNote">Not</label><input id="fNote" maxlength="60" placeholder="İsteğe bağlı" value="${esc(st.note||'')}"></div>
       </div>
+      ${st.t==='out' && !st.repeat && !(editing && (entry.rec || entry.srcId)) ? (() => { const nd = st.nodaily !== undefined ? st.nodaily : !catDaily(cat(st.cat)||{});
+        return `<label class="check"><input type="checkbox" id="fNoDaily" ${nd ? 'checked' : ''}> <span>Günlük harcama hakkımdan düşmesin<br><span class="note" style="font-size:12px">Kira, fatura ya da biriktirip bugün girdiğin eski bir ödemeyse işaretle. Ayın kalanına yayılır.</span></span></label>`; })() : ''}
       <div class="futnote" id="futNote"></div>
       ${editing && entry.rec
         ? `<div class="note">↻ Bu tekrarlayan bir kayıt. Değişiklikler bu aydan sonraki her ayı da etkiler.</div>`
@@ -1934,7 +1955,8 @@ function openSheet(entry){
     const keep = () => { st.amt = document.getElementById('fAmt').value; st.date = document.getElementById('fDate').value; st.note = document.getElementById('fNote').value; const r=document.getElementById('fRep'); if(r) st.repeat=r.checked; };
     sheetRoot.querySelectorAll('[data-close]').forEach(b=>b.onclick=closeSheetAnimated);
     sheetRoot.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{ keep(); st.t=b.dataset.type; draw(); });
-    sheetRoot.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ keep(); if(st.cat!==b.dataset.cat){ st.cat=b.dataset.cat; st.sub=null; st.addingSub=false; } draw(); });
+    sheetRoot.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ keep(); if(st.cat!==b.dataset.cat){ st.cat=b.dataset.cat; st.sub=null; st.addingSub=false; if(!st.ndTouched) st.nodaily = undefined; } draw(); });
+    const ndb = document.getElementById('fNoDaily'); if(ndb) ndb.addEventListener('change', () => { st.ndTouched = true; st.nodaily = ndb.checked; });
     sheetRoot.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{ keep(); st.sub = st.sub===b.dataset.sub ? null : b.dataset.sub; draw(); });
     const as = document.getElementById('fAddSub'); if(as) as.onclick = () => { keep(); st.addingSub = true; draw(); setTimeout(()=>document.getElementById('fNewSub')?.focus(), 30); };
     const addSub = () => { const inp = document.getElementById('fNewSub'), name = inp.value.trim(); if(!name) return toast('Alt başlık adı yaz.');
@@ -2011,6 +2033,7 @@ function closeSheetAnimated(){
 })();
 document.addEventListener('keydown', e => { if(e.key==='Escape' && sheetRoot.innerHTML) closeSheet(); });
 
+const dailyField = st => st.t==='out' && st.nodaily !== undefined && !!st.nodaily !== !catDaily(cat(st.cat)) ? {nodaily: !!st.nodaily} : {};
 const payFields = st => st.t==='out' && st.pay && st.pay!=='cash' ? {pay:st.pay, inst: st.inst>1 ? st.inst : 1} : {};
 // Son 4 ayda en az 2 kez girilen kayıtlar (en sık önce) + en son kayıt
 function quickTemplates(t){
@@ -2040,13 +2063,13 @@ function save(st, entry){
   } else if(entry){
     const oldYm = entry.date.slice(0,7);
     const om = monthDoc(oldYm); om.items = om.items.filter(i=>i.id!==entry.id);
-    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), date:st.date, note:st.note.trim()});
+    const nm = monthDoc(ym); nm.items.push({id:entry.id, t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), ...dailyField(st), date:st.date, note:st.note.trim()});
     saveMonth(oldYm); if(ym!==oldYm) saveMonth(ym);
   } else if(st.repeat){
     S.settings.recurring.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, pay: st.t==='out' && st.pay!=='cash' ? st.pay : null, note:st.note.trim(), day, from:ym});
     saveSettings();
   } else {
-    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), date:st.date, note:st.note.trim()});
+    monthDoc(ym).items.push({id:uid(), t:st.t, amt, cat:st.cat, sub:st.sub||null, ...payFields(st), ...dailyField(st), date:st.date, note:st.note.trim()});
     saveMonth(ym);
   }
   view.ym = ym; closeSheet(); render();
