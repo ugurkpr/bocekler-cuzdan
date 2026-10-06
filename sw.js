@@ -1,6 +1,6 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v27';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
+const CACHE = 'bocekler-v28';
+const FILES = ['./', './index.html', './banka.html', './saglik.html', './ortak.js', './gidalar.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
 
 self.addEventListener('install', e => {
   // cache:'reload' → tarayıcının eski kopyasını değil, sunucudaki güncel dosyayı al
@@ -25,10 +25,11 @@ self.addEventListener('fetch', e => {
   if (url.origin === location.origin && url.pathname.endsWith('/splash.mp4')) { e.respondWith(videoResponse(req)); return; }
   // Kur verisi her zaman canlı alınır, önbelleğe girmez
   if (url.origin !== location.origin && !url.hostname.startsWith('fonts.')) return;
-  // Sayfanın kendisi: önce internet (güncel sürüm), yoksa kayıtlı kopya
+  // Sayfalar (ana ekran, Mobil Bank, Sağlık): önce internet (güncel sürüm), yoksa kayıtlı kopya
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(res => { caches.open(CACHE).then(c => c.put('./index.html', res.clone())); return res; })
-      .catch(() => caches.match('./index.html')));
+    const page = url.pathname.endsWith('/') ? './index.html' : './' + url.pathname.split('/').pop();
+    e.respondWith(fetch(req).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(page, copy)); } return res; })
+      .catch(() => caches.match(page).then(hit => hit || caches.match('./index.html'))));
     return;
   }
   // Diğer her şey (simgeler, yazı tipleri): önce kayıtlı kopya, arkada güncelle
