@@ -77,6 +77,14 @@ nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
 .tfilt::-webkit-scrollbar{display:none}
 .tfilt .chip{flex:none}
 .ystar{font-size:13px}
+.wres img,.wres .em{flex:none;width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--sunk);display:grid;place-items:center;font-size:24px}
+.wres .mid b{white-space:normal}
+.wres .chev{color:var(--muted);font-size:22px}
+.wbadge{display:inline-block;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700}
+.wimg{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:16px;display:block;background:var(--sunk)}
+.tip{display:grid;gap:4px;background:var(--accent-soft);border-color:transparent}
+.tip span{font-size:14.5px;line-height:1.45}
+.steps li{line-height:1.5}
 </style>
 <script src="ortak.js"></script>
 <script src="gidalar.js"></script>
@@ -100,7 +108,7 @@ nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
 (() => {
-const APP_VERSION = '1.2 · 7 Ekim 2026';
+const APP_VERSION = '1.3 · 7 Ekim 2026';
 const KEY = 'bocekler-saglik-v1';
 const mode = 'local';
 /* ---------- yardımcılar ---------- */
@@ -162,157 +170,274 @@ function hedefler(){
 
 /* ---------- gıdalar: gömülü liste + kendi eklediklerim + tarifler ---------- */
 const G = window.GIDALAR || [];
-// tur: kahvalti | corba | ana | salata | ara | tatli · pismis: pişmiş toplam ağırlık (gramla ekleme için) · parca: [ad, toplam adet] · yildiz: niş ve özenli tarif
+// tur: kahvalti | corba | ana | salata | ara | tatli · pismis: pişmiş toplam ağırlık (gramla ekleme için) · parca: [ad, toplam adet] · yildiz: viral ve şık tarifler · ipucu: püf noktası
 const HAZIR_TARIF = [
   /* ---- kahvaltı ---- */
   {id:'t-menemen', tur:'kahvalti', em:'🍳', ad:'Menemen', porsiyon:2, sure:15, pismis:520, malz:[['Yumurta',165],['Domates',360],['Biber (yeşil sivri)',75],['Zeytinyağı',13]],
-   adimlar:'Biberleri yağda 3-4 dakika sotele.\nKabuğu soyulup doğranmış domatesi ekleyip suyunu çekene kadar pişir.\nYumurtaları kırıp hafifçe karıştır, kıvamı gelince ocaktan al.'},
+   adimlar:'Domatesleri kaynar suda 30 saniye bekletip kabuklarını soy, küçük küp doğra.\nBiberlerin sapını ve çekirdeklerini al, ince halka doğra.\nGeniş bir tavada zeytinyağını orta ateşte ısıt, biberleri ekleyip yumuşayana kadar 3-4 dakika sotele.\nDomatesleri ve bir tutam tuzu ekle; ara ara karıştırarak suyunu çekip sos kıvamına gelene kadar 6-8 dakika pişir.\nYumurtaları tavaya kır, ateşi kıs. Akları hafifçe karıştırarak dağıt, sarılar yarı akışkan kalsın.\nYumurtalar tam katılaşmadan, yaklaşık 2 dakika sonra ocaktan al; tavanın sıcaklığıyla pişmeye devam eder. Pul biber ve karabiberle servis et.',
+   ipucu:'Domatesin suyunu iyice çektirmezsen menemen sulu olur. Soğanlı seviyorsan biberden önce ince doğranmış bir küçük soğanı 3 dakika kavur.'},
   {id:'t-yulaf', tur:'kahvalti', em:'🥛', ad:'Muzlu yulaf lapası', porsiyon:1, sure:8, pismis:380, malz:[['Yulaf ezmesi',45],['Süt (yarım yağlı)',200],['Muz',120],['Ceviz',10],['Bal',7]],
-   adimlar:'Yulafı sütle kısık ateşte 5 dakika karıştırarak pişir.\nKaseye al, dilimlenmiş muz, ceviz ve balla süsle.'},
+   adimlar:'Küçük bir tencereye yulafı, sütü ve bir tutam tuzu koy.\nOrta ateşte, dibine yapışmaması için sık sık karıştırarak kaynamaya getir.\nKaynayınca ateşi kıs; 4-5 dakika, kaşıkla çizgi çektiğinde iz kalacak kadar koyulaşana dek pişir.\nMuzun yarısını çatalla ezip lapaya karıştır; doğal tatlılık verir.\nKaseye al, kalan muzu dilimleyip üstüne diz.\nİri kırılmış ceviz, bal ve bir tutam tarçınla bitir.',
+   ipucu:'Bir akşam önceden süt ve yulafı kavanozda karıştırıp buzdolabına koyarsan sabah pişirmeden yiyebilirsin (overnight oats).'},
   {id:'t-omlet', tur:'kahvalti', em:'🥚', ad:'Ispanaklı sebzeli omlet', porsiyon:1, sure:10, pismis:240, malz:[['Yumurta',110],['Ispanak',30],['Mantar',35],['Kapya biber',40],['Beyaz peynir (az yağlı)',30],['Zeytinyağı',5]],
-   adimlar:'Mantar ve biberi yağda sotele, ıspanağı ekleyip söndür.\nÇırpılmış yumurtayı dök, üzerine peyniri ufala, kapağı kapalı pişir.'},
+   adimlar:'Mantarı ince dilimle, biberi küçük küp doğra, ıspanağı iri kıy.\nYumurtaları tuz ve karabiberle bir kasede köpürene kadar 30 saniye çırp.\nYapışmaz tavada zeytinyağını ısıt; mantar ve biberi 3 dakika, mantar suyunu çekene kadar sotele.\nIspanağı ekle, 30 saniyede söner.\nAteşi kısıp yumurtayı tavaya yay, peyniri üzerine ufala.\nKapağı kapat, 2-3 dakika üstü katılaşana kadar pişir. Spatulayla ikiye katlayıp tabağa kaydır.',
+   ipucu:'Ateş kısık olursa omlet kurumaz ve yumuşak kalır.'},
   {id:'t-peynirliomlet', tur:'kahvalti', em:'🧀', ad:'Kaşarlı omlet', porsiyon:1, sure:7, pismis:130, malz:[['Yumurta',110],['Kaşar peyniri',20],['Tereyağı',5]],
-   adimlar:'Yumurtaları çırp, tereyağında tavaya dök.\nAltı pişince kaşarı serp, ikiye katlayıp servis et.'},
+   adimlar:'Kaşarı rendele.\nYumurtaları bir tutam tuzla iyice çırp.\nTereyağını yapışmaz tavada orta ateşte köpürene kadar erit.\nYumurtayı dök; kenarları pişmeye başlayınca spatulayla kenarları ortaya doğru çek, akışkan kısım boşluklara aksın.\nÜstü hâlâ hafif nemliyken kaşarı ortaya serp.\nİkiye katla, 30 saniye daha bekletip peynir eriyince servis et.',
+   ipucu:'Taze kekik ya da frenk soğanı eklersen kahvaltıda çok fark eder.'},
   {id:'t-sucuklu', tur:'kahvalti', em:'🍳', ad:'Sucuklu yumurta', porsiyon:1, sure:8, pismis:140, malz:[['Yumurta',110],['Sucuk',40]],
-   adimlar:'Sucukları tavada yağ salana kadar çevir.\nYumurtaları üzerine kır, akı pişince al.'},
+   adimlar:'Sucuğun kabuğunu soy, 0,5 cm kalınlığında dilimle.\nSahanı yağ koymadan orta ateşte ısıt; sucuk kendi yağını salacak.\nSucukları iki yüzü hafif kızarana kadar 2 dakika çevir.\nYumurtaları sucukların arasına kır, sarıları bozmamaya çalış.\nKapağı kapatıp akları beyazlayana kadar 2-3 dakika pişir. Sarılar akışkan kalsın.',
+   ipucu:'Sucuk tuzlu olduğu için yumurtaya tuz ekleme.'},
   {id:'t-patatesliyumurta', tur:'kahvalti', em:'🥔', ad:'Patatesli yumurta', porsiyon:2, sure:20, pismis:470, malz:[['Patates (çiğ)',340],['Yumurta',165],['Zeytinyağı',13]],
-   adimlar:'Küp doğranmış patatesi yağda kapağı kapalı yumuşayana kadar pişir.\nYumurtaları ekleyip karıştırarak pişir, tuz ve karabiber ekle.'},
+   adimlar:'Patatesleri soy, 1 cm küp doğra; nişastası gitsin diye soğuk suda yıka ve iyice kurula.\nGeniş tavada yağı ısıt, patatesleri tek kat yay.\nKapağı kapalı, ara ara çevirerek 10-12 dakika, çatal kolayca batana kadar pişir.\nKapağı aç, 2 dakika daha kızarmaya bırak.\nYumurtaları tuz ve karabiberle çırpıp patateslerin üzerine dök.\nYumurta pişene kadar 2 dakika yavaşça karıştır, pul biberle servis et.',
+   ipucu:'Patatesleri kuruladıktan sonra tavaya koyarsan yağ sıçramaz ve daha çıtır olurlar.'},
   {id:'t-avokado', tur:'kahvalti', em:'🥑', ad:'Avokadolu yumurtalı tost', porsiyon:1, sure:10, malz:[['Tam buğday ekmeği',60],['Avokado',70],['Haşlanmış yumurta',50],['Çeri domates',45],['Limon',5]],
-   adimlar:'Ekmekleri kızart. Avokadoyu limon, tuz ve pul biberle ez.\nEkmeğe sür, üzerine yumurta dilimleri ve domatesleri yerleştir.'},
+   adimlar:'Yumurtayı kaynayan suya koy, 8 dakika haşla, soğuk suya alıp kabuğunu soy.\nAvokadoyu ikiye böl, çekirdeğini çıkar, içini kaşıkla al.\nÇatalla ez; limon suyu, tuz ve pul biberle karıştır.\nEkmekleri tost makinesinde ya da kuru tavada kızart.\nEzilmiş avokadoyu ekmeklere kalın bir kat sür.\nÜzerine yumurta dilimlerini ve ikiye kesilmiş çeri domatesleri yerleştir, karabiber çek.',
+   ipucu:'Avokado olgunsa parmakla bastırınca hafifçe çöker; sertse 1-2 gün kâğıt torbada beklet.'},
   {id:'t-kasarlitost', tur:'kahvalti', em:'🥪', ad:'Kaşarlı tost', porsiyon:1, sure:7, pismis:95, malz:[['Tost ekmeği (beyaz)',50],['Kaşar peyniri',40],['Tereyağı',5]],
-   adimlar:'Ekmeklerin arasına kaşarı koy, dışlarına ince tereyağı sür.\nTost makinesinde ya da tavada kızart.'},
+   adimlar:'Tost makinesini ya da tavayı önceden ısıt.\nKaşarı ince dilimle ya da rendele.\nBir ekmeğe kaşarı kenarlara kadar yay, diğer ekmeği kapat.\nEkmeklerin dış yüzüne ince tereyağı sür.\nMakinede 3-4 dakika, tavada her yüzü 2 dakika, kapağı kapalı ve kısık ateşte peynir eriyene kadar kızart.',
+   ipucu:'Tavada yapıyorsan üstüne ağır bir tencere kapağı koy, makine gibi bastırır.'},
   {id:'t-fistiktost', tur:'kahvalti', em:'🍌', ad:'Fıstık ezmeli muzlu tost', porsiyon:1, sure:5, malz:[['Tam buğday ekmeği',60],['Fıstık ezmesi',16],['Muz',60]],
-   adimlar:'Ekmeği kızart, fıstık ezmesini sür.\nÜzerine muz dilimlerini diz, istersen tarçın serp.'},
+   adimlar:'Ekmekleri kızart.\nSıcakken fıstık ezmesini sür; hafifçe erir ve kolay yayılır.\nMuzu yuvarlak dilimle, ekmeklerin üzerine diz.\nTarçın ve istersen birkaç tane chia tohumu serp.',
+   ipucu:'Antrenman öncesi hızlı ve tok tutan bir atıştırmalıktır.'},
   {id:'t-chia', tur:'kahvalti', em:'🍓', ad:'Çilekli chia puding', porsiyon:1, sure:5, pismis:300, malz:[['Chia tohumu',24],['Süt (yarım yağlı)',200],['Bal',7],['Çilek',75]],
-   adimlar:'Chia, süt ve balı karıştır, 10 dakika sonra bir daha karıştır.\nBuzdolabında en az 3 saat beklet, çilekle servis et.'},
+   adimlar:'Kavanoza chia, süt ve balı koy, iyice karıştır.\n10 dakika beklet, sonra topaklanmasın diye bir kez daha karıştır.\nKapağını kapatıp buzdolabında en az 3 saat ya da bir gece beklet; jöle kıvamına gelir.\nÇileklerin yarısını çatalla ezip pudingin üstüne yay.\nKalan çilekleri dilimleyip süsle.',
+   ipucu:'Daha koyu istersen chia’yı 30 g yap; vanilya eklemek tadı tatlı göstermeden zenginleştirir.'},
   {id:'t-pankek', tur:'kahvalti', em:'🥞', ad:'Muzlu yulaf pankek', porsiyon:1, sure:15, parca:['pankek', 6], malz:[['Yulaf ezmesi',40],['Yumurta',110],['Muz',120],['Süzme yoğurt',50],['Bal',7]],
-   adimlar:'Yulafı blenderdan geçir, muz ve yumurtayla pürüzsüz olana kadar çek.\nYapışmaz tavada küçük pankekler pişir, yoğurt ve balla servis et.'},
+   adimlar:'Yulafı blenderdan geçirip un kıvamına getir.\nMuzu, yumurtaları ve bir tutam tarçını ekleyip pürüzsüz olana kadar çek.\nHamuru 5 dakika dinlendir; yulaf suyunu çeker ve pankekler dağılmaz.\nYapışmaz tavayı orta-kısık ateşte ısıt, çok az yağla sil.\nHer pankek için 2 yemek kaşığı hamur dök; üstünde kabarcıklar oluşunca (1,5-2 dakika) çevir, 1 dakika daha pişir.\nYoğurt ve balla servis et.',
+   ipucu:'Ateş yüksekse dışı yanar, içi çiğ kalır; sabırla kısık ateşte pişir.'},
   {id:'t-smoothie', tur:'kahvalti', em:'🥤', ad:'Fıstık ezmeli muz smoothie', porsiyon:1, sure:5, pismis:400, malz:[['Süt (yarım yağlı)',250],['Muz',120],['Yulaf ezmesi',20],['Fıstık ezmesi',16]],
-   adimlar:'Hepsini blenderdan geçir, buzla soğuk servis et.'},
+   adimlar:'Muzu dilimle (dondurulmuş muz kullanırsan buz gerekmez, daha kremamsı olur).\nBlendera önce sütü, sonra muz, yulaf ve fıstık ezmesini koy.\n45-60 saniye pürüzsüz olana kadar çek.\nÇok koyuysa biraz süt ekleyip birkaç saniye daha çek, hemen servis et.',
+   ipucu:'Bir ölçek protein tozu eklersen antrenman sonrası için ideal olur.'},
   {id:'t-bowl', tur:'kahvalti', em:'🫐', ad:'Yoğurtlu meyve kasesi', porsiyon:1, sure:5, malz:[['Yunan yoğurdu (yağsız)',150],['Muz',120],['Çilek',75],['Yaban mersini',50],['Granola',30]],
-   adimlar:'Yoğurdu kaseye al, meyveleri dilimleyip üzerine diz, granolayı serp.'},
+   adimlar:'Yoğurdu kaseye al, kaşığın arkasıyla düzle.\nMuzu ve çilekleri dilimle.\nMeyveleri yoğurdun üzerine şeritler halinde diz.\nGranolayı servis etmeden hemen önce serp ki yumuşamasın.',
+   ipucu:'Granolayı en son eklersen çıtırlığını korur.'},
   {id:'t-gozleme', tur:'kahvalti', em:'🫓', ad:'Peynirli gözleme', porsiyon:2, sure:20, parca:['gözleme', 2], pismis:420, malz:[['Yufka',240],['Beyaz peynir (tam yağlı)',120],['Maydanoz',10],['Tereyağı',14]],
-   adimlar:'Yufkayı ikiye katla, yarısına peynir ve maydanozu yay, kapat.\nYağlanmış tavada iki yüzünü kızarana kadar pişir.'},
+   adimlar:'Peyniri ufala, maydanozu ince kıyıp peynirle karıştır.\nYufkayı tezgâha ser, kenarlarını içe doğru katlayarak kare bir zarf hazırla.\nİç harcın yarısını ortaya yay, zarfı kapat.\nGeniş tavayı orta ateşte ısıt, kuru tavaya gözlemeyi koy.\nAlt yüzü kızarınca (2-3 dakika) üstüne tereyağı sür ve çevir; diğer yüzünü de 2 dakika pişir.\nİkinci gözlemeyi de aynı şekilde yap, dilimleyip sıcak servis et.',
+   ipucu:'Yufkanın kenarlarına su sürmek zarfın açılmasını önler.'},
   {id:'t-sigara', tur:'kahvalti', em:'🥟', ad:'Sigara böreği', porsiyon:4, sure:30, parca:['adet', 16], pismis:450, malz:[['Yufka',240],['Beyaz peynir (tam yağlı)',150],['Maydanoz',20],['Ayçiçek yağı',50]],
-   adimlar:'Yufkayı üçgenlere kes, geniş kenara peynir koyup sar, ucunu suyla yapıştır.\nKızgın yağda iki yüzünü kızart, kâğıt havluya al. Fırında yağsız da yapılabilir.'},
-  {id:'t-shakshuka', yildiz:true, tur:'kahvalti', em:'🍅', ad:'Beyaz peynirli shakshuka', porsiyon:2, sure:25, pismis:900, malz:[['Yumurta',220],['Domates',480],['Kapya biber',120],['Soğan',110],['Zeytinyağı',26],['Beyaz peynir (tam yağlı)',40]],
-   adimlar:'Soğan ve biberi yağda 8 dakika yumuşat, kimyon ve tatlı tozbiber ekle.\nRendelenmiş domatesi koyup sos koyulaşana kadar 10 dakika pişir.\nSosta çukurlar aç, yumurtaları kır, kapağı kapalı akları pişene kadar beklet.\nUfalanmış peynir ve maydanozla tavada servis et.'},
-  {id:'t-cilbir', yildiz:true, tur:'kahvalti', em:'🥣', ad:'Çılbır', porsiyon:2, sure:15, pismis:400, malz:[['Yumurta',110],['Süzme yoğurt',200],['Sarımsak',4],['Tereyağı',20]],
-   adimlar:'Yoğurdu ezilmiş sarımsakla oda sıcaklığına getir, tabaklara yay.\nKaynayan sirkeli suda yumurtaları 3 dakika poşe et, yoğurdun üzerine al.\nTereyağını pul biberle köpürt, üzerine gezdir.'},
+   adimlar:'Peyniri çatalla ezip ince kıyılmış maydanozla karıştır.\nYufkaları üst üste koyup 8 eşit üçgene kes (her yufkadan 8, toplam 16).\nÜçgenin geniş kenarına 1 tatlı kaşığı harç koy.\nKenarları içe katla, ucuna doğru sıkıca rulo yap; ucu suyla yapıştır.\nTavada 1 cm yağı orta ateşte ısıt; böreklerin her yüzünü altın renk olana kadar 1-2 dakika kızart.\nKâğıt havluya alıp fazla yağı süzdür.',
+   ipucu:'Hafif olsun dersen fırçayla yağlayıp 200 °C fırında 15-18 dakika ya da airfryer’da 180 °C’de 8 dakika pişir.'},
+  {id:'t-shakshuka', tur:'kahvalti', em:'🍅', ad:'Beyaz peynirli shakshuka', porsiyon:2, sure:25, pismis:900, malz:[['Yumurta',220],['Domates',480],['Kapya biber',120],['Soğan',110],['Zeytinyağı',26],['Beyaz peynir (tam yağlı)',40]],
+   adimlar:'Soğanı ve biberi ince şerit doğra, domatesleri rendele.\nDöküm ya da geniş tavada yağı ısıt; soğan ve biberi orta ateşte 8 dakika, karamelleşmeye başlayana kadar kavur.\n1 diş ezilmiş sarımsak, 1 çay kaşığı kimyon ve tatlı toz biber ekle, 30 saniye kokusu çıkana kadar çevir.\nRendelenmiş domatesi ve tuzu ekle; sos koyulaşana kadar 10 dakika pişir.\nKaşıkla soste 4 çukur aç, yumurtaları içine kır.\nKapağı kapat, kısık ateşte 5-6 dakika akları pişene, sarılar akışkan kalana kadar beklet.\nPeyniri ufala, maydanoz serpip tavada ekmekle servis et.',
+   ipucu:'Yanına ekşi mayalı ekmek kızartırsan sosu sıyırmak için mükemmel olur.'},
+  {id:'t-cilbir', tur:'kahvalti', em:'🥣', ad:'Çılbır', porsiyon:2, sure:15, pismis:400, malz:[['Yumurta',110],['Süzme yoğurt',200],['Sarımsak',4],['Tereyağı',20]],
+   adimlar:'Yoğurdu ezilmiş sarımsak ve bir tutam tuzla karıştır, oda sıcaklığına gelsin diye tezgâhta beklet.\nGeniş bir tencerede suyu kaynat, 1 yemek kaşığı sirke ekle, ateşi kıs (su hafif fokurdasın).\nYumurtayı önce bir kaseye kır; suyu kaşıkla girdap yapacak şekilde çevir ve yumurtayı ortaya bırak.\n3 dakika poşe et, delikli kepçeyle al. Diğer yumurtayı da aynı şekilde pişir.\nYoğurdu tabaklara yay, yumurtaları üzerine koy.\nTereyağını küçük tavada köpürene kadar erit, 1 çay kaşığı pul biber ekleyip ocaktan al ve hemen üstüne gezdir.',
+   ipucu:'Yumurta ne kadar tazeyse poşe ederken o kadar az dağılır.'},
   /* ---- çorbalar ---- */
   {id:'t-mercimek', tur:'corba', em:'🥣', ad:'Mercimek çorbası', porsiyon:6, sure:35, pismis:1800, malz:[['Kırmızı mercimek (çiğ)',200],['Soğan',110],['Havuç',70],['Patates (çiğ)',170],['Tereyağı',14],['Zeytinyağı',13],['Domates salçası',16],['Un (beyaz)',10]],
-   adimlar:'Soğanı yağda kavur, salçayı ve unu ekleyip çevir.\nMercimek, havuç ve patatesi ekle, 1,5 litre sıcak su koy, 25 dakika pişir.\nBlenderdan geçir, nane ve pul biberle servis et.'},
+   adimlar:'Mercimeği süzgeçte suyu berraklaşana kadar yıka.\nSoğanı, havucu ve patatesi küp doğra.\nTencerede yağları ısıt, soğanı 3-4 dakika pembeleşene kadar kavur.\nSalçayı ve unu ekle, 1 dakika kokusu çıkana kadar karıştır.\nHavuç, patates ve mercimeği ekle; 1,5 litre sıcak su koy.\nKaynayınca ateşi kıs, kapağı aralık 25 dakika, mercimek tamamen dağılana kadar pişir.\nEl blenderıyla pürüzsüz olana kadar çek; kıvamı koyuysa biraz sıcak su ekle.\nTuz ve kimyonla tatlandır, bir taşım daha kaynat. Limon ve pul biberle servis et.',
+   ipucu:'Üzerine pul biberli tereyağı gezdirirsen lokanta tadı verir.'},
   {id:'t-domatescorba', tur:'corba', em:'🍅', ad:'Domates çorbası', porsiyon:4, sure:25, pismis:1600, malz:[['Domates',600],['Un (beyaz)',20],['Tereyağı',14],['Süt (tam yağlı)',200],['Kaşar peyniri',40]],
-   adimlar:'Unu tereyağında kavur, rendelenmiş domatesi ekle.\n3 su bardağı sıcak su ekleyip 15 dakika pişir, blenderdan geçir.\nSütü yavaşça ekle, rendelenmiş kaşarla servis et.'},
+   adimlar:'Domatesleri rendele, kabuklarını at.\nTencerede tereyağını erit, unu ekleyip kokusu çıkana kadar 2 dakika kavur.\nRendelenmiş domatesi ekle, 5 dakika pişir.\n3 su bardağı sıcak su ve tuzu ekle, kaynayınca 10 dakika kısık ateşte pişir.\nEl blenderıyla pürüzsüz hale getir.\nSütü ince bir ip gibi akıtarak karıştırarak ekle, kesilmemesi için kaynatma, sadece ısıt.\nKaselere al, rendelenmiş kaşar ve kuru fesleğenle servis et.',
+   ipucu:'Domatesler çok ekşiyse 1 çay kaşığı şeker dengeler.'},
   {id:'t-yayla', tur:'corba', em:'🥣', ad:'Yayla çorbası', porsiyon:4, sure:30, pismis:1600, malz:[['Yoğurt (tam yağlı)',300],['Pirinç (çiğ)',50],['Yumurta',55],['Un (beyaz)',15],['Tereyağı',14]],
-   adimlar:'Pirinci 1 litre suda yumuşayana kadar haşla.\nYoğurt, yumurta ve unu çırp; sıcak sudan alarak ılıştır, tencereye yavaşça ekle.\nKaynayınca naneli tereyağı gezdir.'},
+   adimlar:'Pirinci yıka, 1 litre suda yumuşayana kadar 15 dakika haşla.\nAyrı bir kasede yoğurt, yumurta sarısı ve unu pürüzsüz olana kadar çırp.\nTerbiyeyi kesmemek için tencereden 2 kepçe sıcak suyu yavaş yavaş terbiyeye ekleyerek ılıştır.\nIlıştırılmış terbiyeyi sürekli karıştırarak tencereye dök.\nKaynayana kadar karıştırmayı bırakma; kaynayınca 2 dakika pişirip tuzla.\nTereyağını erit, 1 tatlı kaşığı kuru nane ekleyip çorbanın üzerine gezdir.',
+   ipucu:'Terbiye eklenince durmadan karıştırmak yoğurdun kesilmesini önler.'},
   {id:'t-tavukcorba', tur:'corba', em:'🍗', ad:'Tavuk suyu çorbası', porsiyon:4, sure:40, pismis:1500, malz:[['Tavuk göğüs (çiğ)',200],['Makarna (çiğ)',60],['Havuç',70],['Limon',15]],
-   adimlar:'Tavuğu 1,5 litre suda haşla, didikle.\nSuya rendelenmiş havuç ve şehriyeyi ekle, 10 dakika pişir.\nTavuğu geri koy, limonla servis et.'},
+   adimlar:'Tavuğu 1,5 litre soğuk suya koy, kaynamaya bırak; köpüğünü kaşıkla al.\nKısık ateşte 25 dakika haşla, tavuğu çıkarıp ince didikle.\nHavucu rendeleyip suya ekle, 5 dakika pişir.\nŞehriyeyi ekle, 8 dakika yumuşayana kadar pişir.\nDidiklenmiş tavuğu geri koy, tuz ve karabiberle tatlandır.\nServis ederken limon sık; istersen terbiye için 1 yumurta sarısı ve limonu ılıştırıp ekle.',
+   ipucu:'Haşlarken suya 1 defne yaprağı ve birkaç tane karabiber koymak suyu çok güzelleştirir.'},
   {id:'t-sebzecorba', tur:'corba', em:'🥕', ad:'Sebze çorbası', porsiyon:4, sure:30, pismis:1600, malz:[['Patates (çiğ)',170],['Havuç',140],['Kabak',200],['Soğan',110],['Zeytinyağı',13]],
-   adimlar:'Sebzeleri küp doğra, soğanı yağda kavur.\nSebzeleri ve 1 litre sıcak suyu ekle, 20 dakika pişir; istersen blenderdan geçir.'},
+   adimlar:'Bütün sebzeleri yaklaşık 1 cm küp doğra.\nTencerede yağı ısıt, soğanı 3 dakika kavur.\nHavuç ve patatesi ekle, 3 dakika çevir.\nKabağı ve 1 litre sıcak suyu ekle, tuzla.\nKaynayınca kısık ateşte 20 dakika sebzeler yumuşayana kadar pişir.\nPüre çorba istersen blenderdan geçir, istemezsen taneli bırak. Kekik ve karabiberle servis et.',
+   ipucu:'Kabağı en son eklersen rengi ve dokusu bozulmaz.'},
   /* ---- ana yemekler ---- */
   {id:'t-tavuksote', tur:'ana', em:'🍗', ad:'Sebzeli tavuk sote', porsiyon:3, sure:30, pismis:1000, malz:[['Tavuk göğüs (çiğ)',450],['Kapya biber',120],['Dolmalık biber',100],['Soğan',110],['Domates',240],['Mantar',140],['Zeytinyağı',26]],
-   adimlar:'Kuşbaşı tavuğu suyunu salıp çekene kadar sotele.\nSoğan, biber ve mantarı ekleyip 5 dakika pişir.\nDomatesi ekle, kapağı kapalı 10 dakika pişir.'},
+   adimlar:'Tavuğu 2 cm kuşbaşı doğra, kâğıt havluyla kurula.\nBiberleri ve soğanı şerit, mantarı dilim doğra; domatesi küp kes.\nGeniş tavada yağı yüksek ateşte iyice ısıt.\nTavuğu tavaya tek kat yay, 2 dakika hiç karıştırmadan mühürle; sonra çevirip suyunu çekene kadar 5 dakika pişir.\nSoğan, biber ve mantarı ekle, 5 dakika sebzeler yumuşayana kadar sotele.\nDomatesi, tuzu, karabiberi ve 1 çay kaşığı kekiği ekle.\nKapağı kapalı, orta-kısık ateşte 10 dakika pişir. Bulgur pilavı ya da salatayla servis et.',
+   ipucu:'Tavuğu kalabalık tavada pişirirsen haşlanır; gerekirse iki seferde mühürle.'},
   {id:'t-izgaratavuk', tur:'ana', em:'🍗', ad:'Yoğurtlu ızgara tavuk göğsü', porsiyon:2, sure:25, pismis:320, malz:[['Tavuk göğüs (çiğ)',400],['Zeytinyağı',13],['Yoğurt (tam yağlı)',50]],
-   adimlar:'Tavuğu yoğurt, yağ, tuz, kekik ve pul biberle 20 dakika marine et.\nIzgara tavada her yüzünü 5-6 dakika pişir, 5 dakika dinlendirip dilimle.'},
+   adimlar:'Tavuk göğüslerini streç film arasında merdaneyle vurarak her yeri eşit, yaklaşık 2 cm kalınlığa getir.\nYoğurt, yağ, tuz, kekik, pul biber, 1 diş ezilmiş sarımsak ve limon kabuğu rendesini karıştır.\nTavuğu bu karışıma bula, en az 20 dakika (mümkünse 2 saat buzdolabında) marine et.\nIzgara tavayı yüksek ateşte dumanı çıkana kadar ısıt.\nTavuğu koy, ilk 4 dakika hiç oynatma; çevir ve 4-5 dakika daha pişir. İçi 74 °C olmalı ya da kesince pembe kalmamalı.\nTabağa alıp 5 dakika dinlendir, sonra lif yönüne dik dilimle.',
+   ipucu:'Dinlendirme suyunun içeride kalmasını sağlar; hemen kesersen kuru olur.'},
   {id:'t-tavuksis', tur:'ana', em:'🍢', ad:'Tavuk şiş', porsiyon:3, sure:35, parca:['şiş', 6], pismis:640, malz:[['Tavuk göğüs (çiğ)',500],['Kapya biber',120],['Soğan',110],['Zeytinyağı',13],['Yoğurt (tam yağlı)',50]],
-   adimlar:'Tavuğu küp doğra, yoğurt, yağ ve baharatla marine et.\nBiber ve soğanla şişlere diz, fırında ya da ızgarada çevirerek 15 dakika pişir.'},
+   adimlar:'Tahta şişleri 20 dakika suda beklet ki fırında yanmasın.\nTavuğu 3 cm küp doğra; yoğurt, yağ, 1 tatlı kaşığı salça, tuz, kimyon ve kekikle karıştırıp en az 30 dakika marine et.\nBiberi ve soğanı tavukla aynı büyüklükte kes.\nŞişlere tavuk, biber ve soğanı sırayla diz (6 şiş).\nFırını 220 °C’ye ısıt; şişleri yağlı kâğıt serili tepside 15-18 dakika, yarısında çevirerek pişir.\nIzgarada yapacaksan orta ateşte her yüzünü 3-4 dakika çevirerek pişir. Lavaş ve közlenmiş domatesle servis et.',
+   ipucu:'Parçaları birbirine çok sıkı dizmezsen her yüzü eşit pişer.'},
   {id:'t-kofte', tur:'ana', em:'🍖', ad:'Izgara köfte', porsiyon:3, sure:30, parca:['köfte', 18], pismis:520, malz:[['Dana kıyma (yağsız)',400],['Soğan',55],['Beyaz ekmek',30],['Yumurta',55]],
-   adimlar:'Kıymayı rendelenmiş soğan, ıslatılmış ekmek içi, yumurta ve baharatla yoğur, 20 dakika dinlendir.\n18 köfte yap, ızgarada ya da tavada pişir.'},
+   adimlar:'Soğanı rendele ve suyunu elle sıkarak at.\nEkmeğin içini az suyla ıslatıp ufala.\nKıyma, soğan, ekmek, yumurta, 1 çay kaşığı tuz, karabiber ve kimyonu yoğurma kabına al.\nEn az 5 dakika yapışkan bir doku elde edene kadar yoğur.\nHarcı buzdolabında 20-30 dakika dinlendir; şekil verirken dağılmaz.\nElini ıslatarak 18 eşit köfte yap, ortalarına parmakla hafifçe bastır.\nIzgara tavayı çok iyi ısıt; köfteleri her yüzü 3-4 dakika, ortası pembe kalmayana kadar pişir.',
+   ipucu:'Ortaya bastırmak köftenin pişerken kabarıp top gibi olmasını engeller.'},
   {id:'t-firinkofte', tur:'ana', em:'🥘', ad:'Fırında patatesli köfte', porsiyon:4, sure:50, parca:['köfte', 20], pismis:1250, malz:[['Dana kıyma (orta yağlı)',500],['Soğan',110],['Patates (çiğ)',500],['Domates',240],['Beyaz ekmek',30],['Yumurta',55]],
-   adimlar:'Köfte harcını yoğur, 20 köfte yap.\nTepsiye köfte, patates ve domatesi sırayla diz, 1 su bardağı salçalı su gezdir.\n200 °C fırında 40 dakika pişir.'},
+   adimlar:'Fırını 200 °C’ye ısıt.\nYarım soğanı rendeleyip kıyma, ıslatılmış ekmek içi, yumurta ve baharatlarla 5 dakika yoğur; 20 köfte yap.\nPatatesleri elma dilim, domatesleri ve kalan soğanı halka kes.\nTepsiye köfte, patates ve domatesi sırayla, dik dik yerleştir.\n1 yemek kaşığı salçayı 1 su bardağı sıcak suyla açıp tuz ve kekikle karıştır, tepsiye gezdir.\nÜstünü folyoyla kapat, 25 dakika pişir.\nFolyoyu aç, 15-20 dakika daha üstü kızarana kadar pişir.',
+   ipucu:'İlk yarıda folyo patateslerin buharla yumuşamasını, son yarıda kızarmasını sağlar.'},
   {id:'t-firintavuk', tur:'ana', em:'🍲', ad:'Fırın tavuk ve bulgur pilavı', porsiyon:2, sure:45, malz:[['Tavuk göğüs (çiğ)',400],['Bulgur (çiğ)',120],['Soğan',55],['Domates salçası',16],['Zeytinyağı',20],['Yoğurt (yarım yağlı)',150]],
-   adimlar:'Tavuğu yoğurt ve baharatla marine et, 200 °C fırında 25 dakika pişir.\nSoğanı kavur, salça ve bulguru ekle, 1,5 su bardağı suyla pişir.'},
+   adimlar:'Tavuğu yoğurt, yarım yemek kaşığı yağ, tuz, toz kırmızı biber ve kimyonla marine et.\nFırını 200 °C’ye ısıt; tavuğu yağlı kâğıt serili tepside 22-25 dakika pişir.\nBu sırada soğanı kalan yağda 3 dakika kavur, salçayı ekleyip 1 dakika çevir.\nBulguru ekle, 2 dakika kavur.\n1,5 su bardağı sıcak su ve tuzu ekle; kaynayınca kısık ateşte suyunu çekene kadar 12 dakika pişir.\nOcaktan alıp kapağın altına kâğıt havlu koyarak 10 dakika demlendir.\nTavuğu dilimle, pilavın yanında servis et.',
+   ipucu:'Demlendirirken kapağa kâğıt havlu koymak buharı emer, pilav tane tane olur.'},
   {id:'t-somon', tur:'ana', em:'🐟', ad:'Fırında somon ve sebze', porsiyon:2, sure:30, pismis:560, malz:[['Somon (fırın)',300],['Brokoli',180],['Havuç',140],['Zeytinyağı',13],['Limon',30]],
-   adimlar:'Sebzeleri doğra, yağ ve baharatla harmanla.\nSomonu üstüne yerleştir, limon gezdir, 200 °C’de 18-20 dakika pişir.'},
+   adimlar:'Fırını 200 °C’ye ısıt.\nBrokoliyi küçük çiçeklere ayır, havucu ince çubuk kes.\nSebzeleri yağın yarısı, tuz ve karabiberle harmanlayıp tepsiye yay; 10 dakika tek başına pişir.\nSomonu kâğıt havluyla kurula, kalan yağ, tuz, dereotu ve limon kabuğu rendesiyle ov.\nTepsiyi çıkar, sebzeleri kenara it, somonu derili yüzü alta gelecek şekilde ortaya koy.\n12-14 dakika, somon çatalla kolayca ayrılana kadar pişir. Limon suyu sıkarak servis et.',
+   ipucu:'Somonu fazla pişirmemek için kalın kısmın ortası hafif pembe kalınca çıkar; dinlenirken pişmeye devam eder.'},
   {id:'t-kurufasulye', tur:'ana', em:'🫘', ad:'Kuru fasulye', porsiyon:4, sure:40, pismis:1400, malz:[['Kuru fasulye (haşlanmış)',600],['Soğan',110],['Domates salçası',32],['Zeytinyağı',26]],
-   adimlar:'Soğanı yağda kavur, salçayı ekle.\nHaşlanmış fasulye ve 2 su bardağı sıcak su ekleyip kısık ateşte 30 dakika pişir.'},
+   adimlar:'Kuru fasulyeyi kendin haşlayacaksan bir gece önceden ıslat, ertesi gün yumuşayana kadar haşla.\nSoğanı yemeklik doğra, tencerede yağı ısıtıp 5 dakika pembeleşene kadar kavur.\nSalçayı ekle, kokusu çıkana kadar 2 dakika kavur.\nFasulyeleri ekle, 1 dakika çevir.\nÜzerini 2 parmak geçecek kadar sıcak su (yaklaşık 2 su bardağı), tuz, karabiber ve pul biber ekle.\nKaynayınca kısık ateşte, kapağı aralık 30 dakika suyu koyulaşana kadar pişir.\nOcaktan alınca 10 dakika dinlendir; pilav ve turşuyla servis et.',
+   ipucu:'Tuzu fasulye yumuşadıktan sonra ekle, erken eklersen kabuğu sertleşir.'},
   {id:'t-etlinohut', tur:'ana', em:'🍲', ad:'Kıymalı nohut', porsiyon:4, sure:40, pismis:1300, malz:[['Nohut (haşlanmış)',500],['Dana kıyma (yağsız)',150],['Soğan',110],['Domates salçası',32],['Zeytinyağı',13]],
-   adimlar:'Soğanı ve kıymayı kavur, salçayı ekle.\nNohut ve 2 su bardağı sıcak suyu ekleyip 25 dakika pişir.'},
+   adimlar:'Soğanı ince doğra, yağda 3 dakika kavur.\nKıymayı ekle, topaklanmasın diye kaşıkla dağıtarak suyunu salıp çekene kadar 6-7 dakika kavur.\nSalçayı ekleyip 2 dakika çevir.\nNohutları ve 2 su bardağı sıcak suyu ekle, tuz, karabiber ve pul biberle tatlandır.\nKaynayınca kısık ateşte 25 dakika, suyu yarıya inene kadar pişir.\nPilav ya da yoğurtla servis et.',
+   ipucu:'Bir tatlı kaşığı tereyağını pişmenin sonunda eklemek yemeğe parlaklık verir.'},
   {id:'t-makarna', tur:'ana', em:'🍝', ad:'Domates soslu makarna', porsiyon:3, sure:20, pismis:900, malz:[['Makarna (çiğ)',250],['Domates',360],['Zeytinyağı',13],['Sarımsak',8]],
-   adimlar:'Makarnayı tuzlu suda haşla.\nSarımsağı yağda çevir, rendelenmiş domatesi ekleyip 10 dakika pişir, makarnayla karıştır.'},
+   adimlar:'Büyük tencerede bol suyu kaynat, 1 yemek kaşığı tuz ekle.\nMakarnayı paketteki süreden 1 dakika az haşla; süzmeden önce 1 çay bardağı makarna suyunu ayır.\nBu sırada sarımsağı ince dilimle, yağı tavada ısıtıp sarımsağı 1 dakika rengi dönmeden çevir.\nRendelenmiş domatesi, tuzu ve bir tutam şekeri ekle; 10 dakika sos koyulaşana kadar pişir.\nMakarnayı sosa al, ayırdığın makarna suyundan biraz ekleyip 1 dakika karıştırarak sosla kaplat.\nFesleğen ya da rendelenmiş peynirle servis et.',
+   ipucu:'Nişastalı makarna suyu sosun makarnaya tutunmasını sağlar, atma.'},
   {id:'t-kiymalimakarna', tur:'ana', em:'🍝', ad:'Kıymalı makarna', porsiyon:4, sure:30, pismis:1250, malz:[['Makarna (çiğ)',320],['Dana kıyma (orta yağlı)',250],['Domates salçası',32],['Soğan',110]],
-   adimlar:'Soğan ve kıymayı kavur, salça ve 1 su bardağı su ekleyip sos yap.\nHaşlanmış makarnayla karıştır.'},
+   adimlar:'Soğanı ince doğra, tavada az yağla 3 dakika kavur.\nKıymayı ekle, dağıtarak suyunu salıp çekene kadar kavur.\nSalçayı ekleyip 2 dakika çevir; 1 su bardağı sıcak su, tuz, karabiber ve kekik ekle.\nKısık ateşte 10 dakika sos koyulaşana kadar pişir.\nBu sırada makarnayı tuzlu suda al dente haşla, süz.\nMakarnayı sosla karıştır, rendelenmiş kaşar ya da yoğurtla servis et.',
+   ipucu:'Sosa 1 tatlı kaşığı tereyağı eklemek kıymanın kuru durmasını önler.'},
   {id:'t-bulgurpilav', tur:'ana', em:'🍚', ad:'Bulgur pilavı', porsiyon:4, sure:25, pismis:900, malz:[['Bulgur (çiğ)',320],['Soğan',55],['Domates salçası',16],['Tereyağı',14]],
-   adimlar:'Soğanı tereyağında kavur, salçayı ekle.\nBulguru ve 3 su bardağı sıcak suyu ekle, suyunu çekene kadar pişir, 10 dakika demlendir.'},
+   adimlar:'Pilavlık iri bulguru yıka, süz.\nSoğanı ince doğra, tereyağında 3 dakika kavur.\nSalçayı ekle, 1 dakika çevir.\nBulguru ekle, 2 dakika karıştırarak kavur.\n3 su bardağı sıcak su ve tuzu ekle (1 ölçü bulgura 1,5 ölçü su).\nKaynayınca ateşi en aza al, kapağı kapalı suyunu çekene kadar 12-15 dakika pişir.\nOcaktan al, kapağın altına kâğıt havlu koyup 10 dakika demlendir, sonra çatalla havalandır.',
+   ipucu:'Biber salçası eklersen daha kırmızı ve hafif acılı olur.'},
   {id:'t-pirincpilav', tur:'ana', em:'🍚', ad:'Pirinç pilavı', porsiyon:4, sure:25, pismis:800, malz:[['Pirinç (çiğ)',300],['Tereyağı',28]],
-   adimlar:'Yıkanmış pirinci tereyağında 3 dakika kavur.\n1,5 katı sıcak su ve tuz ekle, kısık ateşte suyunu çekince demlendir.'},
+   adimlar:'Pirinci ılık tuzlu suda 20 dakika beklet, sonra suyu berraklaşana kadar yıkayıp süz.\nTencerede tereyağını erit, pirinci ekle.\nPirinçler şeffaflaşıp birbirine yapışmayana kadar 3-4 dakika kavur.\nPirincin 1,5 katı kaynar su (yaklaşık 2,5 su bardağı) ve tuzu ekle.\nKaynayınca ateşi en aza al; kapağı kapalı, suyunu çekene kadar 15 dakika pişir.\nOcaktan al, kâğıt havlu koyup kapağı kapatarak 10-15 dakika demlendir.',
+   ipucu:'Demlenirken kapağı açma; buhar pirinci tane tane pişirir.'},
   {id:'t-firinpatates', tur:'ana', em:'🥔', ad:'Fırın patates', porsiyon:3, sure:40, pismis:520, malz:[['Patates (çiğ)',680],['Zeytinyağı',26]],
-   adimlar:'Patatesleri elma dilim kes, yağ ve baharatla harmanla.\n210 °C fırında çevirerek 35 dakika pişir.'},
+   adimlar:'Fırını 210 °C’ye ısıt.\nPatatesleri iyice yıka, kabuklarıyla elma dilim kes.\nKaynayan tuzlu suda 5 dakika haşlayıp süz ve 5 dakika buharını salmaya bırak.\nYağ, tuz, toz kırmızı biber, kekik ve sarımsak tozuyla harmanla.\nYağlı kâğıt serili tepsiye birbirine değmeyecek şekilde yay.\n30-35 dakika, yarısında çevirerek altın renk ve çıtır olana kadar pişir.',
+   ipucu:'Ön haşlama ve kurutma, dışı çıtır içi yumuşak patatesin sırrıdır.'},
   {id:'t-firinsebze', tur:'ana', em:'🫑', ad:'Fırında sebze', porsiyon:3, sure:40, pismis:700, malz:[['Kabak',200],['Patlıcan',250],['Kapya biber',120],['Havuç',70],['Patates (çiğ)',170],['Zeytinyağı',26]],
-   adimlar:'Sebzeleri iri doğra, yağ ve baharatla harmanla.\n200 °C fırında 35 dakika pişir.'},
+   adimlar:'Fırını 200 °C’ye ısıt.\nPatlıcanı küp doğra, tuzlayıp 15 dakika acısını salmaya bırak, sonra kurula.\nDiğer sebzeleri de iri, birbirine yakın boyda doğra; havuç ve patatesi biraz daha küçük kes.\nTüm sebzeleri yağ, tuz, karabiber ve kekikle harmanla.\nİki tepsiye yayarak (üst üste binmesin) 30-35 dakika, yarısında karıştırarak pişir.\nSarımsaklı yoğurtla servis et.',
+   ipucu:'Tepsi kalabalıksa sebzeler kızarmaz, haşlanır.'},
   {id:'t-mucver', tur:'ana', em:'🥒', ad:'Kabak mücveri', porsiyon:4, sure:30, parca:['mücver', 12], pismis:650, malz:[['Kabak',400],['Yumurta',110],['Un (beyaz)',60],['Beyaz peynir (tam yağlı)',80],['Dereotu',20],['Zeytinyağı',26]],
-   adimlar:'Kabağı rendeleyip suyunu sık.\nYumurta, un, peynir ve dereotuyla karıştır.\nYağlı tavada kaşıkla dökerek iki yüzünü kızart ya da fırında pişir.'},
+   adimlar:'Kabakları rendele, tuzla ve 10 dakika bekletip suyunu ellerinle iyice sık.\nKabak, yumurta, ufalanmış peynir, ince kıyılmış dereotu ve taze soğanı karıştır.\nUnu azar azar ekle; kaşıktan yavaşça akan bir hamur olsun.\nTavada yağı orta ateşte ısıt, her mücver için 1 yemek kaşığı harç dök ve hafifçe yay.\nHer yüzünü 2-3 dakika altın renk olana kadar kızart, kâğıt havluya al.\nFırında yapmak istersen muffin kalıbında 190 °C’de 20 dakika pişir. Sarımsaklı yoğurtla servis et.',
+   ipucu:'Kabağın suyunu iyi sıkmazsan mücver dağılır ve yağ çeker.'},
   {id:'t-fasulye', tur:'ana', em:'🫛', ad:'Zeytinyağlı taze fasulye', porsiyon:4, sure:50, pismis:900, malz:[['Taze fasulye',500],['Soğan',110],['Domates',240],['Zeytinyağı',39],['Toz şeker',4]],
-   adimlar:'Soğanı yağda pembeleştir, fasulyeyi ekleyip çevir.\nDomates, şeker ve yarım su bardağı su ekleyip kısık ateşte 40 dakika pişir.'},
+   adimlar:'Fasulyelerin uçlarını ve kılçıklarını ayıkla, ikiye ya da üçe böl.\nSoğanı yarım ay doğra; tencerede zeytinyağıyla 5 dakika yumuşayana kadar kavur.\nFasulyeleri ekle, rengi canlanana kadar 5 dakika çevir.\nRendelenmiş domates, şeker, tuz ve yarım su bardağı sıcak suyu ekle.\nKapağı kapalı, kısık ateşte 40 dakika, fasulye yumuşayana kadar pişir.\nTenceresinde soğumaya bırak; zeytinyağlılar soğuk servis edilir.',
+   ipucu:'Şeker domatesin ekşiliğini dengeler ve fasulyenin rengini korur.'},
   {id:'t-pirasa', tur:'ana', em:'🥬', ad:'Zeytinyağlı pırasa', porsiyon:4, sure:40, pismis:1100, malz:[['Pırasa',800],['Havuç',140],['Pirinç (çiğ)',40],['Zeytinyağı',39],['Limon',30]],
-   adimlar:'Pırasa ve havucu doğra, yağda 5 dakika çevir.\nPirinç ve 1 su bardağı sıcak su ekleyip 30 dakika pişir, limonla servis et.'},
+   adimlar:'Pırasaları uzunlamasına yarıp aralarındaki toprağı bol suyla yıka, 2 cm doğra.\nHavucu yuvarlak dilimle.\nTencerede zeytinyağıyla havucu 3 dakika, ardından pırasayı 5 dakika kavur.\nYıkanmış pirinci, tuzu, 1 tatlı kaşığı şekeri ve 1 su bardağı sıcak suyu ekle.\nKapağı kapalı, kısık ateşte 30 dakika pişir.\nOcaktan alırken limon suyunu ekle; soğuk servis et.',
+   ipucu:'Limonu sonda eklemek pırasanın rengini canlı tutar.'},
   {id:'t-ispanak', tur:'ana', em:'🥬', ad:'Ispanak yemeği', porsiyon:3, sure:25, pismis:800, malz:[['Ispanak',500],['Soğan',110],['Pirinç (çiğ)',30],['Zeytinyağı',26]],
-   adimlar:'Soğanı yağda kavur, doğranmış ıspanağı ekle.\nPirinç ve yarım su bardağı suyla 15 dakika pişir, yoğurtla servis et.'},
+   adimlar:'Ispanağı birkaç kez bol suda yıka, köklerini kes, iri doğra.\nSoğanı ince doğra, yağda 4 dakika kavur.\nIsterse 1 tatlı kaşığı salça ekle, 1 dakika çevir.\nIspanağı ekle; söndükçe karıştır.\nYıkanmış pirinç, tuz ve yarım su bardağı sıcak su ekle.\nKapağı kapalı kısık ateşte 15 dakika pişir. Sarımsaklı yoğurtla servis et.',
+   ipucu:'Ispanak kendi suyunu salar; fazla su eklersen yemek sulu olur.'},
   {id:'t-mkofte', tur:'ana', em:'🌿', ad:'Mercimek köftesi', porsiyon:6, sure:40, parca:['köfte', 30], pismis:1050, malz:[['Kırmızı mercimek (çiğ)',200],['Bulgur (çiğ)',160],['Soğan',220],['Zeytinyağı',39],['Domates salçası',32],['Maydanoz',50],['Taze soğan',45],['Marul',150]],
-   adimlar:'Mercimeği dağılana kadar pişir, bulguru ekleyip demlendir.\nSalçalı kavrulmuş soğan, yeşillik ve baharatla yoğur, 30 köfte yap.'},
+   adimlar:'Mercimeği yıka, 2,5 su bardağı suyla kısık ateşte suyunu çekip dağılana kadar 15 dakika pişir.\nOcaktan al, ince köftelik bulguru ekleyip karıştır; kapağı kapalı 20 dakika demlendir.\nSoğanı ince doğra, yağda 5 dakika kavur; salça ve biber salçasını ekleyip 2 dakika çevir.\nKavrulmuş soğanı mercimek-bulgur karışımına ekle.\nKimyon, pul biber, tuz ve isteğe göre nar ekşisi ekleyip ılıyınca 5 dakika yoğur.\nİnce kıyılmış maydanoz ve taze soğanı ekleyip bir kez daha yoğur.\nAvucunda sıkarak 30 köfte şekillendir, marul yapraklarında limonla servis et.',
+   ipucu:'Hamur kuru kalırsa birkaç kaşık sıcak su ekleyerek yoğur.'},
+  {id:'t-hunkar', tur:'ana', em:'👑', ad:'Hünkâr beğendi', porsiyon:4, sure:120, pismis:1700, malz:[['Kuzu eti (but)',500],['Soğan',110],['Domates',240],['Patlıcan',1000],['Süt (tam yağlı)',400],['Un (beyaz)',40],['Tereyağı',40],['Kaşar peyniri',60]],
+   adimlar:'Kuzu etini kuşbaşı doğra; tencerede yağ eklemeden suyunu salıp çekene kadar 10 dakika kavur.\nDoğranmış soğanı ekle, 5 dakika kavur; domates, tuz, karabiber ve 2 su bardağı sıcak su ekle.\nKapağı kapalı, kısık ateşte 1-1,5 saat et lokum gibi olana kadar pişir.\nPatlıcanları ocak ateşinde ya da fırında her yanı yumuşayana kadar közle; kabuklarını soyup limonlu suda beklet, sonra ince doğra.\nTereyağını eritip unu kokusu çıkana kadar 2 dakika kavur; sütü azar azar ekleyerek pürüzsüz beşamel yap.\nPatlıcanları beşamele ekle, 5 dakika karıştırarak pişir; rendelenmiş kaşarı ve tuzu ekle.\nBeğendiyi tabağa yay, ortasına eti suyuyla birlikte koyup servis et.',
+   ipucu:'Patlıcanı limonlu suda bekletmek beğendinin rengini beyaz tutar.'},
+  {id:'t-alinazik', tur:'ana', em:'🍆', ad:'Ali nazik', porsiyon:3, sure:45, pismis:1100, malz:[['Patlıcan',750],['Süzme yoğurt',300],['Dana kıyma (orta yağlı)',300],['Tereyağı',28],['Sarımsak',8]],
+   adimlar:'Patlıcanları ocakta ya da 220 °C fırında her yanı yumuşayana kadar közle.\nKabuklarını soy, süzgece alıp acı suyunu 10 dakika süzdür, ince doğra.\nSüzme yoğurdu ezilmiş sarımsak ve tuzla karıştır, patlıcanla birleştir.\nKıymayı tereyağında, suyunu çekip hafif kızarana kadar kavur; tuz, pul biber ve kimyon ekle.\nYoğurtlu patlıcanı servis tabağına yay.\nÜzerine sıcak kıymayı yay, isteğe göre tereyağında kızdırılmış pul biber gezdir.',
+   ipucu:'Kıyma sıcak, beğendi oda sıcaklığında olunca en lezzetli hâlini alır.'},
+  {id:'t-kadinbudu', tur:'ana', em:'🍖', ad:'Kadınbudu köfte', porsiyon:4, sure:60, parca:['köfte', 12], pismis:850, malz:[['Dana kıyma (orta yağlı)',500],['Pirinç (çiğ)',80],['Soğan',110],['Yumurta',110],['Un (beyaz)',40],['Ayçiçek yağı',60]],
+   adimlar:'Pirinci tuzlu suda yumuşayana kadar 12 dakika haşla, süz.\nKıymanın yarısını ince doğranmış soğanla suyunu çekene kadar kavur, soğut.\nKavrulmuş kıyma, kalan çiğ kıyma, pirinç, 1 yumurta, tuz, karabiber ve kimyonu 5 dakika yoğur.\n12 oval, hafif yassı köfte şekillendir.\nKalan yumurtayı çırp; köfteleri önce una, sonra yumurtaya bula.\nTavada yağı orta ateşte ısıt, köfteleri her yüzü 3 dakika altın renk olana kadar kızart.\nKâğıt havluya alıp sıcak servis et.',
+   ipucu:'Yarısını önceden kavurmak köftenin içinin yumuşak ve sulu olmasını sağlar.'},
+  {id:'t-iclikofte', tur:'ana', em:'🥟', ad:'Fırın içli köfte', porsiyon:6, sure:90, parca:['içli köfte', 12], pismis:1050, malz:[['Bulgur (çiğ)',320],['Dana kıyma (orta yağlı)',250],['Soğan',220],['Ceviz',50],['Tereyağı',28],['Un (beyaz)',30]],
+   adimlar:'İnce köftelik bulguru 1 su bardağı sıcak suyla ıslatıp 15 dakika beklet.\nUn, tuz, pul biber ve 1 yemek kaşığı salça ekleyip elini ıslatarak 15-20 dakika esnek bir hamur olana kadar yoğur.\nİç harç için soğanı kavur, kıymayı ekleyip suyunu çekene kadar pişir; iri kırılmış ceviz, tuz ve baharatları ekleyip soğut.\nHamurdan ceviz büyüklüğünde parça al, avucunda top yap ve işaret parmağınla döndürerek ince bir kap aç.\nİçine harç doldur, ucunu kapatıp oval şekil ver.\nFırını 200 °C’ye ısıt; köftelere eritilmiş tereyağı sür, 25 dakika kızarana kadar pişir.',
+   ipucu:'Hamur çatlıyorsa elini sık sık ıslat ve hamuru biraz daha yoğur.'},
+  {id:'t-manti', tur:'ana', em:'🥟', ad:'Ev yapımı mantı', porsiyon:4, sure:120, pismis:1500, malz:[['Un (beyaz)',400],['Yumurta',55],['Dana kıyma (orta yağlı)',250],['Soğan',110],['Yoğurt (tam yağlı)',400],['Tereyağı',28],['Domates salçası',16]],
+   adimlar:'Un, yumurta, tuz ve yaklaşık 1 su bardağı suyla sert bir hamur yoğur; streçle sarıp 30 dakika dinlendir.\nİç harç: kıyma, rendelenmiş ve suyu sıkılmış soğan, tuz, karabiberi karıştır.\nHamuru 2-3 parçaya bölüp merdaneyle 1-2 mm inceliğinde aç.\n2 cm kareler kes, ortalarına nohut kadar harç koy, dört ucunu birleştirip bohça yap.\nBol tuzlu kaynar suda 12-15 dakika haşla, süz.\nSarımsaklı yoğurdu üzerine dök; tereyağında salça ve pul biberi 1 dakika kızdırıp gezdir, kuru nane serp.',
+   ipucu:'Mantıları unlanmış tepside dondurabilirsin; donmuş hâlde haşlarsan süreye 3 dakika ekle.'},
+  {id:'t-levrek', tur:'ana', em:'🐟', ad:'Levrek buğulama', porsiyon:2, sure:40, pismis:850, malz:[['Levrek (ızgara)',400],['Domates',240],['Mantar',140],['Soğan',110],['Zeytinyağı',26]],
+   adimlar:'Levrek filetolarını tuz ve karabiberle ovup 10 dakika beklet.\nSoğanı halka, mantarı dilim, domatesi küp doğra.\nGeniş tencerenin tabanına soğanı yay, üzerine mantar ve domatesi koy.\nBalıkları sebzelerin üzerine yerleştir; zeytinyağı, 2 defne yaprağı ve yarım su bardağı sıcak su ekle.\nKapağı kapalı, kısık ateşte 18-20 dakika buğula; balığı çevirme.\nLimon dilimleri ve dereotuyla tenceresinde servis et.',
+   ipucu:'Balık pişince eti opaklaşır ve çatalla kolayca ayrılır.'},
+  {id:'t-tandir', tur:'ana', em:'🍖', ad:'Fırında kuzu tandır', porsiyon:4, sure:240, pismis:750, malz:[['Kuzu eti (but)',1000],['Soğan',110],['Zeytinyağı',13]],
+   adimlar:'Kuzu butu fırından 1 saat önce çıkar, oda sıcaklığına gelsin.\nTuz, karabiber, kekik, ezilmiş sarımsak ve yağla karıştırıp etin her yanına ov.\nDerin tepsinin tabanına halka soğanları yay, eti üzerine koy, 1 su bardağı sıcak su ekle.\nTepsiyi folyoyla sıkıca kapat; 150 °C fırında 3,5 saat pişir.\nFolyoyu aç, 200 °C’de 20 dakika üstü kızarana kadar pişir.\n10 dakika dinlendir; çatalla didikleyip iç pilav ve kendi suyuyla servis et.',
+   ipucu:'Düşük ısıda uzun pişirme etin kemikten kendiliğinden ayrılmasını sağlar.'},
+  {id:'t-enginar', tur:'ana', em:'🌼', ad:'Zeytinyağlı enginar', porsiyon:4, sure:50, parca:['enginar', 4], pismis:900, malz:[['Enginar',480],['Havuç',70],['Bezelye',145],['Patates (çiğ)',170],['Zeytinyağı',39],['Limon',30]],
+   adimlar:'Enginarları unlu ve limonlu suda bekleterek kararmasını önle.\nHavuç ve patatesi bezelye büyüklüğünde küp doğra.\nTencerede yağın yarısıyla havuç, patates ve bezelyeyi 5 dakika çevir.\nEnginarları tencereye dizip içlerine sebze karışımını doldur.\nKalan yağı, tuzu, 1 tatlı kaşığı şekeri, limon suyunu ve 1 su bardağı sıcak suyu ekle.\nÜzerine yağlı kâğıt kapatıp kapakla örtün; kısık ateşte 35 dakika pişir.\nTenceresinde soğut, dereotuyla servis et.',
+   ipucu:'Yağlı kâğıt enginarların suyun üstünde kalan kısmının da eşit pişmesini sağlar.'},
+  {id:'t-hamsipilav', tur:'ana', em:'🐟', ad:'Hamsili pilav', porsiyon:4, sure:60, pismis:1300, malz:[['Hamsi (ızgara)',500],['Pirinç (çiğ)',300],['Tereyağı',28],['Kuru üzüm',20],['Antep fıstığı',20]],
+   adimlar:'Hamsileri ayıkla, kılçıklarını çıkarıp kelebek gibi aç; tuzlayıp buzdolabında beklet.\nPirinci ılık tuzlu suda 20 dakika bekletip yıka.\nTereyağında fıstığı ve 1 küçük doğranmış soğanı kavur, pirinci ekleyip 3 dakika çevir.\nKuş üzümü, tuz, tarçın, yenibahar ve karabiber ekle; 1,5 su bardağı sıcak suyla suyunu çekene kadar pişir.\nYağlanmış tepsinin tabanını ve kenarlarını hamsilerle derisi alta gelecek şekilde kapla.\nPilavı yay, üstünü kalan hamsilerle kapat.\n200 °C fırında 25-30 dakika pişir; 5 dakika dinlendirip servis tabağına ters çevir.',
+   ipucu:'Pilavı tam pişirmeden (biraz diri) bırakmak fırında lapa olmasını engeller.'},
   /* ---- salatalar ---- */
   {id:'t-tonsalata', tur:'salata', em:'🥗', ad:'Ton balıklı salata', porsiyon:1, sure:10, malz:[['Ton balığı (suda)',120],['Marul',100],['Domates',120],['Salatalık',150],['Mısır (haşlanmış)',50],['Zeytinyağı',10],['Limon',15]],
-   adimlar:'Sebzeleri doğra, ton balığı ve mısırı ekle.\nZeytinyağı, limon ve tuzla soslayıp karıştır.'},
+   adimlar:'Marulu yıka, salata kurutucusunda ya da havluyla iyice kurula, elle iri doğra.\nDomates ve salatalığı küp kes.\nTon balığının suyunu süz, çatalla iri parçalara ayır.\nZeytinyağı, limon suyu, tuz ve 1 çay kaşığı hardalı küçük kavanozda çalkalayarak sos yap.\nSebzeleri, mısırı ve ton balığını büyük kasede birleştir, sosu servis etmeden hemen önce dökerek karıştır.',
+   ipucu:'Marul ıslak kalırsa sos tutmaz ve salata sulanır.'},
   {id:'t-kinoa', tur:'salata', em:'🥙', ad:'Kinoa salatası', porsiyon:2, sure:20, malz:[['Kinoa (pişmiş)',300],['Salatalık',150],['Domates',240],['Maydanoz',25],['Nar',45],['Zeytinyağı',20],['Limon',30]],
-   adimlar:'Kinoayı haşlayıp soğut.\nDoğranmış sebze, maydanoz ve narla karıştır, yağ ve limonla tatlandır.'},
+   adimlar:'Kinoayı ince süzgeçte acılığı gitsin diye iyice yıka.\n1 ölçü kinoaya 2 ölçü suyla kısık ateşte 15 dakika pişir; 5 dakika demlendirip çatalla havalandır ve soğut.\nSalatalık ve domatesi küçük küp, maydanozu ince kıy.\nZeytinyağı, limon, nar ekşisi, tuz ve kimyonla sos hazırla.\nTüm malzemeyi karıştır, nar tanelerini en son ekle.',
+   ipucu:'Buzdolabında 2 gün dayanır; öğle yemeği kutusu için ideal.'},
   {id:'t-coban', tur:'salata', em:'🥗', ad:'Çoban salata', porsiyon:2, sure:10, pismis:520, malz:[['Domates',240],['Salatalık',150],['Biber (yeşil sivri)',50],['Soğan',55],['Zeytinyağı',13],['Limon',15]],
-   adimlar:'Hepsini küçük küp doğra.\nZeytinyağı, limon ve tuzla karıştır.'},
+   adimlar:'Soğanı ince doğra, tuzla ovup soğuk suda yıka; acısı gider.\nDomates, salatalık ve biberi küçük küp doğra.\nTüm sebzeleri kasede birleştir.\nZeytinyağı, limon suyu ve tuzla karıştır; istersen sumak ve ince kıyılmış maydanoz ekle.',
+   ipucu:'Tuzu servis etmeden hemen önce ekle, domates suyunu bırakmasın.'},
   {id:'t-cacik', tur:'salata', em:'🥒', ad:'Cacık', porsiyon:3, sure:5, pismis:650, malz:[['Yoğurt (tam yağlı)',300],['Salatalık',150],['Sarımsak',4]],
-   adimlar:'Salatalığı rendele, sarımsaklı yoğurtla karıştır.\nBiraz soğuk su ve nane ekleyip kıvamını ayarla.'},
+   adimlar:'Salatalıkları rendele ya da küçük küp doğra.\nSarımsağı ezip tuzla birlikte yoğurda ekle, çırp.\nSalatalığı ekle, yarım su bardağı soğuk suyla istediğin kıvama getir.\nKuru nane serp, üstüne zeytinyağı gezdirip soğuk servis et.',
+   ipucu:'Rendelenmiş salatalığın suyunu sıkarsan daha koyu, meze kıvamında cacık olur.'},
   {id:'t-piyaz', tur:'salata', em:'🫘', ad:'Piyaz', porsiyon:3, sure:15, malz:[['Kuru fasulye (haşlanmış)',300],['Soğan',110],['Maydanoz',25],['Haşlanmış yumurta',50],['Zeytinyağı',26],['Limon',30]],
-   adimlar:'Soğanı piyazlık doğrayıp tuzla ovalayıp yıka.\nFasulye ve maydanozla karıştır, yağ ve limonla tatlandır, yumurtayla süsle.'},
+   adimlar:'Soğanı piyazlık (ince yarım ay) doğra; sumak ve tuzla ovalayıp 5 dakika beklet.\nHaşlanmış fasulyeyi süz, soğuk sudan geçir.\nMaydanozu iri kıy.\nZeytinyağı, limon suyu, sirke ve tuzla sos yap.\nFasulye, soğan ve maydanozu sosla karıştır; dilimlenmiş yumurtayla süsle.',
+   ipucu:'Antalya usulü için sosun içine 2 yemek kaşığı tahin ekle.'},
   {id:'t-kisir', tur:'salata', em:'🌾', ad:'Kısır', porsiyon:4, sure:20, pismis:700, malz:[['Bulgur (çiğ)',160],['Domates salçası',32],['Biber salçası',16],['Zeytinyağı',39],['Maydanoz',50],['Taze soğan',45],['Nar ekşisi',15],['Domates',120]],
-   adimlar:'İnce bulguru 1 su bardağı sıcak suyla ıslatıp 15 dakika beklet.\nSalçalar ve yağla yoğur, ince doğranmış yeşillik ve domatesi ekle, nar ekşisiyle tatlandır.'},
+   adimlar:'İnce köftelik bulguru kaseye al, 1 su bardağı kaynar suyu dök, üstünü kapatıp 15 dakika beklet.\nSalçaları ve zeytinyağını ekleyip ellerinle 5 dakika yoğur; bulgur salçayı iyice emsin.\nMaydanoz, taze soğan ve naneyi çok ince kıy; domatesi küçük küp doğra.\nYeşillikleri, domatesi, nar ekşisini, limonu, tuzu ve kimyonu ekleyip karıştır.\nMarul yaprağıyla servis et.',
+   ipucu:'Yoğurmayı atlama; kısırın rengi ve tadı bu aşamada oturur.'},
   {id:'t-semizotu', tur:'salata', em:'🌱', ad:'Yoğurtlu semizotu', porsiyon:2, sure:10, malz:[['Semizotu',200],['Süzme yoğurt',200],['Sarımsak',4],['Zeytinyağı',10]],
-   adimlar:'Semizotunu iri doğra, sarımsaklı yoğurtla karıştır, üzerine yağ gezdir.'},
+   adimlar:'Semizotunun kalın saplarını ayıkla, bol suda yıkayıp süz.\nİri doğra, kurula.\nYoğurdu ezilmiş sarımsak ve tuzla çırp.\nSemizotunu yoğurtla karıştır, üzerine zeytinyağı ve pul biber gezdir.',
+   ipucu:'Ceviz içi eklersen hem doyurucu hem çıtır olur.'},
+  /* ---- ara öğün ---- */
   {id:'t-tavukwrap', tur:'ara', em:'🌯', ad:'Tavuklu wrap', porsiyon:2, sure:15, parca:['dürüm', 2], pismis:490, malz:[['Tortilla',90],['Tavuk göğüs (ızgara)',200],['Marul',50],['Domates',100],['Süzme yoğurt',50]],
-   adimlar:'Tortillaları ısıt, yoğurt sür.\nDilimlenmiş tavuk ve sebzeleri koyup sıkıca sar.'},
+   adimlar:'Izgara tavuğu ince şeritler halinde dilimle.\nYoğurdu bir tutam tuz, sarımsak ve limonla karıştırıp sos yap.\nTortillaları kuru tavada her yüzü 20 saniye ısıt; yumuşar ve kırılmaz.\nTortillanın ortasına sos sür, marul, domates ve tavuğu dizilim halinde koy.\nAlt kenarı içe katla, yanları kapat ve sıkıca rulo yap.\nİstersen tavada kapanış yeri alta gelecek şekilde 1 dakika bastırarak mühürle; ikiye kesip servis et.',
+   ipucu:'Folyoya sarıp taşırsan dağılmaz; iş yerine götürmek için idealdir.'},
   {id:'t-tonsandvic', tur:'ara', em:'🥪', ad:'Ton balıklı sandviç', porsiyon:1, sure:5, malz:[['Tam buğday ekmeği',60],['Ton balığı (suda)',60],['Light mayonez',15],['Marul',15],['Domates',40]],
-   adimlar:'Ton balığını mayonezle ez.\nEkmeğe marul, domates ve ton karışımını koyup kapat.'},
-  /* ---- ara öğün ve tatlı ---- */
-  {id:'t-yulafkurabiye', tur:'tatli', em:'🍪', ad:'Muzlu yulaf kurabiyesi', porsiyon:6, sure:25, parca:['kurabiye', 12], pismis:430, malz:[['Muz',240],['Yulaf ezmesi',160],['Kuru üzüm',40],['Ceviz',30]],
-   adimlar:'Muzları ez, yulaf, kuru üzüm ve cevizle karıştır.\n12 parça yapıp 180 °C fırında 15-18 dakika pişir.'},
-  {id:'t-firinelma', tur:'tatli', em:'🍎', ad:'Fırında tarçınlı elma', porsiyon:2, sure:30, parca:['elma', 2], pismis:360, malz:[['Elma',360],['Ceviz',20],['Bal',14]],
-   adimlar:'Elmaların içini oy, ceviz, bal ve tarçın doldur.\n180 °C fırında 25 dakika pişir.'},
-  {id:'t-sutlac', tur:'tatli', em:'🍮', ad:'Sütlaç', porsiyon:6, sure:40, pismis:1150, malz:[['Süt (tam yağlı)',1000],['Pirinç (çiğ)',80],['Toz şeker',150],['Un (beyaz)',10]],
-   adimlar:'Pirinci 1 su bardağı suda yumuşayana kadar haşla.\nSütü ekleyip kaynat, şekeri ve suyla açılmış unu ekleyerek 15 dakika karıştır.\nKaselere paylaştırıp soğut.'},
-  {id:'t-muhallebi', tur:'tatli', em:'🍮', ad:'Muhallebi', porsiyon:4, sure:20, pismis:950, malz:[['Süt (tam yağlı)',800],['Un (beyaz)',60],['Toz şeker',120]],
-   adimlar:'Süt, un ve şekeri soğukken çırp.\nKısık ateşte sürekli karıştırarak koyulaşana kadar pişir, kaselere döküp soğut.'},
+   adimlar:'Ton balığını süz, mayonez, karabiber ve birkaç damla limonla çatalla ez.\nİstersen ince doğranmış turşu ya da kırmızı soğan ekle.\nEkmekleri hafifçe kızart.\nBir ekmeğe marul yaprağı, domates dilimleri ve ton karışımını koy, diğer ekmekle kapat.',
+   ipucu:'Marulu ekmeğe değecek şekilde koymak ekmeğin ıslanmasını önler.'},
   {id:'t-limonata', tur:'ara', em:'🍋', ad:'Ev yapımı limonata', porsiyon:4, sure:15, pismis:1200, malz:[['Limon',300],['Toz şeker',120]],
-   adimlar:'Limonların kabuğunu şekerle ovup suyunu sık.\n1 litre soğuk suyla karıştırıp süz, nane ve buzla servis et.'},
-  /* ---- yıldızlı: daha niş, özenli tarifler ---- */
-  {id:'t-hunkar', yildiz:true, tur:'ana', em:'👑', ad:'Hünkâr beğendi', porsiyon:4, sure:120, pismis:1700, malz:[['Kuzu eti (but)',500],['Soğan',110],['Domates',240],['Patlıcan',1000],['Süt (tam yağlı)',400],['Un (beyaz)',40],['Tereyağı',40],['Kaşar peyniri',60]],
-   adimlar:'Kuşbaşı kuzuyu kendi suyunu çekene kadar pişir, soğan ve domatesi ekleyip kısık ateşte 1 saat yumuşat.\nPatlıcanları közleyip kabuğunu soy, ince doğra.\nUnu tereyağında kavur, sütü ekleyip beşamel yap; patlıcan ve kaşarı katıp püre kıvamına getir.\nBeğendiyi tabağa yay, üzerine eti koyup servis et.'},
-  {id:'t-alinazik', yildiz:true, tur:'ana', em:'🍆', ad:'Ali nazik', porsiyon:3, sure:45, pismis:1100, malz:[['Patlıcan',750],['Süzme yoğurt',300],['Dana kıyma (orta yağlı)',300],['Tereyağı',28],['Sarımsak',8]],
-   adimlar:'Patlıcanları közle, kabuğunu soyup doğra, sarımsaklı yoğurtla karıştır.\nKıymayı tereyağında kavur, pul biber ve kimyonla tatlandır.\nYoğurtlu patlıcanı tabağa yay, üzerine sıcak kıymayı koy.'},
-  {id:'t-kadinbudu', yildiz:true, tur:'ana', em:'🍖', ad:'Kadınbudu köfte', porsiyon:4, sure:60, parca:['köfte', 12], pismis:850, malz:[['Dana kıyma (orta yağlı)',500],['Pirinç (çiğ)',80],['Soğan',110],['Yumurta',110],['Un (beyaz)',40],['Ayçiçek yağı',60]],
-   adimlar:'Kıymanın yarısını soğanla kavur, haşlanmış pirinçle karıştırıp soğut.\nKalan çiğ kıyma, bir yumurta ve baharatla yoğur, 12 oval köfte yap.\nKöfteleri una sonra çırpılmış yumurtaya bulayıp kızgın yağda kızart.'},
-  {id:'t-iclikofte', yildiz:true, tur:'ana', em:'🥟', ad:'Fırın içli köfte', porsiyon:6, sure:90, parca:['içli köfte', 12], pismis:1050, malz:[['Bulgur (çiğ)',320],['Dana kıyma (orta yağlı)',250],['Soğan',220],['Ceviz',50],['Tereyağı',28],['Un (beyaz)',30]],
-   adimlar:'İnce bulguru az suyla ıslatıp unla 20 dakika yoğur.\nİç harç: kıyma ve soğanı kavur, ceviz ve baharat ekle.\nHamurdan ceviz büyüklüğünde parça alıp parmakla oy, iç harcı koyup kapat.\nTereyağı sürüp 200 °C fırında 25 dakika pişir.'},
-  {id:'t-manti', yildiz:true, tur:'ana', em:'🥟', ad:'Ev yapımı mantı', porsiyon:4, sure:120, pismis:1500, malz:[['Un (beyaz)',400],['Yumurta',55],['Dana kıyma (orta yağlı)',250],['Soğan',110],['Yoğurt (tam yağlı)',400],['Tereyağı',28],['Domates salçası',16]],
-   adimlar:'Un, yumurta, tuz ve suyla sert bir hamur yoğurup 30 dakika dinlendir.\nİnce açıp küçük kareler kes, rendelenmiş soğanlı kıymadan koyup bohça yap.\nTuzlu suda 12-15 dakika haşla.\nSarımsaklı yoğurt ve salçalı tereyağı sosuyla servis et.'},
-  {id:'t-levrek', yildiz:true, tur:'ana', em:'🐟', ad:'Levrek buğulama', porsiyon:2, sure:40, pismis:850, malz:[['Levrek (ızgara)',400],['Domates',240],['Mantar',140],['Soğan',110],['Zeytinyağı',26]],
-   adimlar:'Tencereye soğan, domates ve mantarı yay.\nLevrek filetoları üzerine koy, yağ, defne ve yarım su bardağı su ekle.\nKapağı kapalı kısık ateşte 20 dakika buğula.'},
-  {id:'t-poke', yildiz:true, tur:'ana', em:'🍣', ad:'Somonlu poke kasesi', porsiyon:2, sure:25, pismis:900, malz:[['Somon (fırın)',200],['Esmer pirinç (pişmiş)',300],['Avokado',140],['Edamame',100],['Salatalık',150],['Susam',9]],
-   adimlar:'Esmer pirinci kaselere paylaştır.\nKüp somon, avokado, edamame ve salatalığı bölümler halinde diz.\nSoya, limon ve susam yağıyla soslayıp susam serp.'},
-  {id:'t-tandir', yildiz:true, tur:'ana', em:'🍖', ad:'Fırında kuzu tandır', porsiyon:4, sure:240, pismis:750, malz:[['Kuzu eti (but)',1000],['Soğan',110],['Zeytinyağı',13]],
-   adimlar:'Kuzu butu tuz, kekik ve sarımsakla ovup soğan yatağına koy.\nKapağı kapalı ya da folyolu 150 °C fırında 3,5 saat pişir.\nFolyoyu açıp 20 dakika kızart, didikleyip pilavla servis et.'},
-  {id:'t-enginar', yildiz:true, tur:'ana', em:'🌼', ad:'Zeytinyağlı enginar', porsiyon:4, sure:50, parca:['enginar', 4], pismis:900, malz:[['Enginar',480],['Havuç',70],['Bezelye',145],['Patates (çiğ)',170],['Zeytinyağı',39],['Limon',30],['Dereotu',20]],
-   adimlar:'Enginarları limonlu suda bekleterek karart.\nKüp havuç, patates ve bezelyeyi yağda çevir, enginarların içine doldur.\nLimonlu, şekerli bir su bardağı suyla 35 dakika pişir, soğuk ve dereotuyla servis et.'},
-  {id:'t-hamsipilav', yildiz:true, tur:'ana', em:'🐟', ad:'Hamsili pilav', porsiyon:4, sure:60, pismis:1300, malz:[['Hamsi (ızgara)',500],['Pirinç (çiğ)',300],['Tereyağı',28],['Kuru üzüm',20],['Antep fıstığı',20]],
-   adimlar:'Pirinci tereyağında kavur, kuş üzümü, fıstık, yenibahar ve tarçınla iç pilav yap.\nTepsiyi ayıklanmış hamsilerle kapla, pilavı koy, üstünü hamsiyle kapat.\n200 °C fırında 30 dakika pişir, ters çevirip servis et.'},
-  {id:'t-firinsutlac', yildiz:true, tur:'tatli', em:'🍮', ad:'Fırın sütlaç', porsiyon:6, sure:60, pismis:1150, malz:[['Süt (tam yağlı)',1000],['Pirinç (çiğ)',100],['Toz şeker',160],['Un (beyaz)',20]],
-   adimlar:'Pirinci suda haşla, sütü ekleyip kaynat.\nŞeker ve suyla açılmış unu ekleyip 10 dakika karıştır.\nToprak kaselere paylaştır, fırının en üst rafında üzeri kızarana kadar ızgarada tut.'},
+   adimlar:'Limonları yıka, kabuklarını rendeyle sadece sarı kısmından rendele.\nRendelenmiş kabuğu şekerle ellerinle 1-2 dakika ov; şeker limon yağını çeker.\nLimonların suyunu sık, şekerli kabukla karıştırıp şeker eriyene kadar beklet.\n1 litre soğuk su ekle, karıştır ve ince süzgeçten süz.\nBuzdolabında 1 saat soğut, nane yaprakları ve buzla servis et.',
+   ipucu:'Şekerin yarısı yerine bal kullanırsan daha hafif bir tat olur.'},
+  /* ---- tatlılar ---- */
+  {id:'t-yulafkurabiye', tur:'tatli', em:'🍪', ad:'Muzlu yulaf kurabiyesi', porsiyon:6, sure:25, parca:['kurabiye', 12], pismis:430, malz:[['Muz',240],['Yulaf ezmesi',160],['Kuru üzüm',40],['Ceviz',30]],
+   adimlar:'Fırını 180 °C’ye ısıt, tepsiye yağlı kâğıt ser.\nMuzları çatalla pürüzsüz olana kadar ez.\nYulaf, kuru üzüm, iri kırılmış ceviz ve 1 çay kaşığı tarçını ekleyip karıştır.\n10 dakika beklet; yulaf muzun suyunu çeker ve hamur toparlanır.\nIslak elle 12 parça alıp yuvarla, tepside hafifçe bastırarak yassılaştır.\n15-18 dakika kenarları kızarana kadar pişir; tepside 10 dakika soğut, sonra al.',
+   ipucu:'Muz ne kadar olgunsa kurabiye o kadar tatlı olur, şeker gerekmez.'},
+  {id:'t-firinelma', tur:'tatli', em:'🍎', ad:'Fırında tarçınlı elma', porsiyon:2, sure:30, parca:['elma', 2], pismis:360, malz:[['Elma',360],['Ceviz',20],['Bal',14]],
+   adimlar:'Fırını 180 °C’ye ısıt.\nElmaların sap kısmından başlayıp tabana kadar delmeden çekirdek yuvasını oy.\nCevizi iri kır; bal ve tarçınla karıştır.\nKarışımı elmaların içine doldur.\nKüçük fırın kabına diz, tabana 3 yemek kaşığı su koy.\n25-30 dakika, elma yumuşayana kadar pişir; yoğurt ya da dondurmayla servis et.',
+   ipucu:'Ekşimsi elma çeşitleri (granny smith) fırında daha iyi şekil tutar.'},
+  {id:'t-sutlac', tur:'tatli', em:'🍮', ad:'Sütlaç', porsiyon:6, sure:40, pismis:1150, malz:[['Süt (tam yağlı)',1000],['Pirinç (çiğ)',80],['Toz şeker',150],['Un (beyaz)',10]],
+   adimlar:'Pirinci yıka, 1 su bardağı suyla tane tane dağılacak kadar 12-15 dakika haşla.\nSütü ekle, karıştırarak kaynamaya getir.\nŞekeri ekle.\nUnu yarım su bardağı soğuk sütle pürüzsüz açıp tencereye ince ince ekle.\nKısık ateşte, dibi tutmasın diye sürekli karıştırarak 15 dakika koyulaşana kadar pişir.\nKaselere paylaştır, oda sıcaklığına gelince buzdolabında en az 2 saat soğut; tarçınla servis et.',
+   ipucu:'Bir parça vanilya ya da limon kabuğu eklemek sütün kokusunu güzelleştirir.'},
+  {id:'t-muhallebi', tur:'tatli', em:'🍮', ad:'Muhallebi', porsiyon:4, sure:20, pismis:950, malz:[['Süt (tam yağlı)',800],['Un (beyaz)',60],['Toz şeker',120]],
+   adimlar:'Süt, un ve şekeri tencereye koy, ocağı açmadan topak kalmayana kadar çırp.\nOrta ateşte sürekli karıştırarak ısıt.\nKoyulaşmaya başlayınca ateşi kıs, 5 dakika daha karıştırarak pişir.\nOcaktan alıp 2 dakika çırp; parlak ve pürüzsüz olur.\nKaselere döküp üzerine streç filmi değecek şekilde kapat (kaymak bağlamasın), soğut.\nAntep fıstığı ya da hindistan cevizi ile servis et.',
+   ipucu:'Streç filmi doğrudan yüzeye değdirmek kabuk bağlamasını önler.'},
+  {id:'t-firinsutlac', tur:'tatli', em:'🍮', ad:'Fırın sütlaç', porsiyon:6, sure:60, pismis:1150, malz:[['Süt (tam yağlı)',1000],['Pirinç (çiğ)',100],['Toz şeker',160],['Un (beyaz)',20]],
+   adimlar:'Pirinci yıka, 1 su bardağı suyla 15 dakika yumuşayana kadar haşla.\nSütü ekleyip karıştırarak kaynat, şekeri ekle.\nUnu yarım su bardağı soğuk sütle açıp ince ince ekle; 10 dakika sürekli karıştırarak koyulaştır.\nFırına dayanıklı (tercihen toprak) kaselere paylaştır.\nFırın tepsisine kaseleri dizip tepsinin yarısına kadar soğuk su koy.\nFırını ızgara (üst ısıtıcı) moduna al, kaseleri en üst rafta üstleri kahverengi lekeler oluşana kadar 10-15 dakika tut.\nOda sıcaklığında soğut, sonra buzdolabında en az 3 saat beklet.',
+   ipucu:'Tepsideki su kaselerin dibinin kaynayıp taşmasını önler; sadece üst kısım kızarır.'},
+  {id:'t-brownie', tur:'tatli', em:'🍫', ad:'Bitter çikolatalı brownie', porsiyon:12, sure:40, parca:['dilim', 12], pismis:750, malz:[['Bitter çikolata (%70)',200],['Tereyağı',150],['Toz şeker',200],['Yumurta',165],['Un (beyaz)',100]],
+   adimlar:'Fırını 175 °C’ye ısıt, 20x20 cm kalıba yağlı kâğıt ser.\nÇikolata ve tereyağını benmari usulü (kaynayan su üstündeki kasede) karıştırarak erit, 5 dakika ılıt.\nYumurta ve şekeri mikserle 3-4 dakika rengi açılıp kabarana kadar çırp.\nÇikolatayı yumurtalı karışıma ince ip gibi akıtarak spatulayla katla.\nUnu ve bir tutam tuzu eleyerek ekle, un görünmeyene kadar az karıştır.\nKalıba yay, 22-25 dakika pişir; ortası hafif titrek kalmalı.\nKalıpta tamamen soğut, sonra 12 kareye kes.',
+   ipucu:'Kürdan ortasından nemli kırıntılarla çıkıyorsa tam kıvamdadır; kuru çıkarsa fazla pişmiştir.'},
+  /* ---- ⭐ yıldızlı: viral ve şık tarifler ---- */
+  {id:'v-dubai', yildiz:true, tur:'tatli', em:'🍫', ad:'Dubai çikolatası', porsiyon:6, sure:40, parca:['kare', 12], pismis:455, malz:[['Sütlü çikolata',200],['Kadayıf (çiğ)',100],['Antep fıstığı kreması',120],['Tereyağı',20],['Tahin',15]],
+   adimlar:'Kadayıfı makasla 1-2 cm parçalara kes.\nTereyağını tavada erit, kadayıfı ekle ve orta ateşte sürekli karıştırarak 8-10 dakika altın rengi ve çıtır olana kadar kavur; soğumaya bırak.\nSoğuyan kadayıfı Antep fıstığı kreması ve tahinle karıştır; dolgu kıvamlı ve çıtır olmalı.\nÇikolatanın 2/3’ünü benmari usulü erit (en fazla 45 °C), kalan 1/3’ünü ekleyip karıştırarak erit; çikolata parlak kalır.\nSilikon tablet kalıbının iç yüzeyini fırçayla çikolatayla kapla, buzdolabında 10 dakika dondur.\nDolguyu kalıba bastırarak yay, kenarlarda 2 mm boşluk bırak.\nÜzerini kalan çikolatayla kapat, spatulayla düzle; buzdolabında 1 saat beklet ve kalıptan çıkar.',
+   ipucu:'Kesince içinin çıtırdaması için kadayıfı iyice kavur; az kavrulursa yumuşar.'},
+  {id:'v-fetamakarna', yildiz:true, tur:'ana', em:'🍝', ad:'Fırında beyaz peynirli makarna', porsiyon:4, sure:40, pismis:1100, malz:[['Makarna (çiğ)',300],['Beyaz peynir (tam yağlı)',200],['Çeri domates',500],['Zeytinyağı',40],['Sarımsak',12],['Fesleğen (taze)',10]],
+   adimlar:'Fırını 200 °C’ye ısıt.\nÇeri domatesleri fırın kabına koy, ortasına tek blok halinde beyaz peyniri yerleştir.\nZeytinyağını domateslerin ve peynirin üzerine gezdir; tuz, karabiber ve pul biber serp.\nDomatesler patlayıp peynirin kenarları kızarana kadar 30-35 dakika pişir; son 10 dakikada soyulmuş sarımsakları ekle.\nBu sırada makarnayı (penne ya da fusilli) tuzlu suda al dente haşla, 1 çay bardağı suyunu ayır.\nFırından çıkan kabı çatalla ez; peynir, domates ve sarımsak kremamsı bir sos olsun.\nMakarnayı ve biraz makarna suyunu ekleyip karıştır, taze fesleğenle servis et.',
+   ipucu:'TikTok’un en çok pişirilen tarifi; peynirin kenarlarının hafif yanması tadı derinleştirir.'},
+  {id:'v-marryme', yildiz:true, tur:'ana', em:'💍', ad:'Marry Me Chicken (kremalı tavuk)', porsiyon:4, sure:35, pismis:1000, malz:[['Tavuk göğüs (çiğ)',600],['Krema',200],['Kurutulmuş domates',60],['Parmesan',30],['Sarımsak',12],['Zeytinyağı',13],['Ispanak',60]],
+   adimlar:'Tavuk göğüslerini yatay ikiye keserek ince fileto yap; tuz, karabiber, kekik ve tatlı toz biberle ov.\nDerin tavada yağı yüksek ateşte ısıt; tavukları her yüzü 4 dakika altın rengi olana kadar mühürle, tabağa al.\nAteşi orta seviyeye al; ince doğranmış sarımsağı ve şerit kesilmiş kurutulmuş domatesi 1 dakika çevir.\nYarım su bardağı tavuk suyu ya da sıcak su ekle, tavanın dibindeki kızarmış kısımları kazıyarak çöz.\nKremayı ve rendelenmiş parmesanı ekle; 3-4 dakika sos koyulaşana kadar kaynat.\nIspanağı ekleyip söndür, tavukları sosa geri koy.\nKapağı kapalı 5 dakika pişir; üzerine taze fesleğen ve pul biber serpip makarna ya da ekşi mayalı ekmekle servis et.',
+   ipucu:'Adını “bunu yiyen evlenme teklif eder” şakasından alır; sosu ekmekle sıyırmadan bırakmak zor.'},
+  {id:'v-vodkapasta', yildiz:true, tur:'ana', em:'🌶️', ad:'Acılı kremalı votka soslu makarna', porsiyon:3, sure:30, pismis:900, malz:[['Makarna (çiğ)',250],['Krema',120],['Domates salçası',48],['Tereyağı',28],['Parmesan',30],['Sarımsak',8],['Soğan',55],['Votka',30]],
+   adimlar:'Makarnayı (rigatoni ya da penne) bol tuzlu suda paketteki süreden 1 dakika az haşla, 1 su bardağı suyunu ayır.\nTavada tereyağını erit; çok ince doğranmış soğanı 3 dakika, sarımsağı 1 dakika kavur.\nSalçayı ekle; rengi koyulaşıp tavaya hafifçe yapışana kadar 4-5 dakika kavur.\nVotkayı ekle, alkolü uçsun diye 2 dakika kaynat (istemezsen bu adımı atla, yerine 2 yemek kaşığı makarna suyu kullan).\nAteşi kıs, kremayı ve 1 çay kaşığı pul biberi ekleyip pembe-turuncu bir sos olana kadar karıştır.\nMakarnayı, parmesanı ve biraz makarna suyunu ekle; sos parlak ve ipeksi olana kadar 1-2 dakika çevir.\nÜzerine parmesan ve fesleğenle servis et.',
+   ipucu:'Gigi Hadid’in paylaşımıyla viral olan tarif; votka alkolü uçarak sosu daha pürüzsüz yapar, tadı kalmaz.'},
+  {id:'v-smashburger', yildiz:true, tur:'ana', em:'🍔', ad:'Smash burger', porsiyon:3, sure:25, parca:['burger', 3], pismis:640, malz:[['Dana kıyma (orta yağlı)',360],['Hamburger ekmeği',180],['Cheddar peyniri',60],['Soğan',55],['Salatalık turşusu',40],['Mayonez',30]],
+   adimlar:'Kıymayı yoğurmadan 6 eşit top yap (her biri 60 g), buzdolabında soğuk tut.\nSos: mayonez, 1 yemek kaşığı ketçap, 1 çay kaşığı hardal ve ince kıyılmış turşuyu karıştır.\nEkmeklerin iç yüzünü kuru tavada 1 dakika kızart, sos sür.\nDöküm tavayı yüksek ateşte 3-4 dakika dumanı çıkana kadar ısıt.\nTopları tavaya koy, üzerine yağlı kâğıt koyup spatulayla 1 cm kalınlığa kadar güçlü bastır; tuz ve karabiber serp.\n2 dakika hiç dokunmadan kenarları dantel gibi kızarana kadar pişir, kazıyarak çevir.\nHemen cheddar koy, 1 dakika sonra iki köfteyi üst üste ekmeğe al; ince doğranmış soğan ve turşuyla kapat.',
+   ipucu:'Tava ne kadar sıcaksa kabuk o kadar çıtır olur; köfteyi bir kez bastır, sonra dokunma.'},
+  {id:'v-salmonbowl', yildiz:true, tur:'ana', em:'🍣', ad:'Somonlu pirinç kasesi', porsiyon:1, sure:15, pismis:470, malz:[['Somon (fırın)',150],['Esmer pirinç (pişmiş)',200],['Avokado',70],['Mayonez',15],['Sriracha sos',10],['Soya sosu',10],['Nori yaprağı',6]],
+   adimlar:'Önceki günden kalan somonu ve pirinci kullan; yoksa somonu 200 °C fırında 12 dakika pişir.\nSomonu çatalla iri parçalara ayırıp pirincin üzerine yerleştir.\nÜzerine 1 buz küpü koy, pişirme kâğıdıyla örtüp mikrodalgada 1,5 dakika ısıt (buz pirinci nemli tutar).\nBuzu çıkar; soya sosu, sriracha ve mayonezi üzerine gezdir.\nÇatalla somonu ve pirinci soslarla karıştır.\nDilimlenmiş avokado ve susamla üstünü süsle.\nNori yapraklarıyla bir lokma pirinç-somon karışımı alarak dürüm gibi ye.',
+   ipucu:'Emily Mariko’nun viral tarifi; buz küpü hilesi artan pirinci ilk günkü gibi yapar.'},
+  {id:'v-burrata', yildiz:true, tur:'salata', em:'🍑', ad:'Burratalı şeftali salatası', porsiyon:2, sure:15, pismis:520, malz:[['Burrata',125],['Şeftali',300],['Roka',40],['Zeytinyağı',13],['Bal',7],['Ceviz',20],['Balzamik sirke',15]],
+   adimlar:'Şeftalileri dilimle; istersen ızgara tavada her yüzünü 1 dakika kızart.\nCevizi kuru tavada 3 dakika kokusu çıkana kadar kavur.\nBalzamik sirkeyi küçük tencerede yarıya inene kadar 3-4 dakika kaynat; bal ekleyip ılıt.\nServis tabağına rokayı yay, şeftalileri üzerine diz.\nBurratayı ortaya koy, servis anında kaşıkla açarak içindeki kremanın akmasını sağla.\nZeytinyağı, balzamik sos, kavrulmuş ceviz, pul tuz ve karabiberle bitir.',
+   ipucu:'Burratayı buzdolabından 20 dakika önce çıkarırsan içi daha kremalı olur.'},
+  {id:'v-avotoast', yildiz:true, tur:'kahvalti', em:'🥑', ad:'Poşe yumurtalı ekşi maya avokado tost', porsiyon:1, sure:15, pismis:300, malz:[['Ekşi mayalı ekmek',70],['Avokado',100],['Yumurta',110],['Krem peynir',20],['Limon',10]],
+   adimlar:'Ekşi mayalı ekmeği zeytinyağı sürüp tavada her yüzü 2 dakika çıtır olana kadar kızart.\nAvokadoyu limon suyu, pul tuz ve pul biberle iri ez; tamamen püre yapma.\nSu dolu tencereyi hafif fokurdayana kadar ısıt, 1 kaşık sirke ekle.\nYumurtaları kaseye kırıp suya bırak, 3 dakika poşe et; kâğıt havluya al.\nEkmeğe ince krem peynir sür, üzerine avokadoyu kalın bir kat yay.\nYumurtaları koy, sarısını hafifçe kes; susam, pul biber ve mikro yeşilliklerle süsle.',
+   ipucu:'Kafe sunumu için üzerine birkaç damla acı sos ve taze limon kabuğu rendesi ekle.'},
+  {id:'v-pestoyumurta', yildiz:true, tur:'kahvalti', em:'🌿', ad:'Pesto yumurta', porsiyon:1, sure:8, pismis:220, malz:[['Yumurta',110],['Pesto sos',30],['Ekşi mayalı ekmek',70],['Avokado',30]],
+   adimlar:'Yapışmaz tavaya yağ yerine pesto sosu koy, orta ateşte 30 saniye cızırdamaya başlayana kadar ısıt.\nYumurtaları pestonun üzerine kır.\nKapağı kapat, 2-3 dakika akları pişip kenarları çıtırlaşana kadar pişir.\nBu sırada ekmeği kızart, üzerine avokado dilimleri koy.\nYumurtaları pestonun çıtırlaşan kısımlarıyla birlikte ekmeğe al; pul biber ve tuz serp.',
+   ipucu:'TikTok’ta milyonlarca kez izlenen tarif; pestodaki yağ yumurtanın kenarlarını dantel gibi yapar.'},
+  {id:'v-lorwrap', yildiz:true, tur:'ara', em:'🫓', ad:'Lor peynirli protein wrap', porsiyon:2, sure:40, parca:['wrap', 2], pismis:420, malz:[['Lor peyniri',250],['Yumurta',110],['Hindi füme',60],['Roka',30],['Domates',80]],
+   adimlar:'Fırını 180 °C’ye ısıt, tepsiye yağlı kâğıt ser.\nLor peynirini ve yumurtaları blenderda tamamen pürüzsüz olana kadar çek; tuz, karabiber ve kekik ekle.\nKarışımı kâğıdın üzerine 0,5 cm kalınlığında dikdörtgen olarak yay.\n30-35 dakika kenarları kızarıp ortası sertleşene kadar pişir.\n5 dakika soğut, kâğıttan dikkatlice ayır ve ikiye kes.\nHer parçaya hindi füme, roka ve domates koy, sıkıca sar.',
+   ipucu:'Viral “cottage cheese flatbread” tarifinin lorla yapılan hâli; porsiyon başı 25 g protein civarı.'},
+  {id:'v-korenkanat', yildiz:true, tur:'ana', em:'🍗', ad:'Kore usulü ballı acılı tavuk', porsiyon:3, sure:35, pismis:650, malz:[['Tavuk but (derisiz, pişmiş)',600],['Mısır nişastası',40],['Gochujang',40],['Bal',30],['Soya sosu',20],['Sarımsak',8],['Susam',9],['Ayçiçek yağı',40]],
+   adimlar:'Tavuk butları 3 cm parçalara kes; tuz, karabiber ve 1 çay kaşığı rendelenmiş zencefille ov.\nMısır nişastasını bir kaba al, tavukları her yanı ince kaplanacak şekilde bula.\nYağı tavada orta-yüksek ateşte ısıt; tavukları iki seferde, her yüzü 4-5 dakika çıtır olana kadar kızart (airfryer’da 200 °C’de 15 dakika).\nSos için gochujang, bal, soya sosu, ezilmiş sarımsak ve 2 yemek kaşığı suyu karıştır.\nTavadaki fazla yağı al, sosu ekle; 1-2 dakika köpürüp parlaklaşana kadar kaynat.\nTavukları sosa at, hızla çevirerek kapla.\nSusam ve ince doğranmış taze soğanla, pirinç pilavı yanında servis et.',
+   ipucu:'Gochujang bulamazsan 2 yemek kaşığı biber salçası + 1 tatlı kaşığı acı sos iyi bir alternatiftir.'},
+  {id:'v-tiramisu', yildiz:true, tur:'tatli', em:'☕', ad:'Bardakta tiramisu', porsiyon:6, sure:30, parca:['bardak', 6], pismis:700, malz:[['Mascarpone',250],['Yumurta',110],['Toz şeker',60],['Kedi dili bisküvi',150],['Espresso',150],['Kakao tozu',10]],
+   adimlar:'Espressoyu (ya da koyu filtre kahveyi) demleyip tamamen soğut.\nYumurta sarılarını şekerle 3 dakika rengi açılıp kremamsı olana kadar çırp.\nMascarponeyi ekleyip pürüzsüz olana kadar düşük hızda karıştır.\nYumurta aklarını ayrı kasede kar gibi sertleşene kadar çırp; spatulayla mascarpone karışımına söndürmeden katla.\nBisküvileri kahveye 1 saniye batır (fazla bekletirsen dağılır), bardakların dibine diz.\nÜzerine krema koy; bir kat bisküvi, bir kat krema daha yap.\nBuzdolabında en az 4 saat (ideali bir gece) beklet, servis ederken üstüne kakao ele.',
+   ipucu:'Çiğ yumurta kullanmak istemezsen yumurtaları atla, yerine 150 ml şanti çırpıp ekle.'},
+  {id:'v-matcha', yildiz:true, tur:'ara', em:'🍵', ad:'Buzlu matcha latte', porsiyon:1, sure:5, pismis:300, malz:[['Matcha tozu',3],['Süt (yarım yağlı)',250],['Bal',7]],
+   adimlar:'Matcha tozunu küçük bir kaseye ele; topak kalmasın.\n50 ml sıcak (kaynamamış, yaklaşık 80 °C) su ekle.\nBambu çırpıcı ya da küçük mini çırpıcıyla “M” hareketiyle 30 saniye köpürene kadar çırp.\nBardağa buz doldur, soğuk sütü ve balı ekle.\nMatchayı yavaşça sütün üzerine dök; katmanlı görüntü oluşur. İçmeden önce karıştır.',
+   ipucu:'Kaynar su matchayı acılaştırır; su 80 °C civarında olmalı.'},
+  {id:'v-sufle', yildiz:true, tur:'kahvalti', em:'🥞', ad:'Japon usulü sufle pankek', porsiyon:1, sure:30, parca:['pankek', 3], pismis:220, malz:[['Yumurta',110],['Un (beyaz)',30],['Süt (yarım yağlı)',20],['Toz şeker',25],['Tereyağı',10]],
+   adimlar:'Yumurtaları ayır; sarıları süt ve unla pürüzsüz olana kadar karıştır.\nAkları temiz kasede köpürene kadar çırp, şekeri üç seferde ekleyerek sivri tepe oluşana kadar sertleştir.\nBeyazın üçte birini sarılı karışıma karıştır, kalanını spatulayla söndürmeden katla.\nYapışmaz tavayı en kısık ateşte ısıt, ince tereyağı sür.\nKarışımdan 3 yüksek yığın yap; tavanın boş kısımlarına 1 yemek kaşığı su dök ve kapağı kapat.\n5-6 dakika pişir, üzerine biraz daha karışım ekleyerek yükselt; dikkatle çevir, kapağı kapatıp 4-5 dakika daha pişir.\nPudra şekeri, meyve ve bal ile hemen servis et; bekledikçe söner.',
+   ipucu:'Kısık ateş ve buhar, pankeklerin içinin pişip dışının yanmamasını sağlar.'},
+  {id:'v-crookie', yildiz:true, tur:'tatli', em:'🥐', ad:'Crookie (kurabiyeli kruvasan)', porsiyon:4, sure:25, parca:['crookie', 4], pismis:440, malz:[['Kruvasan',240],['Un (beyaz)',60],['Tereyağı',50],['Toz şeker',50],['Yumurta',25],['Sütlü çikolata',60]],
+   adimlar:'Fırını 180 °C’ye ısıt.\nYumuşak tereyağı ve şekeri krema kıvamına gelene kadar çırp; yumurta ve bir tutam tuzu ekle.\nUnu ve doğranmış çikolatanın 2/3’ünü ekleyip kurabiye hamuru yap.\nKruvasanları yandan, sonuna kadar kesmeden aç.\nİçlerine 1 yemek kaşığı kurabiye hamuru koy, kapat; üstlerine de ince bir kat hamur yay.\nKalan çikolatayı üstüne batır, 12-14 dakika kurabiye kısmı kızarana kadar pişir.\n5 dakika ılıtıp pudra şekeriyle servis et.',
+   ipucu:'Paris’ten dünyaya yayılan trend; bir günlük kruvasanlarla bile mükemmel olur.'},
   {id:'t-sansebastian', yildiz:true, tur:'tatli', em:'🍰', ad:'San Sebastian cheesecake', porsiyon:8, sure:70, parca:['dilim', 8], pismis:1250, malz:[['Krem peynir',600],['Toz şeker',200],['Yumurta',220],['Krema',250],['Un (beyaz)',15]],
-   adimlar:'Krem peynir ve şekeri pürüzsüz olana kadar çırp, yumurtaları tek tek ekle.\nKrema ve unu katıp pişirme kağıdı serilmiş kalıba dök.\n220 °C fırında üstü koyu karamelleşene kadar 35-40 dakika pişir, bir gece dinlendir.'},
-  {id:'t-brownie', yildiz:true, tur:'tatli', em:'🍫', ad:'Bitter çikolatalı brownie', porsiyon:12, sure:40, parca:['dilim', 12], pismis:750, malz:[['Bitter çikolata (%70)',200],['Tereyağı',150],['Toz şeker',200],['Yumurta',165],['Un (beyaz)',100]],
-   adimlar:'Çikolata ve tereyağını benmari usulü erit.\nŞeker ve yumurtaları çırpıp çikolatayla karıştır, unu ekle.\n175 °C fırında 22-25 dakika pişir; ortası nemli kalsın.'}
+   adimlar:'Tüm malzemeleri 1 saat önceden çıkarıp oda sıcaklığına getir.\nFırını 220 °C’ye ısıt; 22 cm kalıba iki kat pişirme kâğıdını kenarlarından taşacak şekilde buruşturarak yerleştir.\nKrem peynir ve şekeri düşük hızda pürüzsüz olana kadar çırp.\nYumurtaları teker teker ekleyip her birinden sonra karıştır.\nKremayı ekle, son olarak unu eleyerek kat; fazla hava almasın diye kısa karıştır.\nKalıba dök, 35-40 dakika üstü koyu karamel rengine dönene kadar pişir; ortası jöle gibi sallanmalı.\nFırında 1 saat, sonra buzdolabında bir gece beklet.',
+   ipucu:'Üstünün neredeyse yanık görünmesi bu tatlının imzasıdır; ortanın titrek kalması kremamsı içi sağlar.'},
+  {id:'t-poke', yildiz:true, tur:'ana', em:'🍣', ad:'Somonlu poke kasesi', porsiyon:2, sure:25, pismis:900, malz:[['Somon (fırın)',200],['Esmer pirinç (pişmiş)',300],['Avokado',140],['Edamame',100],['Salatalık',150],['Susam',9]],
+   adimlar:'Pirinci pişirip 1 yemek kaşığı pirinç sirkesi ve bir tutam şekerle tatlandır, ılıt.\nSomonu küp doğra (çiğ yiyeceksen suşilik taze somon kullan; değilse fırında 10 dakika pişirip soğut).\nSomonu 2 yemek kaşığı soya sosu, 1 çay kaşığı susam yağı ve rendelenmiş zencefille 10 dakika marine et.\nAvokado ve salatalığı dilimle, edamameyi 3 dakika haşla.\nKaselere pirinci koy, üzerine somon, avokado, salatalık ve edamameyi bölümler halinde diz.\nSusam, taze soğan ve sriracha mayonezle bitir.',
+   ipucu:'Malzemeleri ayrı ayrı dizmek hem görüntüyü hem her lokmada farklı tadı korur.'},
 ];
+
 const gByAd = new Map(G.map(g => [g.ad, g]));
 // Tariflerin malzemeleri: hazır tariflerde listeden, kendi tariflerinde kaydedilen değerden
-function tarifMalz(t){ return t.malz.map(m => Array.isArray(m) ? (() => { const g = gByAd.get(m[0]); return g ? {ad:g.ad, g:m[1], b100:{kcal:g.kcal, p:g.p, k:g.k, y:g.y}} : null; })() : m).filter(Boolean); }
-function tarifBesin(t){ const s = {kcal:0, p:0, k:0, y:0, g:0}; for(const m of tarifMalz(t)){ const f = m.g/100; s.kcal += m.b100.kcal*f; s.p += m.b100.p*f; s.k += m.b100.k*f; s.y += m.b100.y*f; s.g += m.g; } return s; }
+function tarifMalz(t){ return (t.malz || []).map(m => Array.isArray(m) ? (() => { const g = gByAd.get(m[0]); return g ? {ad:g.ad, g:m[1], b100:{kcal:g.kcal, p:g.p, k:g.k, y:g.y}} : null; })() : m).filter(Boolean); }
+function tarifBesin(t){ if(t.web){ const b = t.besin || {kcal:0, p:0, k:0, y:0}, n = t.porsiyon || 1; return {kcal: b.kcal*n, p: b.p*n, k: b.k*n, y: b.y*n, g: 100*n}; }
+  const s = {kcal:0, p:0, k:0, y:0, g:0}; for(const m of tarifMalz(t)){ const f = m.g/100; s.kcal += m.b100.kcal*f; s.p += m.b100.p*f; s.k += m.b100.k*f; s.y += m.b100.y*f; s.g += m.g; } return s; }
 const tumTarifler = () => [...H.tarifler.map(t => ({...t, kendi:true})), ...HAZIR_TARIF];
 const TUR = [['kahvalti','Kahvaltı'],['corba','Çorba'],['ana','Ana yemek'],['salata','Salata'],['ara','Ara öğün'],['tatli','Tatlı']];
 function tarifGida(t){ const s = tarifBesin(t), pis = +t.pismis > 0 ? +t.pismis : 0, g = pis || s.g || 1, por = t.porsiyon || 1;
@@ -320,7 +445,7 @@ function tarifGida(t){ const s = tarifBesin(t), pis = +t.pismis > 0 ? +t.pismis 
   if(t.parca && +t.parca[1] > 0) birim.push({ad: '1 ' + t.parca[0], g: Math.round(g / +t.parca[1])});
   if(por > 1) birim.push({ad: 'yarım porsiyon', g: Math.round(g/por/2)});
   return {ad: t.ad, tarif: t.id, gramOk: !!pis, etiket: 'Tarif · ' + (pis ? 'gram, porsiyon' : 'porsiyon') + (t.parca ? ' ya da ' + t.parca[0] : '') + ' ile', kcal: r1(s.kcal/g*100), p: r1(s.p/g*100), k: r1(s.k/g*100), y: r1(s.y/g*100), por: birim}; }
-const gidaHavuzu = () => [...H.ozel.map(f => ({...f, etiket: f.off ? (f.marka || 'Hazır ürün') : 'Kendi eklediğin'})), ...tumTarifler().map(tarifGida), ...G];
+const gidaHavuzu = () => [...H.ozel.map(f => ({...f, etiket: f.off ? (f.marka || 'Hazır ürün') : 'Kendi eklediğin'})), ...tumTarifler().filter(t => !t.web || (t.besin && t.besin.kcal > 0)).map(tarifGida), ...G];
 function araYerel(q){
   const n = fold(q.trim()); if(!n) return [];
   const w = n.split(/\s+/).filter(Boolean), out = [];
@@ -455,10 +580,11 @@ function rTarif(){
 }
 function rTarifListe(){
   const n = fold(tarifAra), all = tumTarifler().filter(t => (!n || fold(t.ad).includes(n)) && (!tarifTur || (tarifTur === 'yildiz' ? t.yildiz : t.tur === tarifTur)));
-  const kart = t => { const s = tarifBesin(t), por = t.porsiyon || 1;
+  const kart = t => { const s = tarifBesin(t), por = t.porsiyon || 1; if(t.web) return `<button class="item rcp" data-tarif="${esc(t.id)}">${t.img ? `<img class="em" src="${esc(t.img)}" alt="" style="object-fit:cover">` : '<span class="em">🌐</span>'}<span class="mid"><b>${esc(t.ad)}</b><small>İnternetten · ${t.sure ? t.sure + ' dk · ' : ''}${por} porsiyon</small></span><span class="amt">${s.kcal ? nf0.format(s.kcal/por) + ' kcal' : '—'}</span></button>`;
     return `<button class="item rcp" data-tarif="${esc(t.id)}"><span class="em" aria-hidden="true">${esc(t.em || '🍽️')}</span><span class="mid"><b>${t.yildiz ? '<span class="ystar" title="Yıldızlı tarif">⭐</span> ' : ''}${esc(t.ad)}</b><small>${nf0.format(s.p/por)} g protein · ${t.sure ? t.sure + ' dk · ' : ''}${por} porsiyon</small></span><span class="amt">${nf0.format(s.kcal/por)} kcal</span></button>`; };
   const mine = all.filter(t => t.kendi), yildiz = all.filter(t => !t.kendi && t.yildiz), hazir = all.filter(t => !t.kendi && !t.yildiz);
-  return `<section style="margin-top:16px"><div class="sec-head"><h2>Tariflerim</h2><small>Kalori kendiliğinden hesaplanır</small></div>
+  const webBtn = tarifAra.trim().length >= 2 ? `<button class="btn" data-webara="1" style="width:100%;margin-top:14px">🌐 “${esc(tarifAra.trim())}” için internette tarif ara</button>` : `<div class="card note" style="margin-top:14px">Aradığın tarif burada yoksa adını yaz; internetten en çok denenen hâlini getiririm.</div>`;
+  return webBtn + `<section style="margin-top:16px"><div class="sec-head"><h2>Tariflerim</h2><small>Kalori kendiliğinden hesaplanır</small></div>
     ${mine.length ? `<div class="items">${mine.map(kart).join('')}</div>` : `<div class="card empty"><b>Kendi tarifini ekle</b>Malzemeleri ve gramlarını seç, porsiyon başına kalori hesaplansın. Sonra tek dokunuşla öğününe eklersin.</div>`}
     <div class="btns" style="margin-top:10px"><button class="btn ghost" data-newtarif="1" style="flex:1">+ Yeni tarif</button></div></section>
   ${yildiz.length ? `<section><div class="sec-head"><h2>⭐ Yıldızlı tarifler</h2><small>Daha özenli, niş lezzetler</small></div><div class="items">${yildiz.map(kart).join('')}</div></section>` : ''}
@@ -685,19 +811,92 @@ function openKilo(t0){
     H.kilolar = H.kilolar.filter(k => k.t !== t && (!ex || k.t !== ex.t)); H.kilolar.push({t, kg: r1(kg)}); save(); closeSheet(); render(); toast('Kilo kaydedildi'); };
   const d = document.getElementById('kDel'); if(d) d.onclick = () => { if(!d.dataset.armed){ d.dataset.armed = 1; d.textContent = 'Silmek için tekrar dokun'; return; } H.kilolar = H.kilolar.filter(k => k.t !== ex.t); save(); closeSheet(); render(); toast('Silindi'); };
 }
+/* İnternetten tarif: Nefis Yemek Tarifleri'nde arama (en çok denenene göre) ve tarif sayfasını okuma.
+   Site tarayıcıdan doğrudan okunamadığı için herkese açık Jina Reader (r.jina.ai) üzerinden alınır. */
+const JINA = 'https://r.jina.ai/';
+async function jinaGet(url, html){
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 25000);
+  try { const r = await fetch(JINA + url, {signal: ctl.signal, headers: html ? {'X-Return-Format': 'html'} : {}}); if(!r.ok) throw new Error('durum ' + r.status); return await r.text(); }
+  finally { clearTimeout(tm); }
+}
+async function webAra(q){
+  const md = await jinaGet('https://www.nefisyemektarifleri.com/ara/?s=' + encodeURIComponent(q) + '&sorting=deneyen');
+  const imgs = new Map([...md.matchAll(/\[!\[[^\]]*\]\((https:\/\/i\d?\.nefisyemektarifleri\.com\/[^)\s]+)\)\]\((https:\/\/www\.nefisyemektarifleri\.com\/[^)\s]+)/g)].map(m => [m[2], m[1]]));
+  const out = [], seen = new Set();
+  for(const m of md.matchAll(/### \[([^\]]+)\]\((https:\/\/www\.nefisyemektarifleri\.com\/[^)\s]+)[^)]*\)\s*\n+([^\n]*)/g)){
+    const [, ad, url, meta] = m; if(seen.has(url) || /\/(ara|kategori|liste|blog)\//.test(url)) continue; seen.add(url);
+    out.push({ad: ad.trim(), url, img: imgs.get(url) || '', meta: /kişilik|dk/i.test(meta) ? meta.trim() : '', video: /\/video\//.test(url)});
+  }
+  return [...out.filter(x => !x.video), ...out.filter(x => x.video)].slice(0, 12);
+}
+async function webTarif(url){
+  const html = await jinaGet(url, true), doc = new DOMParser().parseFromString(html, 'text/html');
+  const tx = el => (el ? el.textContent : '').replace(/\s+/g, ' ').trim();
+  const ad = tx(doc.querySelector('h1')).replace(/\s*\(videolu\)\s*/i, '');
+  const malz = [];
+  for(const ul of doc.querySelectorAll('ul.recipe-materials')){
+    const h = tx(ul.previousElementSibling); if(h && !/için malzemeler/i.test(h) && h.length < 60) malz.push('## ' + h.replace(/[;:]$/, ''));
+    for(const li of ul.querySelectorAll('li')){ const s = tx(li); if(s) malz.push(s); }
+  }
+  let adim = [...doc.querySelectorAll('.recipe-instructions li, ol.recipe-instructions li')].map(tx).filter(s => s.length > 3);
+  if(!adim.length) adim = [...doc.querySelectorAll('.recipe-preparation li, .recipe-preparation p')].map(tx).filter(s => s.length > 15);
+  if(!ad || !malz.length) throw new Error('tarif okunamadı');
+  const nut = tx(doc.querySelector('.recipe-nutrition-container')), sayi = re => { const m = nut.match(re); return m ? +m[1].replace(',', '.') : null; };
+  const kcal = sayi(/([\d.,]+)\s*kcal/i), info = [...doc.querySelectorAll('.recipe-info li, .recipe-details li')].map(tx).join(' · ');
+  const kisi = info.match(/(\d+)\s*(?:-\s*(\d+))?\s*Kişilik/i), tum = nut.match(/Tüm Tarif\s*\((\d+)\s*Adet\)/i);
+  const sure = [...info.matchAll(/(\d+)\s*dk/gi)].reduce((a, m) => a + +m[1], 0), head = tx(doc.querySelector('.recipe-head-content')), puan = head.match(/\((\d+)\s*oy,\s*ortalama:\s*([\d.,]+)/i);
+  return {id: 'w-' + url.replace(/^https?:\/\/[^/]+\//, '').replace(/\W+/g, '-').slice(0, 60), web: true, kaynak: url, ad, em: '🌐', tur: '',
+    img: (doc.querySelector('meta[property="og:image"]') || {}).content || (doc.querySelector('.recipe-single-img img') || {}).src || '',
+    porsiyon: tum ? +tum[1] : kisi ? +kisi[1] : 4, sure: sure || '', puan: puan ? {oy: +puan[1], ort: +puan[2].replace(',', '.')} : null,
+    besin: kcal != null ? {kcal, p: sayi(/Protein\s*([\d.,]+)\s*g/i) || 0, k: sayi(/Karbonhidrat\s*([\d.,]+)\s*g/i) || 0, y: sayi(/Yağ\s*([\d.,]+)\s*g/i) || 0} : null,
+    malz: [], malzMetin: malz, adimlar: adim.join('\n')};
+}
+let webDurum = null;   // {q, sonuc, hata, yukleniyor}
+function openWebAra(q){
+  webDurum = {q, sonuc: null, hata: '', yukleniyor: true}; drawWebAra();
+  webAra(q).then(r => { if(webDurum && webDurum.q === q){ webDurum.sonuc = r; webDurum.yukleniyor = false; drawWebAra(); } })
+    .catch(() => { if(webDurum && webDurum.q === q){ webDurum.yukleniyor = false; webDurum.hata = navigator.onLine === false ? 'İnternet bağlantısı yok.' : 'Arama şu an yapılamadı. Biraz sonra tekrar dene.'; drawWebAra(); } });
+}
+function drawWebAra(){
+  const d = webDurum; if(!d) return;
+  const sh = openSheet(`${head('İnternetten tarif')}
+    <div class="note">“${esc(d.q)}” için Nefis Yemek Tarifleri’nde en çok denenen tarifler</div>
+    ${d.yukleniyor ? `<div class="card empty"><b>Aranıyor…</b>Bu birkaç saniye sürebilir.</div>`
+      : d.hata ? `<div class="card empty"><b>Olmadı</b>${esc(d.hata)}</div><button class="btn ghost" id="wTekrar">Tekrar dene</button>`
+      : !d.sonuc.length ? `<div class="card empty"><b>Tarif bulunamadı</b>Başka bir kelimeyle dene (örn. “fırında makarna”).</div>`
+      : `<div class="items">${d.sonuc.map((r, i) => `<button class="item wres" data-w="${i}">${r.img ? `<img src="${esc(r.img)}" alt="" loading="lazy">` : '<span class="em">🍽️</span>'}<span class="mid"><b>${esc(r.ad)}</b><small>${i === 0 ? '<span class="wbadge">En çok denenen</span> ' : ''}${esc(r.meta || (r.video ? 'Videolu tarif' : ''))}</small></span><span class="chev">›</span></button>`).join('')}</div>
+         <span class="note">Kaynak: nefisyemektarifleri.com. Kalori değerleri sitenin hesapladığı porsiyon değerleridir.</span>`}`, 'İnternetten tarif');
+  const t = document.getElementById('wTekrar'); if(t) t.onclick = () => openWebAra(d.q);
+  sh.querySelectorAll('[data-w]').forEach(b => b.onclick = () => webAc(d.sonuc[+b.dataset.w]));
+}
+async function webAc(r){
+  openSheet(`${head(r.ad)}<div class="card empty"><b>Tarif açılıyor…</b>Malzemeler ve yapılışı getiriliyor.</div>`, 'Tarif');
+  try { const t = await webTarif(r.url); if(!document.querySelector('#sheetRoot .sheet')) return; if(!t.img) t.img = r.img; openTarif(t); }
+  catch(e){ openSheet(`${head(r.ad)}<div class="card empty"><b>Bu tarif okunamadı</b>Listeden başka bir tarif seç.</div><button class="btn ghost" id="wGeri">‹ Sonuçlara dön</button>`, 'Tarif'); document.getElementById('wGeri').onclick = drawWebAra; }
+}
+
 /* Tarif ayrıntısı ve düzenleyici */
 function openTarif(id){
-  const t = tumTarifler().find(x => x.id === id); if(!t) return;
+  const t = typeof id === 'object' ? id : tumTarifler().find(x => x.id === id); if(!t) return;
+  const kayitli = t.web && H.tarifler.some(x => x.id === t.id);
   const s = tarifBesin(t), por = t.porsiyon || 1, tg = tarifGida(t);
   const draw = () => { const sh = openSheet(`${head(t.ad)}
-    ${t.yildiz ? '<div class="note" style="color:var(--accent-text);font-weight:600">⭐ Yıldızlı tarif · daha özenli ve niş bir lezzet</div>' : ''}
-    <div class="stat3"><div><small>Porsiyon başı</small><b>${nf0.format(s.kcal/por)} kcal</b></div><div><small>Protein</small><b>${nf0.format(s.p/por)} g</b></div><div><small>${t.sure ? 'Süre' : 'Porsiyon'}</small><b>${t.sure ? t.sure + ' dk' : por}</b></div></div>
+    ${t.web && t.img ? `<img class="wimg" src="${esc(t.img)}" alt="">` : ''}
+    ${t.web ? `<div class="note">${t.puan ? `⭐ ${nf1.format(t.puan.ort)} · ${nf0.format(t.puan.oy)} oy · ` : ''}Kaynak: <a href="${esc(t.kaynak)}" target="_blank" rel="noopener">nefisyemektarifleri.com</a></div>` : ''}
+    ${t.yildiz ? '<div class="note" style="color:var(--accent-text);font-weight:600">⭐ Yıldızlı tarif · viral ve şık bir lezzet</div>' : ''}
+    ${t.web && !(t.besin && t.besin.kcal > 0) ? `<div class="card" style="display:grid;gap:8px"><b>Kalori bilgisi bulunamadı</b><span class="note">Porsiyon başı kaloriyi biliyorsan yaz, öğüne eklerken kullanılır.</span><div class="two"><input id="wKcal" class="num" inputmode="numeric" placeholder="kcal / porsiyon"><button class="btn ghost" id="wKcalOk">Kaydet</button></div></div>` : ''}
+    <div class="stat3"><div><small>Porsiyon başı</small><b>${s.kcal ? nf0.format(s.kcal/por) + ' kcal' : '—'}</b></div><div><small>Protein</small><b>${nf0.format(s.p/por)} g</b></div><div><small>${t.sure ? 'Süre' : 'Porsiyon'}</small><b>${t.sure ? t.sure + ' dk' : por}</b></div></div>
     <div class="note">${tg.por.filter(b => b.ad !== '1 porsiyon' && b.ad !== 'yarım porsiyon').map(b => `${esc(b.ad)} ≈ ${nf0.format(tg.kcal * b.g / 100)} kcal · `).join('')}${t.pismis ? `pişmiş 100 g ≈ ${nf0.format(tg.kcal)} kcal · ` : ''}${por} porsiyon · tamamı ${nf0.format(s.kcal)} kcal · karbonhidrat ${nf0.format(s.k/por)} g, yağ ${nf0.format(s.y/por)} g (porsiyon başı)</div>
-    <div class="card"><div class="label" style="margin-bottom:6px">Malzemeler</div>${tarifMalz(t).map(m => `<div class="ing"><span>${esc(m.ad)}</span><span class="num" style="color:var(--muted)">${nf0.format(m.g)} g · ${nf0.format(m.b100.kcal*m.g/100)} kcal</span></div>`).join('')}</div>
+    <div class="card"><div class="label" style="margin-bottom:6px">Malzemeler${t.web ? ` · ${por} porsiyon` : ''}</div>${t.web ? (t.malzMetin || []).map(m => m.startsWith('## ') ? `<div class="ing" style="font-weight:600">${esc(m.slice(3))}</div>` : `<div class="ing"><span>${esc(m)}</span></div>`).join('') : ''}${tarifMalz(t).map(m => `<div class="ing"><span>${esc(m.ad)}</span><span class="num" style="color:var(--muted)">${nf0.format(m.g)} g · ${nf0.format(m.b100.kcal*m.g/100)} kcal</span></div>`).join('')}</div>
     ${t.adimlar ? `<div class="card"><div class="label" style="margin-bottom:8px">Yapılışı</div><ol class="steps">${t.adimlar.split('\n').filter(x => x.trim()).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>` : ''}
-    <button class="btn" id="tAdd">Öğüne ekle (porsiyon${t.parca ? ', ' + esc(t.parca[0]) : ''}${t.pismis ? ' ya da gram' : ''} seç)</button>
-    ${t.kendi ? `<div class="btns"><button class="btn ghost" id="tEdit" style="flex:1">Düzenle</button><button class="btn ghost" id="tDel" style="flex:1;color:var(--out)">Sil</button></div>` : `<button class="btn ghost" id="tCopy">Kopyala ve kendine göre düzenle</button>`}`, 'Tarif');
-    document.getElementById('tAdd').onclick = () => { ekle = {mod:'ogun', o: ogunSimdi(), gun: todayISO, q:'', net:null, tarifDon: t.id}; openMiktar(tg); };
+    ${t.ipucu ? `<div class="card tip"><b>💡 Püf noktası</b><span>${esc(t.ipucu)}</span></div>` : ''}
+    ${t.web && !kayitli ? `<button class="btn" id="wKaydet">Tariflerime kaydet</button>` : ''}
+    <button class="btn ${t.web && !kayitli ? 'ghost' : ''}" id="tAdd">Öğüne ekle (porsiyon${t.parca ? ', ' + esc(t.parca[0]) : ''}${t.pismis ? ' ya da gram' : ''} seç)</button>
+    ${t.web ? (kayitli ? `<button class="btn ghost" id="tDel" style="color:var(--out)">Tariflerimden sil</button>` : (webDurum ? `<button class="btn ghost" id="wGeri">‹ Sonuçlara dön</button>` : '')) : t.kendi ? `<div class="btns"><button class="btn ghost" id="tEdit" style="flex:1">Düzenle</button><button class="btn ghost" id="tDel" style="flex:1;color:var(--out)">Sil</button></div>` : `<button class="btn ghost" id="tCopy">Kopyala ve kendine göre düzenle</button>`}`, 'Tarif');
+    document.getElementById('tAdd').onclick = () => { if(t.web && !(t.besin && t.besin.kcal > 0)) return toast('Önce porsiyon başı kaloriyi yaz.'); ekle = {mod:'ogun', o: ogunSimdi(), gun: todayISO, q:'', net:null, tarifDon: kayitli || !t.web ? t.id : null}; openMiktar(tarifGida(t)); };
+    const wk = document.getElementById('wKaydet'); if(wk) wk.onclick = () => { H.tarifler.unshift(JSON.parse(JSON.stringify({...t, kendi: undefined}))); save(); toast('Tariflerine kaydedildi'); openTarif(t.id); if(view.tab === 'tarif'){ const box = document.getElementById('tListe'); if(box) box.innerHTML = rTarifListe(); } };
+    const wg = document.getElementById('wGeri'); if(wg) wg.onclick = drawWebAra;
+    const wo = document.getElementById('wKcalOk'); if(wo) wo.onclick = () => { const v = num(document.getElementById('wKcal').value); if(!(v > 0 && v < 3000)) return toast('Porsiyon başı kaloriyi yaz.'); t.besin = {kcal: v, p: 0, k: 0, y: 0}; const kt = H.tarifler.find(x => x.id === t.id); if(kt){ kt.besin = t.besin; save(); } openTarif(kayitli ? t.id : t); };
     const ed = document.getElementById('tEdit'); if(ed) ed.onclick = () => openTarifEdit(H.tarifler.find(x => x.id === t.id));
     const cp = document.getElementById('tCopy'); if(cp) cp.onclick = () => openTarifEdit(null, {ad: t.ad + ' (benim)', porsiyon: por, sure: t.sure || '', em: t.em, adimlar: t.adimlar || '', malz: tarifMalz(t), tur: t.tur || '', pismis: t.pismis || '', parca: t.parca ? [...t.parca] : null});
     const dl = document.getElementById('tDel'); if(dl) dl.onclick = () => { if(!dl.dataset.armed){ dl.dataset.armed = 1; dl.textContent = 'Silmek için tekrar dokun'; return; } H.tarifler = H.tarifler.filter(x => x.id !== t.id); save(); closeSheet(); render(); toast('Tarif silindi'); };
@@ -760,7 +959,7 @@ main.addEventListener('click', e => {
 main.addEventListener('change', e => {
   if(e.target.id === 'uYat' || e.target.id === 'uKalk'){ const g = gun(view.gun); g.uyku = {...(g.uyku || {}), [e.target.id === 'uYat' ? 'yat' : 'kalk']: e.target.value}; save(); render(); }
 });
-main.addEventListener('click', e => { const b = e.target.closest('[data-tur]'); if(!b) return; tarifTur = b.dataset.tur; main.querySelectorAll('[data-tur]').forEach(x => x.setAttribute('aria-pressed', x === b)); const box = document.getElementById('tListe'); if(box) box.innerHTML = rTarifListe(); });
+main.addEventListener('click', e => { if(e.target.closest('[data-webara]')) return openWebAra(tarifAra.trim()); const b = e.target.closest('[data-tur]'); if(!b) return; tarifTur = b.dataset.tur; main.querySelectorAll('[data-tur]').forEach(x => x.setAttribute('aria-pressed', x === b)); const box = document.getElementById('tListe'); if(box) box.innerHTML = rTarifListe(); });
 main.addEventListener('input', e => { if(e.target.id === 'tAra'){ tarifAra = e.target.value; const box = document.getElementById('tListe'); if(box) box.innerHTML = rTarifListe(); } });
 
 /* ---------- tek seferlik ipuçları ---------- */

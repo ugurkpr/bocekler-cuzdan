@@ -592,6 +592,24 @@ Mado Maraş Dondurma (top)|zin|@95|1.8|12|4.5|1 top:45
 Sbarro Pizza (dilim)|zin|@450|19|48|19|1 dilim:160
 Arby's Roast Beef Classic|zin|@360|23|37|14|1 adet:154
 Carl's Jr. Famous Star|zin|@670|26|54|39|1 adet:254
+Burrata|sut|250|11|2|22|1 adet:125,yarım:62
+Cheddar peyniri|sut|403|25|1.3|33|1 dilim:20
+Pesto sos|kah|450|5|6|45|1 yemek kaşığı:15
+Soya sosu|kah|53|8|5|0.6|1 yemek kaşığı:15
+Sriracha sos|kah|93|2|19|1|1 tatlı kaşığı:5
+Gochujang|kah|210|5|43|2|1 yemek kaşığı:20
+Susam yağı|kah|884|0|0|100|1 tatlı kaşığı:5
+Balzamik sirke|kah|88|0.5|17|0|1 yemek kaşığı:15
+Antep fıstığı kreması|kah|580|12|45|40|1 yemek kaşığı:20
+Kakao tozu|kah|228|20|58|14|1 yemek kaşığı:6
+Mascarpone|sut|430|4.6|4|44|1 yemek kaşığı:15
+Kadayıf (çiğ)|tah|370|9|76|3|1 su bardağı:60
+Mısır nişastası|tah|381|0.3|91|0.1|1 yemek kaşığı:8
+Kedi dili bisküvi|atis|390|8|82|3.5|1 adet:6
+Kurutulmuş domates|seb|258|14|56|3|1 adet:5
+Fesleğen (taze)|seb|23|3|3|0.6|1 avuç:10
+Nori yaprağı|seb|35|6|5|0.3|1 yaprak:3
+Matcha tozu|kah|324|30|39|5|1 çay kaşığı:2
 `.trim().split('\n').filter(r => r.trim()).map((row, i) => {
   const [ad, kat, kcal0, p0, k0, y0, por0] = row.split('|');
   const por = (por0 || '').split(',').filter(Boolean);
