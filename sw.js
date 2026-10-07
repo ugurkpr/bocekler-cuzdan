@@ -1,5 +1,5 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v32';
+const CACHE = 'bocekler-v33';
 const FILES = ['./', './index.html', './banka.html', './saglik.html', './profil.html', './avatar-erkek.jpg', './avatar-kadin.jpg', './ortak.js', './gidalar.js', './ikon-banka.jpg', './ikon-saglik.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
 
 self.addEventListener('install', e => {
