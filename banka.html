@@ -466,10 +466,10 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '2.4 · 8 Ekim 2026';
+const APP_VERSION = '2.5 · 8 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
-// Gizli mod: sadece toplam kalan ve toplam birikim gizlenir (ortak.js)
+// Gizli mod: Özet'teki kalan, gelir, gider (ve beklenenler) ile toplam birikim gizlenir (ortak.js)
 const gizliMi = () => !!(window.Bocekler && Bocekler.gizli());
 const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
 const GIZLI = '₺•••';
@@ -858,9 +858,9 @@ function renderSummary(){
     <div class="hero-top"><div><div class="label lrow">${ymLabel(view.ym)} · kalan <button class="goz" data-goz="1" aria-label="Tutarları gizle ya da göster">${Bocekler.gozIkon()}</button></div><div class="big num">${gizliMi() ? GIZLI : (left<0?'−':'') + tl.format(Math.abs(left))}</div></div>
       <button class="herobtn tap" data-report="1" aria-label="${ymLabel(view.ym)} raporunu aç"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rapor</button></div>
     <div class="row">
-      <button class="cell tap" data-addtype="in" aria-label="Gelir ekle"><span class="label">Gelir</span><b class="num">${tl.format(inc)}</b><span class="plusb" aria-hidden="true">+</span></button>
-      <button class="cell tap" data-addtype="out" aria-label="Gider ekle"><span class="label">Gider</span><b class="num">${tl.format(out)}</b><span class="plusb" aria-hidden="true">+</span></button>
-      ${pin || pout ? `<button class="pend tap" data-goto="liste"><span><span class="label">Beklenen</span>${pin ? `<b>+${tl.format(pin)}</b> gelir` : ''}${pin && pout ? ' · ' : ''}${pout ? `<b>−${tl.format(pout)}</b> gider` : ''}</span><span>Ay sonu tahmini <b>${(left+pin-pout)<0?'−':''}${tl.format(Math.abs(r2(left+pin-pout)))}</b></span></button>` : ''}
+      <button class="cell tap" data-addtype="in" aria-label="Gelir ekle"><span class="label">Gelir</span><b class="num">${gizliMi() ? GIZLI : tl.format(inc)}</b><span class="plusb" aria-hidden="true">+</span></button>
+      <button class="cell tap" data-addtype="out" aria-label="Gider ekle"><span class="label">Gider</span><b class="num">${gizliMi() ? GIZLI : tl.format(out)}</b><span class="plusb" aria-hidden="true">+</span></button>
+      ${pin || pout ? `<button class="pend tap" data-goto="liste"><span><span class="label">Beklenen</span>${pin ? `<b>+${gizliMi() ? GIZLI : tl.format(pin)}</b> gelir` : ''}${pin && pout ? ' · ' : ''}${pout ? `<b>−${gizliMi() ? GIZLI : tl.format(pout)}</b> gider` : ''}</span><span>Ay sonu tahmini <b>${gizliMi() ? GIZLI : ((left+pin-pout)<0?'−':'') + tl.format(Math.abs(r2(left+pin-pout)))}</b></span></button>` : ''}
     </div>
   </div>
   ${spendCard()}
@@ -2452,7 +2452,7 @@ main.addEventListener('click', e => {
 init();
 // Profil sayfasından geri dönünce (sayfa önbellekten gelirse) güncel profil ve rengi oku
 addEventListener('pageshow', e => { if(e.persisted) location.reload(); });
-document.addEventListener('click', e => { if(!e.target.closest('[data-goz]')) return; e.stopPropagation(); Bocekler.gizliYap(!Bocekler.gizli()); render(); toast(Bocekler.gizli() ? 'Kalan ve birikim gizlendi' : 'Kalan ve birikim görünüyor'); }, true);
+document.addEventListener('click', e => { if(!e.target.closest('[data-goz]')) return; e.stopPropagation(); Bocekler.gizliYap(!Bocekler.gizli()); render(); toast(Bocekler.gizli() ? 'Toplamlar gizlendi' : 'Toplamlar görünüyor'); }, true);
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();

@@ -80,7 +80,7 @@ function gecis(){
 // Bölümlerin sol üstündeki ev simgesi: doğrudan ana ekrana gitmek yerine geçiş penceresini açar
 document.addEventListener("click", e => { const a = e.target.closest("a.brand.home"); if(!a) return; e.preventDefault(); gecis(); });
 
-/* Gizli mod: sadece toplam kalan para ve toplam birikim ₺••• görünür. Göz simgesiyle açılıp kapanır.
+/* Gizli mod: Özet'teki kalan, gelir ve gider ile toplam birikim ₺••• görünür. Göz simgesiyle açılıp kapanır.
    Varsayılan olarak her açılışta gizli başlar (Profil'den kapatılabilir); anlık durum uygulama kapanana kadar sürer. */
 const GIZ_KEY = "bocekler-gizli";
 const gizliTercih = () => { try { return localStorage.getItem(GIZ_KEY) !== "0"; } catch(e){ return true; } };

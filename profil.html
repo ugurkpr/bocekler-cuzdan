@@ -495,7 +495,7 @@ function draw(){
     return `<section><div class="sec-head"><h2>${bas}</h2><small>Önerilen · ${alt}</small></div>
     <div class="card"><div class="swatches">${Object.entries(P).map(([id, p]) => `<button class="swatch" data-color="${id}" data-bolum="${b}" aria-pressed="${cur === id}"><i style="background:${p.light.hero};color:${p.light.accentInk}">${cur === id ? '✓' : ''}</i>${p.name}</button>`).join('')}</div></div></section>`; }).join('')}
   <section><div class="sec-head"><h2>Gizlilik</h2></div>
-    <div class="card" style="display:grid;gap:6px"><label class="check"><input type="checkbox" id="pGiz" ${Bocekler.gizliTercih() ? 'checked' : ''}> <span><b>Açılışta kalan ve birikimi gizle</b><br><span class="note" style="font-size:12px">Uygulama her açıldığında toplam kalan para ve toplam birikim ₺••• görünür; diğer tutarlar açık kalır. Görmek için göz simgesine dokun.</span></span></label></div></section>
+    <div class="card" style="display:grid;gap:6px"><label class="check"><input type="checkbox" id="pGiz" ${Bocekler.gizliTercih() ? 'checked' : ''}> <span><b>Açılışta toplamları gizle</b><br><span class="note" style="font-size:12px">Uygulama her açıldığında Özet’teki kalan, gelir ve gider ile toplam birikim ₺••• görünür; diğer tutarlar açık kalır. Görmek için göz simgesine dokun.</span></span></label></div></section>
   <section><div class="sec-head"><h2>Görünüm</h2></div>
     <div class="seg seg3" role="group" aria-label="Tema" style="grid-template-columns:repeat(3,1fr)">${[['system','Telefona göre'],['light','Açık'],['dark','Koyu']].map(([k, a]) => `<button data-th="${k}" aria-pressed="${th === k}">${a}</button>`).join('')}</div></section>
   <section><div class="sec-head"><h2>Bölümler</h2></div>
@@ -509,7 +509,7 @@ function draw(){
   nm.addEventListener('keydown', e => { if(e.key === 'Enter') nm.blur(); });
   document.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { yaz(s => { s.profile = {...(s.profile || {}), photo: b.dataset.av}; }); draw(); toast('Profil fotoğrafı değişti'); });
   document.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { const sg = b.dataset.bolum === 'saglik'; yaz(s => { s[sg ? 'colorSaglik' : 'color'] = b.dataset.color; }); draw(); toast(`${sg ? 'Sağlık' : 'Mobil Bank'}: ${P[b.dataset.color].name}`); });
-  document.getElementById('pGiz').addEventListener('change', e => { Bocekler.gizliTercihYap(e.target.checked); toast(e.target.checked ? 'Açılışta kalan ve birikim gizli olacak' : 'Kalan ve birikim açık başlayacak'); });
+  document.getElementById('pGiz').addEventListener('change', e => { Bocekler.gizliTercihYap(e.target.checked); toast(e.target.checked ? 'Açılışta toplamlar gizli olacak' : 'Toplamlar açık başlayacak'); });
   document.querySelectorAll('[data-th]').forEach(b => b.onclick = () => { yaz(s => { s.theme = b.dataset.th; }); draw(); });
   document.getElementById('pFile').addEventListener('change', e => {
     const f = e.target.files[0]; if(!f) return;
