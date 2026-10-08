@@ -80,9 +80,19 @@ function gecis(){
 // Bölümlerin sol üstündeki ev simgesi: doğrudan ana ekrana gitmek yerine geçiş penceresini açar
 document.addEventListener("click", e => { const a = e.target.closest("a.brand.home"); if(!a) return; e.preventDefault(); gecis(); });
 
+/* Gizli mod: başkalarına gösterirken tutarlar ₺••• görünür. Göz simgesiyle açılıp kapanır;
+   "açılışta gizli başlasın" tercihi bu telefonda saklanır, anlık durum uygulama kapanana kadar sürer. */
+const GIZ_KEY = "bocekler-gizli";
+const gizliTercih = () => { try { return localStorage.getItem(GIZ_KEY) === "1"; } catch(e){ return false; } };
+const gizli = () => { try { const s = sessionStorage.getItem("gizli"); return s === null ? gizliTercih() : s === "1"; } catch(e){ return gizliTercih(); } };
+const gizliYap = v => { try { sessionStorage.setItem("gizli", v ? "1" : "0"); } catch(e){} };
+const gizliTercihYap = v => { try { localStorage.setItem(GIZ_KEY, v ? "1" : "0"); } catch(e){} gizliYap(v); };
+const gozIkon = () => gizli()
+  ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3.1 3.9M6.6 6.6C3.9 8.4 2.5 12 2.5 12s3.5 7 9.5 7c1.6 0 3-.4 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>'
+  : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg>';
 // Bölümler birbirine kısa özet bırakır (ana ekrandaki kutucuklar için)
 const snap = (k, v) => { try { const all = JSON.parse(localStorage.getItem("bocekler-ozet") || "{}"); all[k] = {...v, at: Date.now()}; localStorage.setItem("bocekler-ozet", JSON.stringify(all)); } catch(e){} };
 const snaps = () => { try { return JSON.parse(localStorage.getItem("bocekler-ozet") || "{}"); } catch(e){ return {}; } };
-window.Bocekler = { PALETTES, applyTheme, bankSettings, snap, snaps, renkOf, gecis };
+window.Bocekler = { PALETTES, applyTheme, bankSettings, snap, snaps, renkOf, gecis, gizli, gizliYap, gizliTercih, gizliTercihYap, gozIkon };
 applyTheme();
 })();
