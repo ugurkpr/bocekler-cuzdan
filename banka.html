@@ -466,13 +466,14 @@ details.charges[open] summary::after{transform:rotate(-90deg)}
 
 <script>
 (() => {
-const APP_VERSION = '2.3 · 8 Ekim 2026';
+const APP_VERSION = '2.4 · 8 Ekim 2026';
 const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',minimumFractionDigits:2,maximumFractionDigits:2});
-// Gizli moddayken bütün tutarlar ₺••• görünür (ortak.js)
+// Gizli mod: sadece toplam kalan ve toplam birikim gizlenir (ortak.js)
 const gizliMi = () => !!(window.Bocekler && Bocekler.gizli());
-const tl = { format: n => gizliMi() ? '₺•••' : (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
-const tlShort = n => gizliMi() ? '•••' : n>=1e6 ? (n/1e6).toLocaleString('tr-TR',{maximumFractionDigits:1})+' Mn' : n>=1e3 ? (n/1e3).toLocaleString('tr-TR',{maximumFractionDigits:1})+' B' : String(Math.round(n));
+const tl = { format: n => (Math.round(n*100)%100 ? tl2 : tl0).format(n) };
+const GIZLI = '₺•••';
+const tlShort = n => n>=1e6 ? (n/1e6).toLocaleString('tr-TR',{maximumFractionDigits:1})+' Mn' : n>=1e3 ? (n/1e3).toLocaleString('tr-TR',{maximumFractionDigits:1})+' B' : String(Math.round(n));
 const pad = n => String(n).padStart(2,'0');
 const now = new Date();
 const todayYM = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
@@ -540,7 +541,7 @@ const ASSETS = [
 ];
 const asset = id => ASSETS.find(a=>a.id===id) || ASSETS[4];
 const rate = id => id==='TRY' ? 1 : (Number(S.rates[id])||0);
-const qtyFmt = (id,q) => { if(gizliMi()) return '•••'; q=Math.abs(q); if(id==='TRY') return tl.format(q); const n=q.toLocaleString('tr-TR',{maximumFractionDigits:id==='CEYREK'?0:2}); return id==='USD'?'$'+n : id==='EUR'?'€'+n : id==='GRA'? n+' gr' : n+' adet'; };
+const qtyFmt = (id,q) => { q=Math.abs(q); if(id==='TRY') return tl.format(q); const n=q.toLocaleString('tr-TR',{maximumFractionDigits:id==='CEYREK'?0:2}); return id==='USD'?'$'+n : id==='EUR'?'€'+n : id==='GRA'? n+' gr' : n+' adet'; };
 const savFor = ym => (S.months[ym] && S.months[ym].sav) || [];
 // "Önceden birikmiş" (old) kayıtlar o ayın gelirinden ayrılmış sayılmaz; sadece toplam birikime eklenir
 const savMonthTL = ym => savFor(ym).reduce((a,x)=>a + (x.old ? 0 : x.dir*x.qty*x.rate), 0);
@@ -854,7 +855,7 @@ function renderSummary(){
 
   return `${alertsHTML()}${backupBanner()}
   <div class="hero">
-    <div class="hero-top"><div><div class="label lrow">${ymLabel(view.ym)} · kalan <button class="goz" data-goz="1" aria-label="Tutarları gizle ya da göster">${Bocekler.gozIkon()}</button></div><div class="big num">${left<0?'−':''}${tl.format(Math.abs(left))}</div></div>
+    <div class="hero-top"><div><div class="label lrow">${ymLabel(view.ym)} · kalan <button class="goz" data-goz="1" aria-label="Tutarları gizle ya da göster">${Bocekler.gozIkon()}</button></div><div class="big num">${gizliMi() ? GIZLI : (left<0?'−':'') + tl.format(Math.abs(left))}</div></div>
       <button class="herobtn tap" data-report="1" aria-label="${ymLabel(view.ym)} raporunu aç"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Rapor</button></div>
     <div class="row">
       <button class="cell tap" data-addtype="in" aria-label="Gelir ekle"><span class="label">Gelir</span><b class="num">${tl.format(inc)}</b><span class="plusb" aria-hidden="true">+</span></button>
@@ -975,7 +976,7 @@ function renderSavings(){
   const tgt = S.settings.savTarget||0;
   return `
   <div class="hero">
-    <div><div class="label lrow">Toplam birikim · bugünkü kurla <button class="goz" data-goz="1" aria-label="Tutarları gizle ya da göster">${Bocekler.gozIkon()}</button></div><div class="big num">${tl.format(total)}</div></div>
+    <div><div class="label lrow">Toplam birikim · bugünkü kurla <button class="goz" data-goz="1" aria-label="Tutarları gizle ya da göster">${Bocekler.gozIkon()}</button></div><div class="big num">${gizliMi() ? GIZLI : tl.format(total)}</div></div>
     <div class="note" style="color:inherit;opacity:.8">${r.at ? 'Kurlar: '+esc(fmtAt(r.at)) : 'Kurlar henüz alınmadı'}${missing?' · bazı kurlar eksik, aşağıdan yaz':''}</div>
   </div>
   <section><div class="assets">${ASSETS.map(a=>{ const q=h[a.id]||0; return `<button class="asset tap" data-addsav="${a.id}"><span class="label">${a.name}</span><span class="q num">${q<0?'−':''}${qtyFmt(a.id,q)}</span><small class="num">${a.id==='TRY'?'Nakit / hesap':rate(a.id)?'≈ '+tl.format(q*rate(a.id)):'Kur yok'}</small></button>`; }).join('')}</div></section>
@@ -1824,7 +1825,7 @@ function renderSettings(){
     <div class="pstats">
       <div><b class="num">${count}</b><small>kayıt</small></div>
       <div><b class="num">${debts().length}</b><small>kart / kredi</small></div>
-      <div><b class="num">${tlShort(ASSETS.reduce((a,x)=>a+(holdings()[x.id]||0)*rate(x.id),0))}</b><small>birikim (₺)</small></div>
+      <div><b class="num">${gizliMi() ? '•••' : tlShort(ASSETS.reduce((a,x)=>a+(holdings()[x.id]||0)*rate(x.id),0))}</b><small>birikim (₺)</small></div>
     </div>
   </div></section>
   <section>
@@ -2451,7 +2452,7 @@ main.addEventListener('click', e => {
 init();
 // Profil sayfasından geri dönünce (sayfa önbellekten gelirse) güncel profil ve rengi oku
 addEventListener('pageshow', e => { if(e.persisted) location.reload(); });
-document.addEventListener('click', e => { if(!e.target.closest('[data-goz]')) return; e.stopPropagation(); Bocekler.gizliYap(!Bocekler.gizli()); render(); toast(Bocekler.gizli() ? 'Tutarlar gizlendi' : 'Tutarlar görünüyor'); }, true);
+document.addEventListener('click', e => { if(!e.target.closest('[data-goz]')) return; e.stopPropagation(); Bocekler.gizliYap(!Bocekler.gizli()); render(); toast(Bocekler.gizli() ? 'Kalan ve birikim gizlendi' : 'Kalan ve birikim görünüyor'); }, true);
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
 if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});
 })();

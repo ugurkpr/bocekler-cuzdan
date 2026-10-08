@@ -80,10 +80,10 @@ function gecis(){
 // Bölümlerin sol üstündeki ev simgesi: doğrudan ana ekrana gitmek yerine geçiş penceresini açar
 document.addEventListener("click", e => { const a = e.target.closest("a.brand.home"); if(!a) return; e.preventDefault(); gecis(); });
 
-/* Gizli mod: başkalarına gösterirken tutarlar ₺••• görünür. Göz simgesiyle açılıp kapanır;
-   "açılışta gizli başlasın" tercihi bu telefonda saklanır, anlık durum uygulama kapanana kadar sürer. */
+/* Gizli mod: sadece toplam kalan para ve toplam birikim ₺••• görünür. Göz simgesiyle açılıp kapanır.
+   Varsayılan olarak her açılışta gizli başlar (Profil'den kapatılabilir); anlık durum uygulama kapanana kadar sürer. */
 const GIZ_KEY = "bocekler-gizli";
-const gizliTercih = () => { try { return localStorage.getItem(GIZ_KEY) === "1"; } catch(e){ return false; } };
+const gizliTercih = () => { try { return localStorage.getItem(GIZ_KEY) !== "0"; } catch(e){ return true; } };
 const gizli = () => { try { const s = sessionStorage.getItem("gizli"); return s === null ? gizliTercih() : s === "1"; } catch(e){ return gizliTercih(); } };
 const gizliYap = v => { try { sessionStorage.setItem("gizli", v ? "1" : "0"); } catch(e){} };
 const gizliTercihYap = v => { try { localStorage.setItem(GIZ_KEY, v ? "1" : "0"); } catch(e){} gizliYap(v); };

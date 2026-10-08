@@ -160,7 +160,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-
 </div>
 <script>
 (() => {
-const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl = {format: n => Bocekler.gizli() ? '₺•••' : tl0.format(n)};
+const tl0 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}), tl = tl0;
 const nf = new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function draw(){
@@ -175,7 +175,7 @@ function draw(){
   document.getElementById('motto').textContent = M[(now.getDate() + now.getMonth()) % M.length];
   for(const [cls, b] of [['bank','banka'],['health','saglik']]){ const p = Bocekler.PALETTES[Bocekler.renkOf(b, st)].light, el = document.querySelector('.tile.' + cls); el.style.background = p.hero; el.style.color = p.accentInk; }
   const sn = Bocekler.snaps(), b = sn.banka, s = sn.saglik, today = now.toDateString();
-  document.getElementById('bankStat').innerHTML = b ? `<span>Bu ay kalan <strong>${(b.kalan<0?'−':'')+esc(tl.format(Math.abs(b.kalan)))}</strong></span>${b.gunluk != null ? `<span>Bugün <strong>${esc(tl.format(b.gunluk))}</strong> harcayabilirsin</span>` : ''}` : '';
+  document.getElementById('bankStat').innerHTML = b ? `<span>Bu ay kalan <strong>${Bocekler.gizli() ? '₺•••' : (b.kalan<0?'−':'')+esc(tl.format(Math.abs(b.kalan)))}</strong></span>${b.gunluk != null ? `<span>Bugün <strong>${esc(tl.format(b.gunluk))}</strong> harcayabilirsin</span>` : ''}` : '';
   const bb = document.getElementById('bankBadge'); bb.hidden = !(b && b.uyari); if(b && b.uyari) bb.textContent = b.uyari === 1 ? '1 ödeme' : `${b.uyari} ödeme`;
   document.getElementById('healthStat').innerHTML = s && new Date(s.at).toDateString() === today
     ? `<span><strong>${esc(nf.format(s.kcal))}</strong> / ${esc(nf.format(s.hedef))} kcal</span><span>Su <strong>${esc(s.su)}</strong>/${esc(s.suHedef)} bardak</span>` : '';
