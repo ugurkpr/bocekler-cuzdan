@@ -145,7 +145,7 @@ let H = (() => { try { const d = JSON.parse(localStorage.getItem(KEY) || 'null')
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(H)); } catch(e){ toast('Kayıt yapılamadı: telefon hafızası dolu olabilir.'); }
   const t = hedefler(), s = sums(todayISO);
-  Bocekler.snap('saglik', {kcal: Math.round(s.kcal), hedef: t.kcal + sporBonus(todayISO).ek, su: gun(todayISO, true).su || 0, suHedef: t.su});
+  Bocekler.snap('saglik', {kcal: Math.round(s.kcal), hedef: t.kcal + sporBonus(todayISO).ek, hedefTaban: t.kcal, su: gun(todayISO, true).su || 0, suHedef: t.su});
 }
 const gun = (iso, peek) => H.gunler[iso] || (peek ? {ogun:[], su:0} : (H.gunler[iso] = {ogun:[], su:0}));
 const besin = (e) => { const f = e.g/100; return {kcal: e.b100.kcal*f, p: e.b100.p*f, k: e.b100.k*f, y: e.b100.y*f}; };
