@@ -150,6 +150,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-
       <span><b>Sağlık</b><span class="sub">Kalori, kilo, su, uyku, tarifler</span><span class="stat" id="healthStat"></span></span>
       <span class="chev" aria-hidden="true">›</span>
     </a>
+    <a class="tile sport" href="spor.html">
+      <span class="ico" aria-hidden="true"><img src="ikon-spor.jpg" alt="" width="84" height="84"></span>
+      <span><b>Spor</b><span class="sub">Antrenman, hareketler, yürüyüş</span><span class="stat" id="sportStat"></span></span>
+      <span class="chev" aria-hidden="true">›</span>
+    </a>
   </main>
   <nav class="links" aria-label="Kısayollar">
     <a href="profil.html">👤 Profil ve renk</a>
@@ -173,9 +178,10 @@ function draw(){
   document.getElementById('goz').innerHTML = Bocekler.gozIkon();
   const M = ['Fıstıkları say, kışa hazır ol.', 'Bir bardak su iç, sincap da içiyor.', 'Küçük birikimler büyük fıstık yığınları yapar.', 'Bugün ne yediğini yazmayı unutma.', 'Kartın son ödeme gününe göz at.'];
   document.getElementById('motto').textContent = M[(now.getDate() + now.getMonth()) % M.length];
-  for(const [cls, b] of [['bank','banka'],['health','saglik']]){ const p = Bocekler.PALETTES[Bocekler.renkOf(b, st)].light, el = document.querySelector('.tile.' + cls); el.style.background = p.hero; el.style.color = p.accentInk; }
+  for(const [cls, b] of [['bank','banka'],['health','saglik'],['sport','spor']]){ const p = Bocekler.PALETTES[Bocekler.renkOf(b, st)].light, el = document.querySelector('.tile.' + cls); el.style.background = p.hero; el.style.color = p.accentInk; }
   const sn = Bocekler.snaps(), b = sn.banka, s = sn.saglik, today = now.toDateString();
   document.getElementById('bankStat').innerHTML = b ? `<span>Bu ay kalan <strong>${Bocekler.gizli() ? '₺•••' : (b.kalan<0?'−':'')+esc(tl.format(Math.abs(b.kalan)))}</strong></span>${b.gunluk != null ? `<span>Bugün <strong>${esc(tl.format(b.gunluk))}</strong> harcayabilirsin</span>` : ''}` : '';
+  const sp = sn.spor; document.getElementById('sportStat').innerHTML = sp ? `<span>Bu hafta <strong>${esc(nf.format(sp.dk))}</strong> / ${esc(sp.hedef)} dk</span>${sp.bugun ? `<span>Bugün <strong>${esc(nf.format(sp.bugun))}</strong> kcal</span>` : ''}` : '<span>Hedefine göre antrenmanla başla</span>';
   const bb = document.getElementById('bankBadge'); bb.hidden = !(b && b.uyari); if(b && b.uyari) bb.textContent = b.uyari === 1 ? '1 ödeme' : `${b.uyari} ödeme`;
   document.getElementById('healthStat').innerHTML = s && new Date(s.at).toDateString() === today
     ? `<span><strong>${esc(nf.format(s.kcal))}</strong> / ${esc(nf.format(s.hedef))} kcal</span><span>Su <strong>${esc(s.su)}</strong>/${esc(s.suHedef)} bardak</span>` : '';

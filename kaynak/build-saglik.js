@@ -8,7 +8,7 @@ let engine = bank.slice(bank.indexOf('let tipOn = false;'), bank.indexOf('new Mu
 engine = engine.replace(/key\.startsWith\('form-'\)/g, "TIP_FORM(key)").replace(/^const currentTipKey = .*\n/m, '');
 if(!swipe.includes('touchstart') || !engine.includes('function runTips')) throw new Error('parça bulunamadı');
 const head0 = fs.readFileSync(path.join(D, 'index.html'), 'utf8').split('<title>')[0];
-for(const [src0, out0, ikon] of [['saglik.src.html', 'saglik.html', 'ikon-saglik.jpg'], ['profil.src.html', 'profil.html', 'icon-192.png']]){
+for(const [src0, out0, ikon] of [['saglik.src.html', 'saglik.html', 'ikon-saglik.jpg'], ['profil.src.html', 'profil.html', 'icon-192.png'], ['spor.src.html', 'spor.html', 'ikon-spor.jpg']]){
   let src = fs.readFileSync(path.join(__dirname, src0), 'utf8');
   const head = head0.replace('<link rel="icon" href="icon-192.png">', `<link rel="icon" href="${ikon}">`);
   src = src.replace('/*BANKCSS*/', () => css).replace('/*SWIPE*/', () => swipe).replace('/*TIPENGINE*/', () => "const TIP_FORM = k => k === 's-ekle' || k === 's-miktar';\n" + engine);

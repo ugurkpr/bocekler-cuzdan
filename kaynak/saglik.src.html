@@ -145,11 +145,13 @@ let H = (() => { try { const d = JSON.parse(localStorage.getItem(KEY) || 'null')
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(H)); } catch(e){ toast('Kayıt yapılamadı: telefon hafızası dolu olabilir.'); }
   const t = hedefler(), s = sums(todayISO);
-  Bocekler.snap('saglik', {kcal: Math.round(s.kcal), hedef: t.kcal, su: gun(todayISO, true).su || 0, suHedef: t.su});
+  Bocekler.snap('saglik', {kcal: Math.round(s.kcal), hedef: t.kcal + sporBonus(todayISO).ek, su: gun(todayISO, true).su || 0, suHedef: t.su});
 }
 const gun = (iso, peek) => H.gunler[iso] || (peek ? {ogun:[], su:0} : (H.gunler[iso] = {ogun:[], su:0}));
 const besin = (e) => { const f = e.g/100; return {kcal: e.b100.kcal*f, p: e.b100.p*f, k: e.b100.k*f, y: e.b100.y*f}; };
 function sums(iso, o){ const s = {kcal:0, p:0, k:0, y:0}; for(const e of gun(iso, true).ogun) if(!o || e.o === o){ const b = besin(e); s.kcal += b.kcal; s.p += b.p; s.k += b.k; s.y += b.y; } return s; }
+// Spor bölümünde yapılan egzersizin net kalorisi; Spor'daki ayara göre (varsayılan yarısı) günlük hedefe eklenir
+function sporBonus(iso){ try { const d = JSON.parse(localStorage.getItem('bocekler-spor-v1') || 'null'); if(!d || !Array.isArray(d.seanslar)) return {kcal:0, ek:0}; const k = d.seanslar.filter(x => x.t === iso).reduce((a, x) => a + (+x.kcal || 0), 0), f = d.ayar && d.ayar.ekle != null ? +d.ayar.ekle : 0.5; return {kcal: Math.round(k), ek: Math.round(k * f)}; } catch(e){ return {kcal:0, ek:0}; } }
 const lastKg = () => { const k = [...H.kilolar].sort((a,b) => a.t.localeCompare(b.t)); return k.length ? k[k.length-1].kg : null; };
 function hedefler(){
   const p = H.profil, kg = lastKg(), ok = !!(p.cins && +p.yas > 0 && +p.boy > 0 && kg);
@@ -503,7 +505,7 @@ function render(){
   maybeTips(currentTipKey());
 }
 function rBugun(){
-  const t = hedefler(), s = sums(view.gun), g = gun(view.gun, true), kalan = t.kcal - s.kcal, p = Math.min(100, s.kcal / t.kcal * 100);
+  const t0 = hedefler(), sb = sporBonus(view.gun), t = {...t0, kcal: t0.kcal + sb.ek}, s = sums(view.gun), g = gun(view.gun, true), kalan = t.kcal - s.kcal, p = Math.min(100, s.kcal / t.kcal * 100);
   const mac = (ad, v, h) => `<div class="macro"><span>${ad}</span><b>${nf0.format(v)} <small style="font-weight:400">/ ${nf0.format(h)} g</small></b><div class="bar"><i style="width:${Math.min(100, h ? v/h*100 : 0).toFixed(0)}%"></i></div></div>`;
   return `${!t.ok ? `<section style="margin-top:0"><button class="card setup" data-go="profil" style="width:100%;text-align:left;display:grid;gap:4px"><b style="font-family:var(--display);font-size:17px">Önce hedefini belirle</b><span class="note" style="color:var(--ink)">Boy, yaş ve kilonu girersen günlük kalori ihtiyacını hesaplarım. Şimdilik 2.000 kcal varsayıyorum.</span></button></section>` : ''}
   <div class="hero" style="margin-top:${t.ok ? 0 : 14}px">
@@ -511,6 +513,7 @@ function rBugun(){
       <div class="ring ${kalan < 0 ? 'over' : ''}" style="--p:${p.toFixed(1)}"><div><span><small>${kalan < 0 ? 'Fazla' : 'Kalan'}</small><b class="num">${nf0.format(Math.abs(kalan))}</b><small>kcal</small></span></div></div>
       <div class="kinfo">
         <div class="r"><span>Hedef</span><b>${nf0.format(t.kcal)} kcal</b></div>
+        ${sb.kcal ? `<div class="r"><span>🏃 Egzersiz</span><b>${sb.ek ? '+' + nf0.format(sb.ek) : nf0.format(sb.kcal)} kcal</b></div>` : ''}
         <div class="r"><span>Alınan</span><b>${nf0.format(s.kcal)} kcal</b></div>
         <div class="r"><span>${esc(view.gun === todayISO ? 'Bugün' : dayLabel(view.gun,{day:'numeric',month:'long'}))}</span><b>${g.ogun.length} kayıt</b></div>
       </div>
