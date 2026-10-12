@@ -50,12 +50,19 @@ nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
 .wk button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .segbar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}
 .segbar i{display:block;height:100%}
-.t-yavas{background:#9BC7A8}.t-rahat{background:#5FB27C}.t-tempolu{background:#F0A23A}.t-hizli{background:#E5484D}
+.t-yavas{background:#9BC7A8}.t-rahat{background:#5FB27C}.t-tempolu{background:#F0A23A}.t-hizli{background:#E5484D}.t-kosu{background:#A66CD9}
+#oyn .kcalc{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+#oyn .bantkut{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;max-width:420px}
+#oyn .bantkut>div{display:grid;justify-items:center;gap:2px;padding:10px 6px;min-width:0;border-radius:16px;background:var(--sunk)}
+#oyn .bantkut small{color:var(--muted);font-size:12px;font-weight:600}
+#oyn .bantkut span{display:flex;align-items:center;gap:4px}
+#oyn .bantkut b{font-family:var(--display);font-size:26px;min-width:2.4ch;text-align:center;font-variant-numeric:tabular-nums}
+#oyn .bantkut button{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);font-size:22px;font-weight:700}
 /* oynatıcı */
 #oyn{position:fixed;inset:0;z-index:60;background:var(--bg);color:var(--ink);display:grid;grid-template-rows:auto 1fr auto;padding:calc(10px + env(safe-area-inset-top,0px)) 16px calc(14px + env(safe-area-inset-bottom,0px))}
 #oyn .ust{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #oyn .ust small{color:var(--muted);font-weight:600}
-#oyn .orta{display:grid;align-content:center;justify-items:center;gap:10px;text-align:center;min-height:0}
+#oyn .orta{min-width:0;display:grid;align-content:center;justify-items:center;gap:10px;text-align:center;min-height:0}
 #oyn .anim{max-width:min(320px,42vh)}
 #oyn .faz{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
 #oyn .faz.din{background:var(--sunk);color:var(--ink)}
@@ -91,7 +98,7 @@ nav.tabs .in{grid-template-columns:repeat(4,minmax(0,1fr))}
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
 (() => {
-const APP_VERSION = '1.1 · 13 Ekim 2026';
+const APP_VERSION = '1.2 · 13 Ekim 2026';
 const KEY = 'bocekler-spor-v1';
 const mode = 'local';
 const pad = n => String(n).padStart(2,'0');
@@ -110,10 +117,11 @@ const sureYazi = sn => sn >= 60 ? `${Math.floor(sn/60)} dk${sn%60 ? ' ' + (sn%60
 const tarafli = h => /Her (bacak|taraf)/.test(h.tk || '');
 
 /* ---------- veri ---------- */
-const blank = () => ({seanslar:[], ayar:{ekle:0.5, hedefDk:150, ses:true, uyariOk:false}, yHafta:1, secim:{hedef:'', sure:20, sev:1, zipla:true, esyasiz:false}, favori:[]});
+const blank = () => ({seanslar:[], ayar:{ekle:0.5, hedefDk:150, ses:true, uyariOk:false, yer:'dis', bantT:{}}, yHafta:1, secim:{hedef:'', sure:20, sev:1, zipla:true, esyasiz:false}, favori:[]});
 function clean(d){
   const b = blank(), o = x => x && typeof x === 'object' && !Array.isArray(x), ayar = {...b.ayar, ...(o(d.ayar) ? d.ayar : {})}, sec = {...b.secim, ...(o(d.secim) ? d.secim : {})};
-  ayar.ekle = [0, 0.5, 1].includes(+ayar.ekle) ? +ayar.ekle : 0.5; ayar.hedefDk = +ayar.hedefDk > 0 ? +ayar.hedefDk : 150; ayar.ses = ayar.ses !== false; ayar.uyariOk = !!ayar.uyariOk;
+  ayar.ekle = [0, 0.5, 1].includes(+ayar.ekle) ? +ayar.ekle : 0.5; ayar.hedefDk = +ayar.hedefDk > 0 ? +ayar.hedefDk : 150; ayar.ses = ayar.ses !== false; ayar.uyariOk = !!ayar.uyariOk; ayar.yer = ayar.yer === 'bant' ? 'bant' : 'dis';
+  ayar.bantT = Object.fromEntries(Object.entries(o(ayar.bantT) ? ayar.bantT : {}).filter(([k, v]) => window.BANT_TEMPO[k] && o(v) && +v.hiz >= 1 && +v.hiz <= 20 && +v.egim >= 0 && +v.egim <= 15).map(([k, v]) => [k, {hiz: +v.hiz, egim: +v.egim}]));
   if(!HD.some(x => x.id === sec.hedef)) sec.hedef = ''; sec.sure = [10,20,30].includes(+sec.sure) ? +sec.sure : 20; sec.sev = [1,2,3].includes(+sec.sev) ? +sec.sev : 1; sec.zipla = sec.zipla !== false; sec.esyasiz = !!sec.esyasiz;
   const seanslar = (Array.isArray(d.seanslar) ? d.seanslar : []).filter(s => o(s) && /^\d{4}-\d{2}-\d{2}$/.test(s.t) && isFinite(+s.dk) && +s.dk > 0)
     .map(s => ({...s, ad: String(s.ad || 'Aktivite').slice(0, 80), dk: Math.round(+s.dk), kcal: Math.max(0, Math.round(+s.kcal || 0)), km: +s.km > 0 ? +s.km : undefined, zorluk: [1,2,3,4,5].includes(+s.zorluk) ? +s.zorluk : undefined, gruplar: Array.isArray(s.gruplar) ? s.gruplar.filter(g => typeof g === 'string') : [], yogun: !!s.yogun}));
@@ -217,7 +225,7 @@ function rBugun(){
     <p class="note" style="margin:10px 2px 0">💡 ${esc(oneri)}</p>
     ${son || S.favori.length ? `<div class="btns" style="margin-top:10px">${son ? `<button class="btn ghost" data-tekrar="son" style="flex:1">↻ Son antrenmanı tekrarla</button>` : ''}${S.favori.length ? `<button class="btn ghost" data-favlist="1" style="flex:1">⭐ Favorilerim (${S.favori.length})</button>` : ''}</div>` : ''}</section>
   <section><div class="sec-head"><h2>Bugünün yürüyüşü</h2><small>${S.yHafta}. hafta</small></div>
-    <div class="card" style="display:grid;gap:10px"><b>${esc(yp.not)} · ${yp.bolum.reduce((a, b) => a + b[0], 0)} dk</b>${segBar(yp)}<span class="note">Adım hedefi: ${esc(yp.adim)}</span><button class="btn" data-yuru="1">🚶 Yürüyüşe başla</button></div></section>
+    <div class="card" style="display:grid;gap:10px"><b>${esc(yp.not)} · ${yp.bolum.reduce((a, b) => a + b[0], 0)} dk</b>${segBar(yp)}<span class="note">Adım hedefi: ${esc(yp.adim)}</span><button class="btn" data-yuru="1">${S.ayar.yer === 'bant' ? '🏃 Koşu bandında başla' : '🚶 Yürüyüşe başla'}</button></div></section>
   <section><div class="sec-head"><h2>Son aktiviteler</h2><small>${S.seanslar.length ? 'Dokun: ayrıntı' : ''}</small></div>
     ${S.seanslar.length ? `<div class="items">${S.seanslar.slice().sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 15).map(s => `<button class="item" data-seans="${esc(s.id)}"><span class="mid"><b>${esc(s.ad)}</b><small>${esc(dayLabel(s.t, {day:'numeric', month:'long', weekday:'short'}))} · ${s.dk} dk${s.km ? ' · ' + esc(nf2.format(s.km)) + ' km' : ''}${s.zorluk ? ' · zorluk ' + s.zorluk + '/5' : ''}</small></span><span class="amt">${nf0.format(s.kcal || 0)} kcal</span></button>`).join('')}</div>`
       : `<div class="card empty"><b>Henüz aktivite yok</b>Bir antrenman ya da yürüyüş tamamladığında burada görünür. Dışarıda yaptığın sporu + ile elle ekleyebilirsin.</div>`}</section>
@@ -242,7 +250,7 @@ function rAntrenman(){
     <span class="note">≈ ${Math.round(sure/60)} dk · ${p.tur} tur · ${p.is} sn çalış / ${p.din} sn dinlen · ≈ ${nf0.format(progKcal(p))} kcal</span>
     ${planListe(p)}
     <button class="btn" data-basla="uretilen">▶ Antrenmanı başlat</button>
-    <div class="note" style="display:grid;gap:4px"><b style="color:var(--ink)">${hd.em} ${esc(hd.ad)} için öneriler</b><span>${esc(hd.oneri)}</span><span>🚶 ${esc(hd.yuruyus)}</span></div>
+    <div class="note" style="display:grid;gap:4px"><b style="color:var(--ink)">${hd.em} ${esc(hd.ad)} için öneriler</b><span>${esc(hd.oneri)}</span><span>🚶 ${esc(hd.yuruyus)}</span>${['yag','kardiyo'].includes(hd.id) ? '<button class="btn ghost" data-bantgit="1" style="margin-top:4px">🏃 Koşu bandı programları</button>' : ''}</div>
   </div></section>
   <section><div class="sec-head"><h2>Hazır programlar</h2></div><p class="note" style="margin:-4px 2px 10px">⭐ hedefine uygun · 🤫 zıplamasız (apartman dostu)</p>
     <div class="items">${PR.slice().sort((a, b) => hd.prog.includes(b.id) - hd.prog.includes(a.id)).map(x => `<button class="item prog" data-prog="${x.id}"><span class="em">${x.em}</span><span class="mid"><b>${esc(x.ad)}${hd.prog.includes(x.id) ? ' <span class="ystar">⭐</span>' : ''}${progZipla(x) ? '' : ' <span class="ystar" title="Zıplamasız">🤫</span>'}</b><small>${Math.round(progSure(x)/60)} dk · ≈ ${nf0.format(progKcal(x))} kcal · ${seviyeAd(x.sev)}</small></span><span class="chev">›</span></button>`).join('')}</div></section>`;
@@ -253,20 +261,6 @@ function rHareket(){
   <section style="margin-top:12px"><div class="exgrid">${liste.map(h => `<button class="exc" data-hrk="${h.id}"><img src="${img(h.id,'b')}" alt="" loading="lazy"><b>${esc(h.ad)}</b><small>${esc(h.kas)} · <span class="lvl" aria-label="Zorluk ${h.z}">${'●'.repeat(h.z)}${'○'.repeat(3-h.z)}</span></small></button>`).join('')}</div></section>
   <p class="note" style="text-align:center;margin-top:14px">${HR.length} hareket · Harekete dokun, nasıl yapıldığını ve başlangıç-bitiş pozlarını gör.</p>`;
 }
-function rYuruyus(){
-  const yp = YP[S.yHafta - 1], toplam = yp.bolum.reduce((a, b) => a + b[0], 0), kcal = yp.bolum.reduce((a, [dk, tp]) => a + kcalOf(YT[tp].met, dk*60), 0);
-  return `<section style="margin-top:0"><div class="sec-head"><h2>8 haftalık yürüyüş planı</h2><small>Haftada 5 gün</small></div>
-    <div class="wk" role="group" aria-label="Hafta">${YP.map(p => `<button data-hafta="${p.h}" aria-pressed="${p.h === S.yHafta}" aria-label="${p.h}. hafta">${p.h}</button>`).join('')}</div></section>
-  <section><div class="card" style="display:grid;gap:10px"><b style="font-family:var(--display);font-size:18px">${S.yHafta}. hafta · ${toplam} dk</b><span>${esc(yp.not)}</span>${segBar(yp)}
-    <div class="note">${yp.bolum.map(([dk, tp]) => `${dk} dk ${YT[tp].ad.toLocaleLowerCase('tr')}`).join(' → ')}</div>
-    <div class="note">Adım hedefi: <b>${esc(yp.adim)}</b> · ≈ ${nf0.format(kcal)} kcal</div>
-    <button class="btn" data-yuru="1">🚶 Yürüyüşe başla</button>
-    <span class="note">Sesli komutlarla tempoyu söylerim. Ekran açık kalırsa istersen mesafeyi de ölçerim; iPhone’da ekran kilitlenince sesli komut ve mesafe ölçümü durur, açınca kaldığı yerden devam eder.</span></div></section>
-  <section><div class="sec-head"><h2>Tempo rehberi</h2></div><div class="card" style="display:grid;gap:8px;font-size:14px">
-    ${Object.entries({yavas:'ısınma ve soğuma, rahat nefes.', rahat:'sohbet edebileceğin hız (~4,5 km/s).', tempolu:'konuşabilirsin ama şarkı söyleyemezsin (~5-6 km/s, dakikada 100+ adım).', hizli:'nefesin hızlanır, birkaç kelimeyle konuşursun.'}).map(([k, a]) => `<div><b class="t-${k}" style="display:inline-block;width:12px;height:12px;border-radius:3px"></b> <b>${YT[k].ad}:</b> ${a}</div>`).join('')}
-    <div class="note">Destekli ayakkabı giy, sıcakta sabah ya da akşam yürü, su taşı. Karanlıkta yansıtıcı bir şey giy. Önce süreyi, sonra hızı artır.</div></div></section>`;
-}
-
 /* ---------- pencereler ---------- */
 let geriFn = null;   // açık pencere kapanınca dönülecek önceki pencere
 function openSheet(html, label, geri){ geriFn = geri || null; sheetRoot.innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="in"><div class="grab"></div>${html}</div></div>`;
@@ -308,21 +302,26 @@ function openFavoriler(){
   sh.querySelectorAll('[data-fb]').forEach(b => b.onclick = () => { closeSheet(); oynat(S.favori[+b.dataset.fb]); });
   sh.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { S.favori.splice(+b.dataset.fs, 1); save(); render(); openFavoriler(); });
 }
-const MANUEL = [['Yürüyüş', 3.5], ['Tempolu yürüyüş', 4.3], ['Koşu', 8.0], ['Bisiklet', 6.8], ['Yüzme', 6.0], ['Dans', 5.0], ['Yoga / pilates', 3.0], ['Spor salonu', 5.0], ['Futbol / basketbol', 7.0], ['Diğer', 4.0]];
+const MANUEL = [['Koşu bandı', 0], ['Yürüyüş', 3.5], ['Tempolu yürüyüş', 4.3], ['Koşu', 8.0], ['Bisiklet', 6.8], ['Yüzme', 6.0], ['Dans', 5.0], ['Yoga / pilates', 3.0], ['Spor salonu', 5.0], ['Futbol / basketbol', 7.0], ['Diğer', 4.0]];
 function openManuel(){
   const st = {i: 0};
   const draw = () => { const sh = openSheet(`${head('Aktivite ekle')}
     <div class="chips">${MANUEL.map(([a], i) => `<button class="chip" data-m="${i}" aria-pressed="${st.i === i}">${a}</button>`).join('')}</div>
     <div class="two"><div class="field"><label class="label" for="mDk">Süre (dk)</label><input id="mDk" class="num" type="number" inputmode="numeric" min="1" max="600" placeholder="Örn. 30" value="${esc(st.dk || '')}"></div>
       <div class="field"><label class="label" for="mT">Tarih</label><input id="mT" type="date" max="${bugun()}" value="${st.t || bugun()}"></div></div>
+    ${st.i === 0 ? `<div class="two"><div class="field"><label class="label" for="mHiz">Ortalama hız (km/s)</label><input id="mHiz" class="num" inputmode="decimal" placeholder="Örn. 5,5" value="${esc(st.hiz || '')}"></div>
+      <div class="field"><label class="label" for="mEg">Eğim (%)</label><input id="mEg" class="num" inputmode="decimal" placeholder="Örn. 3" value="${esc(st.eg ?? '')}"></div></div>` : ''}
     <div class="field"><label class="label" for="mKm">Mesafe (km, isteğe bağlı)</label><input id="mKm" class="num" inputmode="decimal" placeholder="Örn. 3,5" value="${esc(st.km || '')}"></div>
     <span class="note">Kalori, Sağlık’taki son kilona göre tahmin edilir.</span>
     <button class="btn" id="mOk">Kaydet</button>`, 'Aktivite ekle');
-    const keep = () => { st.dk = document.getElementById('mDk').value; st.t = document.getElementById('mT').value; st.km = document.getElementById('mKm').value; };
+    const keep = () => { st.dk = document.getElementById('mDk').value; st.t = document.getElementById('mT').value; st.km = document.getElementById('mKm').value; const h = document.getElementById('mHiz'); if(h){ st.hiz = h.value; st.eg = document.getElementById('mEg').value; } };
     sh.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { keep(); st.i = +b.dataset.m; draw(); });
     document.getElementById('mOk').onclick = () => { keep(); const dk = parseInt(st.dk, 10), km = String(st.km).trim() === '' ? null : num(st.km);
       if(!(dk >= 1 && dk <= 600)) return toast('Süreyi dakika olarak yaz (1-600).'); if(!/^\d{4}-\d{2}-\d{2}$/.test(st.t) || st.t > bugun()) return toast('Geçerli bir tarih seç.'); if(km != null && !(km > 0 && km < 300)) return toast('Mesafeyi kontrol et.');
-      const [ad, met] = MANUEL[st.i]; S.seanslar.push({id: uid(), t: st.t, ts: Date.now(), ad, dk, km: km || undefined, kcal: Math.round(kcalOf(met, dk*60)), gruplar: [], yogun: met >= 6, tip: 'manuel'}); save(); closeSheet(); render(); toast(`${ad} eklendi`); };
+      const [ad, met] = MANUEL[st.i]; let kcal = kcalOf(met, dk*60), yogun = met >= 6, km2 = km;
+      if(st.i === 0){ const hiz = num(st.hiz), eg = String(st.eg ?? '').trim() === '' ? 0 : num(st.eg); if(!(hiz >= 1 && hiz <= 20)) return toast('Hızı km/s olarak yaz (1-20).'); if(!(eg >= 0 && eg <= 15)) return toast('Eğimi 0-15 arasında yaz.');
+        kcal = bantKcalDk(hiz, eg) * dk; yogun = hiz >= 7.5 || eg >= 8; km2 = km || Math.round(hiz * dk / 60 * 100) / 100; }
+      S.seanslar.push({id: uid(), t: st.t, ts: Date.now(), ad, dk, km: km2 || undefined, kcal: Math.round(kcal), gruplar: [], yogun, tip: 'manuel'}); save(); closeSheet(); render(); toast(`${ad} eklendi`); };
   };
   draw();
 }
@@ -360,6 +359,7 @@ addEventListener('popstate', () => { if(!document.getElementById('oyn')) return;
 addEventListener('pagehide', e => { if(e.persisted) return; if(O) bitir(false); else if(Y) yBitir(false); });
 function oynaticiAc(etiket){
   const box = document.createElement('div'); box.id = 'oyn'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', etiket); box.tabIndex = -1; document.body.appendChild(box);
+  try { if(navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch(e){}
   if(sesVar()) speechSynthesis.getVoices();
   ekranAcik(true); geriKoruma(); return box;
@@ -380,6 +380,7 @@ function adimBasla(sessiz, koru){
   box.innerHTML = `<div class="ust"><button class="icon-btn" data-o="bitir">✕ Bitir</button><small>${O.i + 1} / ${toplam}${a.bolum ? ' · ' + esc(a.bolum) : ''}</small><button class="icon-btn" data-o="ses" aria-label="${S.ayar.ses ? 'Sesi kapat' : 'Sesi aç'}">${S.ayar.ses ? '🔊' : '🔇'}</button></div>
     <div class="orta"><div class="pbar"><i style="width:${(O.i / toplam * 100).toFixed(1)}%"></i></div>${animHTML(h)}<span class="faz ${a.tip === 'is' ? '' : 'din'}">${faz}</span>
       <h2>${a.tip === 'din' ? 'Sıradaki: ' + esc(h.ad) : esc(h.ad)}</h2>${a.tip === 'is' && h.tk ? `<div class="sira">≈ ${esc(h.tk)}${tarafli(h) ? ' · yarısında taraf değiştir' : ''}</div>` : ''}<div class="sayac" id="oSay" aria-live="off">${Math.ceil(a.sn)}</div>
+      <div class="kcalc">🔥 <b id="oKcal">${nf0.format(O.kcal)}</b> kcal</div>
       <div class="ipu">${esc(a.tip === 'is' ? h.ip[0] + ' · ' + h.ip[2] : h.ip.slice(0, 2).join(' · '))}</div>
       ${sonraki && a.tip === 'is' ? `<div class="sira">Sonra: ${esc(HB.get(sonraki.id).ad)}</div>` : ''}</div>
     <div class="alt"><button data-o="geri" aria-label="Önceki hareket">⏮</button><button class="ana" data-o="dur" aria-label="${O.dur ? 'Devam et' : 'Duraklat'}">${O.dur ? '▶' : '⏸'}</button><button data-o="atla" aria-label="Sonraki">⏭</button></div>`;
@@ -400,6 +401,7 @@ function tik(){
   }
   if(O.i !== ilk){ bip(true); adimBasla(false, true); return; }
   const a = O.adim[O.i], h = HB.get(a.id), sn = Math.max(0, Math.ceil(O.kalan / 1000)), el = document.getElementById('oSay'); if(el) el.textContent = sn;
+  const kc = document.getElementById('oKcal'); if(kc) kc.textContent = nf0.format(O.kcal);
   if(a.tip === 'is' && a.sn >= 30 && !O.yari && O.kalan <= a.sn * 500){ O.yari = true; soyle(tarafli(h) ? 'Taraf değiştir' : 'Yarısı bitti'); }
   if(sn <= 3 && sn > 0 && O.sayac !== sn){ O.sayac = sn; bip(false); }
 }
@@ -439,72 +441,198 @@ function bitir(tamam){
   draw();
 }
 
+/* ---------- sesli komutlar ----------
+   iPhone ekran kilitlenince sayfadaki zamanlayıcıları ve konuşma sentezini durdurur; sessiz modda da konuşma duyulmaz.
+   Bu yüzden yürüyüşte komutlar önceden kaydedilmiş seslerden birkaç dakikalık ses parçalarına dizilip normal müzik gibi çalınır. */
+const SES_ADLARI = ['yavas','rahat','tempolu','hizli','kosu','basla','birdk','yari','son','bitti','bant'], SR = 12000;
+let sesKlip = null, sesYukleniyor = null;
+const yAudio = new Audio(); yAudio.preload = 'auto'; yAudio.setAttribute('playsinline', ''); let yAudioUrl = null;
+function yenidenOrnekle(buf){ const src = buf.getChannelData(0), oran = buf.sampleRate / SR, n = Math.floor(src.length / oran), out = new Float32Array(n);
+  for(let i = 0; i < n; i++){ const x = i * oran, j = Math.floor(x), f = x - j; out[i] = (src[j] || 0) * (1 - f) + (src[j + 1] || 0) * f; } return out; }
+function bipKlip(){ const n = Math.round(SR * 0.42), out = new Float32Array(n);
+  for(let i = 0; i < n; i++){ const t = i / SR, ilk = t < 0.16, z = ilk ? t : t - 0.22; if(!ilk && t < 0.22) continue; const zarf = Math.min(1, z * 80) * Math.max(0, 1 - z / 0.2); out[i] = 0.45 * zarf * Math.sin(2 * Math.PI * (ilk ? 880 : 1175) * z); } return out; }
+function sesYukle(){
+  if(sesKlip) return Promise.resolve(sesKlip); if(sesYukleniyor) return sesYukleniyor;
+  sesYukleniyor = (async () => { const ctx = new (window.AudioContext || window.webkitAudioContext)(), out = {bip: bipKlip()};
+    await Promise.all(SES_ADLARI.map(async k => { const ab = await (await fetch(`ses/${k}.mp3`)).arrayBuffer(); const buf = await new Promise((ok, no) => { const p = ctx.decodeAudioData(ab, ok, no); if(p && p.catch) p.catch(no); }); out[k] = yenidenOrnekle(buf); }));
+    try { ctx.close(); } catch(e){} sesKlip = out; return out; })().catch(() => { sesYukleniyor = null; return null; });
+  return sesYukleniyor;
+}
+function wavYap(f32){
+  const n = f32.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, SR, true); v.setUint32(28, SR * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for(let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, f32[i])) * 32767, true);
+  return new Blob([b], {type: 'audio/wav'});
+}
+function sesCal(f32){ if(yAudioUrl) URL.revokeObjectURL(yAudioUrl); yAudioUrl = URL.createObjectURL(wavYap(f32)); yAudio.src = yAudioUrl; const p = yAudio.play(); if(p && p.catch) p.catch(() => {}); }
+// iPhone'da ses, kullanıcı dokunuşu sırasında başlatılan oynatıcıdan çalınabilir: dokunuşta kısa bir sessizlik çalınır
+function sesKilitAc(){ try { if(navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){} sesCal(new Float32Array(SR / 5)); }
+function sesDene(){ sesKilitAc(); sesYukle().then(k => { if(!k) return toast('Ses dosyaları yüklenemedi.'); sesCal(dizi(['bip', 'rahat'])); }); }
+const dizi = adlar => { const parca = adlar.map(k => sesKlip[k]).filter(Boolean), ara = Math.round(SR * 0.15), n = parca.reduce((a, p) => a + p.length + ara, 0), out = new Float32Array(n); let c = 0; parca.forEach(p => { out.set(p, c); c += p.length + ara; }); return out; };
+
+/* ---------- yürüyüş ve koşu bandı ---------- */
+const BT = window.BANT_TEMPO, BP = window.BANT_PROG, nf1 = new Intl.NumberFormat('tr-TR', {maximumFractionDigits: 1});
+const bantDeger = tp => ({...BT[tp], ...((S.ayar.bantT || {})[tp] || {})});
+// ACSM yürüme/koşu denklemleri (dinlenme harcaması çıkarılmış): kcal/dk = VO2 × kg / 200
+const bantKcalDk = (hiz, egim, kg = KG) => { const v = hiz * 1000 / 60, g = egim / 100, vo2 = hiz >= 7.5 ? 0.2 * v + 0.9 * v * g : 0.1 * v + 1.8 * v * g; return vo2 * kg / 200; };
+const segKcalDk = (s, bant, kg = KG) => bant ? bantKcalDk(s.hiz, s.egim, kg) : (YT[s.tp].met - 1) * 3.5 * kg / 200;
+const haftaPlani = bant => ({ad: bant ? `Koşu bandı · ${S.yHafta}. hafta` : `Yürüyüş · ${S.yHafta}. hafta`, hafta: S.yHafta, bant, seg: YP[S.yHafta - 1].bolum.map(([dk, tp]) => ({tp, sn: dk * 60, ...(bant ? bantDeger(tp) : {})}))});
+const bantPlani = b => ({ad: `Koşu bandı · ${b.ad}`, bant: true, prog: b.id, seg: b.bolum.map(([dk, tp, hiz, egim]) => ({tp, sn: dk * 60, hiz, egim}))});
+const planDk = p => Math.round(p.seg.reduce((a, s) => a + s.sn, 0) / 60), planKcal = p => p.seg.reduce((a, s) => a + segKcalDk(s, p.bant) * s.sn / 60, 0);
+const segBar2 = seg => { const t = seg.reduce((a, s) => a + s.sn, 0); return `<div class="segbar" aria-hidden="true">${seg.map(s => `<i class="t-${s.tp}" style="width:${(s.sn / t * 100).toFixed(1)}%"></i>`).join('')}</div>`; };
+const hizEgim = s => `${nf1.format(s.hiz)} km/s · %${s.egim}`;
+function segListe(p){ // ardışık aynı bölümler (interval tekrarları) tek satırda gösterilir
+  const satir = []; for(let i = 0; i < p.seg.length;){ const s = p.seg[i], s2 = p.seg[i + 1]; let n = 1;
+    if(s2 && s2.tp !== s.tp){ while(p.seg[i + 2 * n] && p.seg[i + 2 * n + 1] && ['tp','sn','hiz','egim'].every(k => p.seg[i + 2 * n][k] === s[k] && p.seg[i + 2 * n + 1][k] === s2[k])) n++; }
+    const yaz = x => `${Math.round(x.sn / 60)} dk ${YT[x.tp].ad.toLocaleLowerCase('tr')}${p.bant ? ` (${hizEgim(x)})` : ''}`;
+    if(n > 1){ satir.push(`${n} × [${yaz(s)} + ${yaz(s2)}]`); i += 2 * n; } else { satir.push(yaz(s)); i++; } }
+  return satir.join(' → ');
+}
+function rYuruyus(){
+  const bant = S.ayar.yer === 'bant', p = haftaPlani(bant), yp = YP[S.yHafta - 1];
+  return `<section style="margin-top:0"><div class="chips" role="group" aria-label="Nerede">${[['dis','🌳 Dışarıda'],['bant','🏃 Koşu bandında']].map(([k, a]) => `<button class="chip" data-yer="${k}" aria-pressed="${S.ayar.yer === k}">${a}</button>`).join('')}</div></section>
+  <section><div class="sec-head"><h2>8 haftalık yürüyüş planı</h2><small>Haftada 5 gün</small></div>
+    <div class="wk" role="group" aria-label="Hafta">${YP.map(x => `<button data-hafta="${x.h}" aria-pressed="${x.h === S.yHafta}" aria-label="${x.h}. hafta">${x.h}</button>`).join('')}</div></section>
+  <section><div class="card" style="display:grid;gap:10px"><b style="font-family:var(--display);font-size:18px">${S.yHafta}. hafta · ${planDk(p)} dk</b><span>${esc(yp.not)}</span>${segBar2(p.seg)}
+    <div class="note">${esc(segListe(p))}</div>
+    <div class="note">${bant ? '' : `Adım hedefi: <b>${esc(yp.adim)}</b> · `}≈ ${nf0.format(planKcal(p))} kcal</div>
+    <button class="btn" data-yuru="1">${bant ? '🏃 Bantta başla' : '🚶 Yürüyüşe başla'}</button>
+    ${bant ? `<button class="btn ghost" data-bantayar="1">⚙️ Tempo başına hız ve eğim</button><span class="note">Bandı ekrandaki hız ve eğime ayarla. Yürürken − / + ile değiştirirsen bir dahaki sefere o değerle başlarım.</span>`
+      : `<span class="note">Sesli komutlar ekran kilitliyken ve sessiz moddayken de çalar; kulaklık takabilirsin. Mesafe ölçümü yalnızca ekran açıkken çalışır.</span>`}
+    <button class="btn ghost" data-sesdene="1">🔊 Sesi dene</button></div></section>
+  <section id="bantProg"><div class="sec-head"><h2>Koşu bandı programları</h2><small>Hız ve eğim hazır</small></div>
+    <div class="items">${BP.map(b => { const bp = bantPlani(b); return `<button class="item prog" data-bprog="${b.id}"><span class="em">${b.em}</span><span class="mid"><b>${esc(b.ad)}</b><small>${planDk(bp)} dk · ≈ ${nf0.format(planKcal(bp))} kcal · ${seviyeAd(b.sev)}</small></span><span class="chev">›</span></button>`; }).join('')}</div></section>
+  <section><div class="sec-head"><h2>Tempo rehberi</h2></div><div class="card" style="display:grid;gap:8px;font-size:14px">
+    ${Object.entries({yavas:'ısınma ve soğuma, rahat nefes.', rahat:'sohbet edebileceğin hız (~4,5-5 km/s).', tempolu:'konuşabilirsin ama şarkı söyleyemezsin (~5,5-6 km/s, dakikada 100+ adım).', hizli:'nefesin hızlanır, birkaç kelimeyle konuşursun.', kosu:'hafif koşu; bantta 7,5 km/s ve üstü.'}).map(([k, a]) => `<div><b class="t-${k}" style="display:inline-block;width:12px;height:12px;border-radius:3px"></b> <b>${YT[k].ad}:</b> ${a}</div>`).join('')}
+    <div class="note">Bantta tutunmadan yürü; tutunursan yakılan kalori belirgin düşer. Eğimi artırmak, hızı artırmaktan dizlere daha dostudur. Dışarıda destekli ayakkabı giy, su taşı, karanlıkta yansıtıcı bir şey giy.</div></div></section>`;
+}
+function openBantProg(id){
+  const b = BP.find(x => x.id === id); if(!b) return; const p = bantPlani(b);
+  const sh = openSheet(`${head(b.em + ' ' + b.ad)}<p class="note" style="margin:0">${esc(b.aciklama)}</p>
+    <div class="stat3"><div><small>Süre</small><b>${planDk(p)} dk</b></div><div><small>Seviye</small><b>${seviyeAd(b.sev)}</b></div><div><small>Kalori</small><b>≈ ${nf0.format(planKcal(p))}</b></div></div>
+    ${segBar2(p.seg)}<div class="note">${esc(segListe(p))}</div>
+    <button class="btn" id="bpBasla">▶ Başlat</button>`, b.ad);
+  document.getElementById('bpBasla').onclick = () => { closeSheet(); yuruyus(bantPlani(b)); };
+}
+function openBantAyar(){
+  const sh = openSheet(`${head('Bant hız ve eğim')}<span class="note">8 haftalık plan bantta bu değerlerle çalışır. Kendi bandına ve kondisyonuna göre ayarla.</span>
+    ${['yavas','rahat','tempolu','hizli'].map(tp => { const d = bantDeger(tp); return `<div class="two"><div class="field"><label class="label" for="bh-${tp}">${YT[tp].ad} · hız (km/s)</label><input id="bh-${tp}" class="num" inputmode="decimal" value="${esc(nf1.format(d.hiz))}"></div><div class="field"><label class="label" for="be-${tp}">Eğim (%)</label><input id="be-${tp}" class="num" inputmode="decimal" value="${d.egim}"></div></div>`; }).join('')}
+    <button class="btn" id="baKaydet">Kaydet</button><button class="btn ghost" id="baSifir">Önerilen değerlere dön</button>`, 'Bant ayarları');
+  document.getElementById('baKaydet').onclick = () => { const yeni = {};
+    for(const tp of ['yavas','rahat','tempolu','hizli']){ const h = num(document.getElementById('bh-' + tp).value), e = num(document.getElementById('be-' + tp).value);
+      if(!(h >= 1 && h <= 20)) return toast(`${YT[tp].ad}: hızı 1-20 km/s arasında yaz.`); if(!(e >= 0 && e <= 15)) return toast(`${YT[tp].ad}: eğimi 0-15 arasında yaz.`); yeni[tp] = {hiz: Math.round(h * 10) / 10, egim: Math.round(e)}; }
+    S.ayar.bantT = {...S.ayar.bantT, ...yeni}; save(); closeSheet(); render(); toast('Kaydedildi'); };
+  document.getElementById('baSifir').onclick = () => { S.ayar.bantT = {}; save(); closeSheet(); render(); toast('Önerilen değerlere dönüldü'); };
+}
+
 /* ---------- yürüyüş oynatıcı ---------- */
 let Y = null;
-function yuruyus(){
-  kiloOku(); const yp = YP[S.yHafta - 1], seg = yp.bolum.map(([dk, tp]) => ({tp, sn: dk * 60}));
-  Y = {yp, seg, i: 0, kalan: seg[0].sn * 1000, son: Date.now(), dur: false, aktifMs: 0, gps: null, km: 0, onceki: null, kcal: 0, kg: KG, bitirOnay: 0};
-  oynaticiAc('Yürüyüş'); yCiz(); soyle(`${S.yHafta}. hafta yürüyüşü başlıyor. ${YT[seg[0].tp].ses}`); Y.tik = setInterval(yTik, 250);
+// sesli komutların zamanları (aktif süre, saniye)
+function olaylar(p){
+  const o = [], top = p.seg.reduce((a, s) => a + s.sn, 0); let t = 0;
+  p.seg.forEach((s, i) => { const k = i === 0 ? ['basla'] : ['bip']; k.push(s.tp); const o0 = p.seg[i - 1];
+    if(p.bant && (!o0 || o0.hiz !== s.hiz || o0.egim !== s.egim)) k.push('bant');
+    o.push({t, k, ana: true}); if(o0 && o0.sn >= 180) o.push({t: t - 60, k: ['birdk']}); t += s.sn; });
+  if(top >= 600) o.push({t: Math.round(top / 2), k: ['yari']}); if(top >= 240) o.push({t: top - 60, k: ['son']});
+  // bölüm başlangıcına çok yakın ek komutlar atlanır
+  return o.filter(e => e.ana || !o.some(x => x.ana && Math.abs(x.t - e.t) < 8)).sort((a, b) => a.t - b.t);
+}
+const yToplam = () => Y.seg.reduce((a, s) => a + s.sn, 0);
+const yKonum = () => Y.seg.slice(0, Y.i).reduce((a, s) => a + s.sn, 0) + (Y.seg[Y.i].sn * 1000 - Math.max(0, Y.kalan)) / 1000;
+// bulunulan andan başlayarak en çok 4 dakikalık ses parçası hazırlanır; bitince sıradaki hazırlanır
+function sesParca(){
+  if(!Y || Y.dur || !sesKlip) return; const P = yKonum(), top = yToplam(), L = Math.min(240, top - P + 0.5); if(L <= 0.5) return;
+  const yerler = []; let son = Math.round(L * SR);
+  Y.olay.forEach(e => { if(e.cal || e.t >= P + L) return; e.cal = true; if(e.t < P - 3) return;
+    const d = dizi(e.k), bas = Math.max(0, Math.round((e.t - P) * SR)); yerler.push([bas, d]); son = Math.max(son, bas + d.length); });
+  const out = new Float32Array(son); let imlec = 0; yerler.forEach(([bas, d]) => { const b = Math.max(bas, imlec); if(b + d.length > out.length) return; out.set(d, b); imlec = b + d.length; });
+  Y.sesli = true; sesCal(out);
+}
+yAudio.addEventListener('ended', () => { if(!Y) return; yTik(); if(Y && !Y.dur) sesParca(); });
+function olayTazele(){ const P = yKonum(); Y.olay.forEach(e => { e.cal = e.t < P - 0.5; }); }
+function medyaOturum(){
+  if(!('mediaSession' in navigator)) return;
+  try { navigator.mediaSession.metadata = new MediaMetadata({title: Y.p.ad, artist: 'Böcekler Spor', artwork: [{src: 'ikon-spor.jpg', sizes: '288x288', type: 'image/jpeg'}]});
+    navigator.mediaSession.setActionHandler('pause', () => { if(Y && !Y.dur) yKontrol('dur'); }); navigator.mediaSession.setActionHandler('play', () => { if(Y && Y.dur) yKontrol('dur'); }); } catch(e){}
+}
+function yuruyus(p){
+  p = p || haftaPlani(S.ayar.yer === 'bant'); kiloOku(); sesKilitAc(); yAudio.muted = !S.ayar.ses;
+  const seg = p.seg.map(s => ({...s}));
+  Y = {p, seg, bant: !!p.bant, i: 0, kalan: seg[0].sn * 1000, son: Date.now(), dur: false, aktifMs: 0, gps: null, km: 0, onceki: null, kcal: 0, kg: KG, bitirOnay: 0, olay: olaylar(p), sesli: false};
+  oynaticiAc(Y.bant ? 'Koşu bandı' : 'Yürüyüş'); yCiz(); medyaOturum(); Y.tik = setInterval(yTik, 250);
+  sesYukle().then(k => { if(!Y) return; if(k) sesParca(); else { Y.sesli = false; soyle(`${Y.p.ad} başlıyor. ${YT[Y.seg[0].tp].ses}`); } });
 }
 const fmt = ms => { const s = Math.max(0, Math.ceil(ms/1000)); return `${Math.floor(s/60)}:${pad(s%60)}`; };
 function yCiz(){
-  const s = Y.seg[Y.i], kalanTop = Y.seg.slice(Y.i + 1).reduce((a, x) => a + x.sn, 0) * 1000 + Math.max(0, Y.kalan), box = document.getElementById('oyn'), sonraki = Y.seg[Y.i + 1], tum = Y.seg.reduce((a, b) => a + b.sn, 0);
+  const s = Y.seg[Y.i], kalanTop = Y.seg.slice(Y.i + 1).reduce((a, x) => a + x.sn, 0) * 1000 + Math.max(0, Y.kalan), box = document.getElementById('oyn'), sonraki = Y.seg[Y.i + 1], tum = yToplam();
   box.innerHTML = `<div class="ust"><button class="icon-btn" data-y="bitir">✕ Bitir</button><small>${Y.i + 1} / ${Y.seg.length} bölüm</small><button class="icon-btn" data-y="ses" aria-label="${S.ayar.ses ? 'Sesi kapat' : 'Sesi aç'}">${S.ayar.ses ? '🔊' : '🔇'}</button></div>
     <div class="orta"><div class="segbar" style="width:100%">${Y.seg.map((x, i) => `<i class="t-${x.tp}" style="width:${(x.sn / tum * 100).toFixed(1)}%;opacity:${i < Y.i ? .35 : 1}"></i>`).join('')}</div>
-      <img src="ikon-spor.jpg" alt="" style="width:120px;height:120px;border-radius:32px">
-      <span class="faz">${YT[s.tp].ad} tempo</span><div class="sayac" id="ySay">${fmt(Y.kalan)}</div>
+      ${Y.bant ? '' : '<img src="ikon-spor.jpg" alt="" style="width:110px;height:110px;border-radius:30px">'}
+      <span class="faz t-${s.tp}" style="color:#1d1d1f">${YT[s.tp].ad}</span><div class="sayac" id="ySay">${fmt(Y.kalan)}</div>
+      ${Y.bant ? `<div class="bantkut"><div><small>Hız</small><span><button data-y="h-" aria-label="Hızı azalt">−</button><b id="yHiz">${nf1.format(s.hiz)}</b><button data-y="h+" aria-label="Hızı artır">+</button></span><small>km/s</small></div><div><small>Eğim</small><span><button data-y="e-" aria-label="Eğimi azalt">−</button><b id="yEg">${s.egim}</b><button data-y="e+" aria-label="Eğimi artır">+</button></span><small>yüzde</small></div></div>` : ''}
+      <div class="kcalc">🔥 <b id="yKcal">${nf0.format(Y.kcal)}</b> kcal${Y.bant ? ` <small style="color:var(--muted);font-weight:600">(${nf0.format(segKcalDk(s, true, Y.kg) * 60)}/saat)</small>` : ''}${Y.bant || Y.gps != null ? ` · <span id="yKm">${esc(nf2.format(Y.km))}</span> km` : ''}</div>
       <div class="ipu">${esc(YT[s.tp].ses)}</div>
-      <div class="sira">Toplam kalan: <b id="yTop">${fmt(kalanTop)}</b>${sonraki ? ` · Sonra: ${YT[sonraki.tp].ad.toLocaleLowerCase('tr')}` : ''}</div>
-      <div class="sira" id="yGps">${Y.gps != null ? `📍 ${esc(nf2.format(Y.km))} km` : `<button class="chip" data-y="gps">📍 Mesafeyi ölç</button>`}</div></div>
+      <div class="sira">Toplam kalan: <b id="yTop">${fmt(kalanTop)}</b>${sonraki ? ` · Sonra: ${YT[sonraki.tp].ad.toLocaleLowerCase('tr')}${Y.bant ? ` (${hizEgim(sonraki)})` : ''}` : ''}</div>
+      ${Y.bant || Y.gps != null ? '' : `<div class="sira"><button class="chip" data-y="gps">📍 Mesafeyi ölç</button></div>`}</div>
     <div class="alt"><button data-y="geri" aria-label="Önceki bölüm">⏮</button><button class="ana" data-y="dur" aria-label="${Y.dur ? 'Devam et' : 'Duraklat'}">${Y.dur ? '▶' : '⏸'}</button><button data-y="atla" aria-label="Sonraki bölüm">⏭</button></div>`;
   box.querySelectorAll('[data-y]').forEach(b => b.onclick = () => yKontrol(b.dataset.y));
 }
 function yTik(){
   if(!Y || Y.dur) return; const now = Date.now(); let d = now - Y.son; Y.son = now; if(d <= 0) return;
   Y.aktifMs += d; const ilk = Y.i;
-  while(d > 0 && Y){ const kullan = Math.min(d, Math.max(0, Y.kalan)); Y.kcal += kcalOf(YT[Y.seg[Y.i].tp].met, kullan / 1000, Y.kg); Y.kalan -= kullan; d -= kullan;
-    if(Y.kalan <= 0){ if(Y.i >= Y.seg.length - 1){ bip(true); return yBitir(true); } Y.i++; Y.kalan = Y.seg[Y.i].sn * 1000; } else break; }
-  if(Y.i !== ilk){ bip(true); yCiz(); soyle(YT[Y.seg[Y.i].tp].ses); return; }
-  const el = document.getElementById('ySay'); if(el) el.textContent = fmt(Y.kalan);
-  const t = document.getElementById('yTop'); if(t) t.textContent = fmt(Y.seg.slice(Y.i + 1).reduce((a, x) => a + x.sn, 0)*1000 + Math.max(0, Y.kalan));
+  while(d > 0 && Y){ const s = Y.seg[Y.i], kullan = Math.min(d, Math.max(0, Y.kalan)); Y.kcal += segKcalDk(s, Y.bant, Y.kg) * kullan / 60000; if(Y.bant) Y.km += s.hiz * kullan / 3600000;
+    Y.kalan -= kullan; d -= kullan;
+    if(Y.kalan <= 0){ if(Y.i >= Y.seg.length - 1) return yBitir(true); Y.i++; Y.kalan = Y.seg[Y.i].sn * 1000; } else break; }
+  if(Y.i !== ilk){ yCiz(); if(!Y.sesli){ bip(true); soyle(YT[Y.seg[Y.i].tp].ses); } return; }
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('ySay', fmt(Y.kalan)); set('yTop', fmt(Y.seg.slice(Y.i + 1).reduce((a, x) => a + x.sn, 0)*1000 + Math.max(0, Y.kalan))); set('yKcal', nf0.format(Y.kcal)); set('yKm', nf2.format(Y.km));
 }
 function gpsKapat(){ if(Y && Y.gps != null){ try { navigator.geolocation.clearWatch(Y.gps); } catch(e){} Y.gps = null; } }
+function yGit(i){ Y.i = i; Y.kalan = Y.seg[i].sn * 1000; Y.son = Date.now(); olayTazele(); yCiz(); if(Y.sesli) sesParca(); else soyle(YT[Y.seg[i].tp].ses); }
 function yKontrol(k){
   if(!Y) return; if(k !== 'bitir') Y.bitirOnay = 0;
-  if(k === 'dur'){ Y.dur = !Y.dur; Y.son = Date.now(); Y.onceki = null; yCiz(); if(Y.dur){ sustur(); toast('Duraklatıldı'); } else soyle('Devam'); }
-  else if(k === 'atla'){ if(Y.i < Y.seg.length - 1){ Y.i++; Y.kalan = Y.seg[Y.i].sn * 1000; yCiz(); soyle(YT[Y.seg[Y.i].tp].ses); } else yBitir(true); }
-  else if(k === 'geri'){ Y.i = Math.max(0, Y.i - 1); Y.kalan = Y.seg[Y.i].sn * 1000; yCiz(); soyle(YT[Y.seg[Y.i].tp].ses); }
-  else if(k === 'ses'){ S.ayar.ses = !S.ayar.ses; save(); if(!S.ayar.ses) sustur(); yCiz(); }
+  if(k === 'dur'){ yTik(); Y.dur = !Y.dur; Y.son = Date.now(); Y.onceki = null; yCiz();
+    if(Y.dur){ sustur(); try { yAudio.pause(); } catch(e){} toast('Duraklatıldı'); } else { olayTazele(); if(Y.sesli) sesParca(); else soyle('Devam'); } }
+  else if(k === 'atla'){ yTik(); if(Y.i < Y.seg.length - 1) yGit(Y.i + 1); else yBitir(true); }
+  else if(k === 'geri'){ yTik(); yGit(Math.max(0, Y.i - 1)); }
+  else if(k === 'ses'){ S.ayar.ses = !S.ayar.ses; save(); if(!S.ayar.ses) sustur(); yAudio.muted = !S.ayar.ses; yCiz(); }
+  else if(/^[he][+-]$/.test(k)){ yTik(); const s = Y.seg[Y.i], art = k[1] === '+' ? 1 : -1;
+    if(k[0] === 'h') s.hiz = Math.round(Math.min(20, Math.max(1, s.hiz + art * 0.5)) * 10) / 10; else s.egim = Math.min(15, Math.max(0, s.egim + art));
+    if(Y.p.hafta){ // haftalık planda aynı tempodaki sonraki bölümler de değişir ve sonraki sefer için hatırlanır
+      Y.seg.forEach((x, i) => { if(i > Y.i && x.tp === s.tp){ x.hiz = s.hiz; x.egim = s.egim; } }); S.ayar.bantT = {...S.ayar.bantT, [s.tp]: {hiz: s.hiz, egim: s.egim}}; save(); }
+    yCiz(); }
   else if(k === 'gps'){ if(!navigator.geolocation) return toast('Bu cihazda konum yok.'); if(Y.gps != null) return;
     const id = navigator.geolocation.watchPosition(pos => { if(!Y || Y.dur) return; const c = pos.coords; if(c.accuracy > 25) return;
       if(Y.onceki){ const R = 6371, r = x => x * Math.PI / 180, dLa = r(c.latitude - Y.onceki.latitude), dLo = r(c.longitude - Y.onceki.longitude), a = Math.sin(dLa/2)**2 + Math.cos(r(Y.onceki.latitude))*Math.cos(r(c.latitude))*Math.sin(dLo/2)**2, km = 2*R*Math.asin(Math.sqrt(a));
         // titreşimi saymamak için iki ölçümün doğruluk payından kısa hareketler atlanır
         if(km * 1000 < Math.max(8, (c.accuracy + (Y.onceki.accuracy || c.accuracy)) / 2)) return; if(km < 0.25) Y.km += km; }
-      Y.onceki = {latitude: c.latitude, longitude: c.longitude, accuracy: c.accuracy}; const g = document.getElementById('yGps'); if(g) g.innerHTML = `📍 ${esc(nf2.format(Y.km))} km`; },
+      Y.onceki = {latitude: c.latitude, longitude: c.longitude, accuracy: c.accuracy}; const g = document.getElementById('yKm'); if(g) g.textContent = nf2.format(Y.km); },
       e => { if(e.code === 1){ gpsKapat(); if(Y) yCiz(); toast('Konum izni verilmedi.'); } }, {enableHighAccuracy: true, maximumAge: 2000, timeout: 30000});
     Y.gps = id; yCiz(); toast('Ekran açık kaldıkça mesafeyi ölçüyorum.'); }
   else if(k === 'bitir'){ if(Date.now() - Y.bitirOnay > 3000){ Y.bitirOnay = Date.now(); const b = document.querySelector('#oyn [data-y="bitir"]'); if(b) b.textContent = 'Bitir? Tekrar dokun'; toast('Bitirmek için tekrar dokun'); return; } yBitir(false); }
 }
 function yBitir(tamam){
   clearInterval(Y.tik); gpsKapat();
-  const dk = Math.round(Y.aktifMs / 60000), km = Y.km, kcal = Y.kcal, h = S.yHafta; Y = null; oynaticiKapat();
-  if(dk < 1){ sustur(); toast('Yürüyüş kaydedilmedi (çok kısa).'); return; }
-  soyle(tamam ? 'Tebrikler, yürüyüş bitti!' : 'Yürüyüş bitti');
-  S.seanslar.push({id: uid(), t: bugun(), ts: Date.now(), ad: `Yürüyüş · ${h}. hafta`, dk, km: km > 0.05 ? Math.round(km*100)/100 : undefined, kcal: Math.round(kcal), gruplar: [], tip: 'yuruyus'});
-  const buHafta = S.seanslar.filter(s => s.tip === 'yuruyus' && s.t >= haftaBasi(bugun())).length;
+  const dk = Math.round(Y.aktifMs / 60000), km = Y.km, kcal = Y.kcal, p = Y.p, sesli = Y.sesli; Y = null; oynaticiKapat();
+  if(tamam && sesli && sesKlip) sesCal(dizi(['bip', 'bitti'])); else { try { yAudio.pause(); } catch(e){} }
+  try { navigator.mediaSession.metadata = null; } catch(e){}
+  if(dk < 1){ sustur(); toast('Kaydedilmedi (çok kısa).'); return; }
+  if(!sesli) soyle(tamam ? 'Tebrikler, bitti!' : 'Bitti');
+  S.seanslar.push({id: uid(), t: bugun(), ts: Date.now(), ad: p.ad, dk, km: km > 0.05 ? Math.round(km*100)/100 : undefined, kcal: Math.round(kcal), gruplar: [], tip: 'yuruyus', yogun: p.seg.some(s => s.tp === 'kosu')});
+  const buHafta = S.seanslar.filter(s => s.tip === 'yuruyus' && s.t >= haftaBasi(bugun())).length, h = p.hafta;
   save(); view.tab = 'bugun'; render();
-  const sh = openSheet(`${head(tamam ? '🎉 Yürüyüş tamam!' : 'Yürüyüş kaydedildi')}<div class="stat3"><div><small>Aktif süre</small><b>${dk} dk</b></div><div><small>Kalori</small><b>≈ ${nf0.format(kcal)}</b></div><div><small>Mesafe</small><b>${km > 0.05 ? esc(nf2.format(km)) + ' km' : '—'}</b></div></div>
-    <div class="note">Bu hafta ${buHafta} yürüyüş yaptın. Planda haftada 5 gün var.</div>
-    ${buHafta >= 5 && h < 8 ? `<button class="btn" id="ySonraki">${h + 1}. haftaya geç</button>` : ''}<div class="btns"><button class="btn ghost" id="yPay" style="flex:1">📤 Paylaş</button><button class="btn" data-close style="flex:1">Tamam</button></div>`, 'Yürüyüş sonu');
+  const sh = openSheet(`${head(tamam ? '🎉 Tebrikler!' : 'Kaydedildi')}<div class="stat3"><div><small>Aktif süre</small><b>${dk} dk</b></div><div><small>Kalori</small><b>≈ ${nf0.format(kcal)}</b></div><div><small>Mesafe</small><b>${km > 0.05 ? esc(nf2.format(km)) + ' km' : '—'}</b></div></div>
+    ${h ? `<div class="note">Bu hafta ${buHafta} yürüyüş yaptın. Planda haftada 5 gün var.</div>` : ''}
+    ${h && buHafta >= 5 && h < 8 ? `<button class="btn" id="ySonraki">${h + 1}. haftaya geç</button>` : ''}<div class="btns"><button class="btn ghost" id="yPay" style="flex:1">📤 Paylaş</button><button class="btn" data-close style="flex:1">Tamam</button></div>`, 'Yürüyüş sonu');
   const ys = document.getElementById('ySonraki'); if(ys) ys.onclick = () => { S.yHafta = h + 1; save(); closeSheet(); render(); toast(`${h + 1}. haftaya geçtin`); };
-  document.getElementById('yPay').onclick = () => paylas(`Bugün ${dk} dk yürüdüm${km > 0.05 ? ', ' + nf2.format(km) + ' km' : ''} 🚶 (Böcekler Spor)`);
+  document.getElementById('yPay').onclick = () => paylas(`Bugün ${dk} dk ${p.bant ? 'koşu bandında yürüdüm' : 'yürüdüm'}${km > 0.05 ? ', ' + nf2.format(km) + ' km' : ''}, ≈ ${nf0.format(kcal)} kcal 🚶 (Böcekler Spor)`);
 }
 
 /* ---------- olaylar ---------- */
 document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { view.tab = b.dataset.tab; render(); window.scrollTo(0, 0); history.replaceState(null, '', '#' + view.tab); });
 document.getElementById('addBtn').onclick = openManuel;
 main.addEventListener('click', e => {
-  const t = e.target.closest('[data-go],[data-uyari],[data-yuru],[data-seans],[data-ekle],[data-hedef],[data-sure],[data-sev],[data-tog],[data-yenile],[data-basla],[data-prog],[data-hrk],[data-grup],[data-hafta],[data-tekrar],[data-favlist],[data-fav]'); if(!t) return;
+  const t = e.target.closest('[data-go],[data-uyari],[data-yuru],[data-seans],[data-ekle],[data-hedef],[data-sure],[data-sev],[data-tog],[data-yenile],[data-basla],[data-prog],[data-hrk],[data-grup],[data-hafta],[data-tekrar],[data-favlist],[data-fav],[data-yer],[data-bantayar],[data-sesdene],[data-bprog],[data-bantgit]'); if(!t) return;
   const d = t.dataset, sec = S.secim; if(!sec.hedef) sec.hedef = varsayilanHedef();
   if(d.go){ view.tab = d.go; render(); window.scrollTo(0, 0); return; }
   if(d.uyari){ S.ayar.uyariOk = true; save(); render(); return; }
@@ -521,6 +649,11 @@ main.addEventListener('click', e => {
   if(d.favlist) return openFavoriler();
   if(d.tekrar){ const son = S.seanslar.filter(s => s.prog).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0]; if(son && son.prog.liste.every(i => HB.has(i))) return oynat(son.prog); return; }
   if(d.prog) return openProgram(d.prog);
+  if(d.yer){ S.ayar.yer = d.yer; save(); render(); return; }
+  if(d.bantayar) return openBantAyar();
+  if(d.sesdene) return sesDene();
+  if(d.bprog) return openBantProg(d.bprog);
+  if(d.bantgit){ S.ayar.yer = 'bant'; save(); view.tab = 'yuruyus'; render(); history.replaceState(null, '', '#yuruyus'); const b = document.getElementById('bantProg'); if(b) b.scrollIntoView(); return; }
   if(d.hrk) return openHareket(d.hrk);
   if(d.grup !== undefined){ view.grup = d.grup; render(); return; }
   if(d.hafta){ S.yHafta = +d.hafta; save(); render(); return; }

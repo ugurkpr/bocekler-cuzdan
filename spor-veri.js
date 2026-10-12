@@ -119,4 +119,21 @@ window.YURUYUS_PLAN = [
   {h:7, adim:'~8.000', not:'Aralıklı × 5, mümkünse hafif yokuş', bolum:[[5,'yavas'],[3,'hizli'],[3,'yavas'],[3,'hizli'],[3,'yavas'],[3,'hizli'],[3,'yavas'],[3,'hizli'],[3,'yavas'],[3,'hizli'],[8,'yavas']]},
   {h:8, adim:'8.000-10.000', not:'35 dk tempolu, sürdür', bolum:[[5,'yavas'],[35,'tempolu'],[5,'yavas']]}
 ];
-window.YURUYUS_TEMPO = {yavas:{ad:'Yavaş', met:2.8, ses:'Yavaşla, rahat bir tempoda yürü'}, rahat:{ad:'Rahat', met:3.5, ses:'Rahat tempoda yürü'}, tempolu:{ad:'Tempolu', met:4.3, ses:'Tempoyu artır. Konuşabilirsin ama şarkı söyleyemezsin'}, hizli:{ad:'Hızlı', met:5.0, ses:'Hızlan! Kollarını salla, adımlarını sıklaştır'}};
+window.YURUYUS_TEMPO = {yavas:{ad:'Yavaş', met:2.8, ses:'Yavaşla, rahat bir tempoda yürü'}, rahat:{ad:'Rahat', met:3.5, ses:'Rahat tempoda yürü'}, tempolu:{ad:'Tempolu', met:4.3, ses:'Tempoyu artır. Konuşabilirsin ama şarkı söyleyemezsin'}, hizli:{ad:'Hızlı', met:5.0, ses:'Hızlan! Kollarını salla, adımlarını sıklaştır'}, kosu:{ad:'Koşu', met:8.0, ses:'Hafif koşuya geç!'}};
+
+// Koşu bandı: her tempo için önerilen hız (km/s) ve eğim (%). Kullanıcı oynatıcıda değiştirirse kendi değeri hatırlanır.
+window.BANT_TEMPO = {yavas:{hiz:4.0, egim:0}, rahat:{hiz:4.8, egim:1}, tempolu:{hiz:5.6, egim:3}, hizli:{hiz:6.3, egim:5}, kosu:{hiz:8.0, egim:1}};
+// bolum: [dakika, tempo, hız km/s, eğim %]
+(() => { const tekrar = (n, a) => Array.from({length: n}, () => a).flat();
+window.BANT_PROG = [
+  {id:'b-tempo', ad:'Tempolu bant yürüyüşü', em:'🚶', sev:1, aciklama:'Hafif eğimde sabit, tempolu yürüyüş. Konuşabildiğin ama şarkı söyleyemediğin hız. Bantta yeniysen buradan başla.',
+    bolum:[[5,'rahat',4.8,1],[20,'tempolu',5.6,3],[5,'yavas',4.0,0]]},
+  {id:'b-egim', ad:'Eğimli interval', em:'📈', sev:2, aciklama:'2 dakika dik yokuş, 2 dakika düz. Koşmadan nabzı yükseltir; dizleri yormadan yağ yakımı için ideal.',
+    bolum:[[5,'rahat',4.5,1], ...tekrar(5, [[2,'hizli',5.5,8],[2,'rahat',5.0,2]]), [5,'yavas',4.0,0]]},
+  {id:'b-12330', ad:'12-3-30 eğimli yürüyüş', em:'⛰️', sev:3, aciklama:'Sosyal medyada popüler program: %12 eğim, saatte 3 mil (4,8 km), 30 dakika. Yürüyüş olduğu halde koşuya yakın kalori yakar. Tutunmadan yürü; zorlanırsan eğimi %6-8’e indir.',
+    bolum:[[5,'rahat',4.0,2],[30,'tempolu',4.8,12],[5,'yavas',4.0,0]]},
+  {id:'b-yurukos', ad:'Yürü-koş', em:'🏃', sev:2, aciklama:'Koşuya geçiş programı: 1 dakika hafif koşu, 2 dakika tempolu yürüyüş. Koşu kısmında nefesin kesilmemeli.',
+    bolum:[[5,'rahat',5.0,1], ...tekrar(6, [[1,'kosu',8.0,1],[2,'tempolu',5.5,1]]), [3,'yavas',4.5,0]]},
+  {id:'b-hiit', ad:'Bant HIIT', em:'🔥', sev:3, aciklama:'Isındıktan sonra 8 tur: 1 dakika hızlı koşu, 1 dakika yürüyüş. Yalnızca düzenli koşabiliyorsan. Bandın hızlanması birkaç saniye sürer; komutu duyunca hemen bas.',
+    bolum:[[5,'rahat',5.5,1], ...tekrar(8, [[1,'kosu',9.5,1],[1,'rahat',5.0,1]]), [4,'yavas',4.5,0]]}
+]; })();
