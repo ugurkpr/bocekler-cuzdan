@@ -6,9 +6,9 @@ const TOKENS = {bg:'--bg',surface:'--surface',sunk:'--sunk',line:'--line',ink:'-
 const BANK_KEY = "cuzdan-defteri-v1";
 const bankSettings = () => { try { return (JSON.parse(localStorage.getItem(BANK_KEY) || "null") || {}).settings || {}; } catch(e){ return {}; } };
 // Her bölümün kendi rengi: Mobil Bank altın sarısı (para, birikim), Sağlık yeşil (sağlık, tazelik). Profil'den değiştirilir.
-const VARSAYILAN = {banka: "sari", saglik: "yesil", spor: "turuncu"};
-const bolumAdi = () => /saglik\.html$/.test(location.pathname) ? "saglik" : /spor\.html$/.test(location.pathname) ? "spor" : "banka";
-const renkOf = (bolum, s) => { s = s || bankSettings(); const id = bolum === "saglik" ? (s.colorSaglik || VARSAYILAN.saglik) : bolum === "spor" ? (s.colorSpor || VARSAYILAN.spor) : (s.color || VARSAYILAN.banka); return PALETTES[id] ? id : VARSAYILAN[bolum]; };
+const VARSAYILAN = {banka: "sari", saglik: "yesil", spor: "turuncu", mutfak: "kirmizi"};
+const bolumAdi = () => /saglik\.html$/.test(location.pathname) ? "saglik" : /spor\.html$/.test(location.pathname) ? "spor" : /mutfak\.html$/.test(location.pathname) ? "mutfak" : "banka";
+const renkOf = (bolum, s) => { s = s || bankSettings(); const id = bolum === "saglik" ? (s.colorSaglik || VARSAYILAN.saglik) : bolum === "spor" ? (s.colorSpor || VARSAYILAN.spor) : bolum === "mutfak" ? (s.colorMutfak || VARSAYILAN.mutfak) : (s.color || VARSAYILAN.banka); return PALETTES[id] ? id : VARSAYILAN[bolum]; };
 function applyTheme(bolum){
   const s = bankSettings(), pal = PALETTES[renkOf(bolum || bolumAdi(), s)], t0 = s.theme || "system";
   const dk = t0 === "dark" || (t0 === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
@@ -25,7 +25,8 @@ try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () =
 const SAYFALAR = [
   {id: "banka", ad: "Mobil Bank", alt: "Gelir, gider, birikim, kartlar", url: "banka.html", ikon: "ikon-banka.jpg"},
   {id: "saglik", ad: "Sağlık", alt: "Kalori, kilo, su, uyku, tarifler", url: "saglik.html", ikon: "ikon-saglik.jpg"},
-  {id: "spor", ad: "Spor", alt: "Antrenman, hareketler, yürüyüş", url: "spor.html", ikon: "ikon-spor.jpg"}
+  {id: "spor", ad: "Spor", alt: "Antrenman, hareketler, yürüyüş", url: "spor.html", ikon: "ikon-spor.jpg"},
+  {id: "mutfak", ad: "Mutfak", alt: "Aylık menü, tarifler, alışveriş", url: "mutfak.html", ikon: "ikon-mutfak.jpg"}
 ];
 function gecisCss(){
   if(document.getElementById("gecis-css")) return;
@@ -40,8 +41,8 @@ function gecisCss(){
 #gecis .gh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #gecis .gh b{font-family:var(--display);font-size:20px}
 #gecis .gh button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:12px;min-height:44px;padding:0 14px;font:inherit;font-weight:600}
-#gecis .gt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-#gecis .gt a{position:relative;display:grid;gap:6px;padding:12px 10px;border-radius:18px;text-decoration:none;min-height:150px;align-content:start}
+#gecis .gt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#gecis .gt a{position:relative;display:grid;gap:6px;padding:12px 10px;border-radius:18px;text-decoration:none;min-height:128px;align-content:start}
 #gecis .gt a img{width:50px;height:50px;border-radius:15px;box-shadow:0 4px 12px rgb(0 0 0 / .18),0 0 0 2px rgb(255 255 255 / .5)}
 #gecis .gt a b{font-family:var(--display);font-size:16px;line-height:1.1}
 #gecis .gt a small{font-size:11.5px;opacity:.85;line-height:1.3}
@@ -55,7 +56,7 @@ function gecisCss(){
 function gecis(){
   if(document.getElementById("gecis")) return;
   gecisCss();
-  const s = bankSettings(), dk = document.documentElement.style.colorScheme === "dark", burada = /saglik\.html$/.test(location.pathname) ? "saglik" : /banka\.html$/.test(location.pathname) ? "banka" : /spor\.html$/.test(location.pathname) ? "spor" : /profil\.html$/.test(location.pathname) ? "profil" : "ana";
+  const s = bankSettings(), dk = document.documentElement.style.colorScheme === "dark", burada = /saglik\.html$/.test(location.pathname) ? "saglik" : /banka\.html$/.test(location.pathname) ? "banka" : /spor\.html$/.test(location.pathname) ? "spor" : /mutfak\.html$/.test(location.pathname) ? "mutfak" : /profil\.html$/.test(location.pathname) ? "profil" : "ana";
   const esc = x => String(x).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const box = document.createElement("div"); box.id = "gecis"; box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Bölüm değiştir");
   box.innerHTML = `<div class="gs"></div><div class="gp"><div class="gi"><div class="gg"></div>

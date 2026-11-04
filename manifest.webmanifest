@@ -1,7 +1,7 @@
 {
   "name": "Böcekler",
   "short_name": "Böcekler",
-  "description": "Mobil Bank ve Sağlık: gelir-gider, birikim, kalori, kilo, su ve uyku takibi",
+  "description": "Mobil Bank, Sağlık, Spor ve Mutfak: gelir-gider, birikim, kalori, antrenman, aylık menü ve tarifler",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

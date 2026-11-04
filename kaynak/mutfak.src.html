@@ -1,0 +1,275 @@
+<title>Böcekler · Mutfak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<style>
+/*BANKCSS*/
+/* ---- Mutfak bölümüne özel ---- */
+nav.tabs .in{grid-template-columns:repeat(3,minmax(0,1fr))}
+.top .chef{flex:none;width:44px;height:44px;border-radius:14px;overflow:hidden;box-shadow:0 0 0 2px var(--surface),0 3px 10px rgb(0 0 0 / .15)}
+.top .chef img{width:100%;height:100%;object-fit:cover;display:block}
+.dnav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px}
+.dnav button{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1}
+.dnav .t{text-align:center;min-width:0}
+.dnav .t b{display:block;font-family:var(--display);font-size:20px;line-height:1.15}
+.dnav .t small{color:var(--muted);font-size:13px;font-weight:600}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px}
+.week button{border:1px solid transparent;background:none;border-radius:12px;padding:6px 0 7px;display:grid;justify-items:center;gap:2px;color:var(--ink);font:inherit}
+.week button small{font-size:11px;font-weight:600;color:var(--muted)}
+.week button b{font-size:16px;font-variant-numeric:tabular-nums}
+.week button i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.week button[aria-pressed="true"]{background:var(--surface);border-color:var(--line)}
+.week button.bugun b{color:var(--accent-text)}
+.k-tencere{background:var(--accent)!important}.k-keyif{background:#F0A23A!important}.k-tava,.k-firin{background:var(--muted)!important}.k-hazirlik{background:var(--ink)!important}
+.dish{position:relative;overflow:hidden;grid-template-columns:1fr auto;align-items:end}
+.dish h1{font-family:var(--display);font-size:clamp(24px,7vw,30px);line-height:1.08;margin:4px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.dish .sq{width:96px;height:96px;border-radius:24px;overflow:hidden;box-shadow:0 6px 18px rgb(0 0 0 / .18),0 0 0 3px rgb(255 255 255 / .5);align-self:start}
+.dish .sq img{width:100%;height:100%;object-fit:cover;display:block}
+.dish .meta{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.dish .meta span{background:color-mix(in srgb,var(--accent-ink) 12%,transparent);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
+.hatir{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:var(--accent-soft);border:0}
+.hatir .em{font-size:22px;line-height:1.2}
+.hatir b{display:block;margin-bottom:2px}
+.ing{list-style:none;margin:0;padding:0}
+.ing li{border-top:1px solid var(--line)}
+.ing li:first-child{border-top:0}
+.ing label{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;min-height:46px;cursor:pointer;font-size:15px}
+.ing input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent)}
+.ing input:checked + span{color:var(--muted);text-decoration:line-through}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;font-size:15px;line-height:1.5}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent-text);font-weight:700;font-size:14px;display:grid;place-items:center}
+.side{display:grid;gap:12px}
+.side h3{margin:0;font-family:var(--display);font-size:17px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:999px;padding:3px 8px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.tag.tencere{background:var(--accent-soft);color:var(--accent-text)}
+.tag.keyif{background:#FDEBD0;color:#8A4B00}
+.item.bugun{background:var(--accent-soft)}
+.item .dt{width:46px;flex:none;text-align:center;line-height:1.1}
+.item .dt b{display:block;font-family:var(--display);font-size:19px;font-variant-numeric:tabular-nums}
+.item .dt small{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.item .mid b{white-space:normal}
+.shop .item{align-items:flex-start}
+.shop .item input{flex:none;width:22px;height:22px;margin-top:1px;accent-color:var(--accent)}
+.shop .item.ok .mid b{text-decoration:line-through;color:var(--muted)}
+.shop .cat{background:var(--sunk);font-weight:600;font-size:13px;padding:8px 14px}
+.evde{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--accent-text)}
+.cta{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;border:0;padding:14px;border-radius:var(--r);background:var(--sunk);color:var(--ink)}
+.cta .em{font-size:28px}
+.cta b{display:block;font-family:var(--display);font-size:16px}
+.cta small{color:var(--muted);font-size:13px}
+.uyari{background:var(--accent-soft);border-color:transparent;display:grid;gap:8px}
+input[type=date]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:46px;width:100%}
+</style>
+<script src="ortak.js"></script>
+<script src="mutfak-veri.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand home" href="./" aria-label="Böcekler bölüm geçişi"><span class="homei" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></span><span>Böcekler<small>Mutfak</small></span></a>
+    <span class="chef" aria-hidden="true"><img src="ikon-mutfak.jpg" alt="" width="44" height="44"></span>
+  </header>
+  <main id="main"></main>
+</div>
+<nav class="tabs" aria-label="Sekmeler"><div class="in">
+  <button class="tab" data-tab="gun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7c0-1.5 1-1.5 1-3M14 7c0-1.5 1-1.5 1-3"/></svg>Bugün</button>
+  <button class="tab" data-tab="takvim"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Takvim</button>
+  <button class="tab" data-tab="liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h2l2.5 11h10L20 8H6.5"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>Alışveriş</button>
+</div></nav>
+<div id="sheetRoot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+(() => {
+const APP_VERSION = '1.0 · 4 Kasım 2026';
+const KEY = 'bocekler-mutfak-v1';
+const mode = 'local';
+const M = window.MUTFAK, R = M.recipes, SD = M.sides, PLAN = M.plan, GUN = PLAN.length - 1;
+const pad = n => String(n).padStart(2,'0');
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const bugun = () => isoOf(new Date());
+const addDays = (iso, n) => { const d = new Date(iso+'T12:00'); d.setDate(d.getDate()+n); return isoOf(d); };
+const fark = (a, b) => Math.round((new Date(a+'T12:00') - new Date(b+'T12:00')) / 864e5);
+const dayLabel = (iso, opt={day:'numeric',month:'long',weekday:'long'}) => new Date(iso+'T12:00').toLocaleDateString('tr-TR', opt);
+const tl = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0});
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT; function toast(m){ const t = document.getElementById('toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+
+/* ---------- veri ---------- */
+const BAS0 = '2026-11-04';   // ilk alışveriş günü; Takvim'den değiştirilebilir
+const blank = () => ({bas: BAS0, tik: {}, alindi: {}});
+let okumaHatasi = false;
+let S = (() => { try { const raw = localStorage.getItem(KEY); if(!raw) return blank(); const d = JSON.parse(raw);
+  if(d && typeof d === 'object') return {bas: /^\d{4}-\d{2}-\d{2}$/.test(d.bas) ? d.bas : BAS0, tik: d.tik && typeof d.tik === 'object' ? d.tik : {}, alindi: d.alindi && typeof d.alindi === 'object' ? d.alindi : {}}; } catch(e){ okumaHatasi = true; } return blank(); })();
+function snapYaz(){ Bocekler.snap('mutfak', {bas: S.bas, adlar: PLAN.map(([id, mod]) => (mod === 'gun2' ? '↻ ' : '') + R[id].name)}); }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); okumaHatasi = false; } catch(e){ toast('Kayıt yapılamadı.'); } snapYaz(); }
+
+const TUR = {tencere: 'Tencere', keyif: 'Keyif akşamı', tava: 'Tava', firin: 'Fırın', hazirlik: 'Alışveriş günü', ekstra: 'Ekstra'};
+const turYazi = (r, mod) => r.kind === 'tencere' ? `Tencere · ${mod === 'gun2' ? '2' : '1'}. gün` : TUR[r.kind];
+const gunOf = iso => fark(iso, S.bas);
+const plnOf = iso => { const i = gunOf(iso); return i >= 0 && i <= GUN ? {i, id: PLAN[i][0], mod: PLAN[i][1], ek: PLAN[i][2]} : null; };
+const yapilanGun = (i, id) => { for(let j = i - 1; j >= 0; j--) if(PLAN[j][0] === id && PLAN[j][1] === 'yap') return j; return i - 1; };
+
+/* ---------- görünüm ---------- */
+const TABS = ['gun','takvim','liste'];
+let view = {tab: TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'gun', gun: bugun()};
+const main = document.getElementById('main'), sheetRoot = document.getElementById('sheetRoot');
+function render(){
+  Bocekler.applyTheme();
+  document.querySelectorAll('nav .tab').forEach(b => { if(b.dataset.tab === view.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  main.innerHTML = view.tab === 'gun' ? rGun() : view.tab === 'takvim' ? rTakvim() : rListe();
+  maybeTips(currentTipKey());
+}
+
+const tikli = (k) => !!S.tik[k];
+const ingList = (list, pre) => `<ul class="ing items">${list.map((t, n) => { const k = pre + n; return `<li><label><input type="checkbox" data-tik="${esc(k)}" ${tikli(k) ? 'checked' : ''}><span>${esc(t)}</span></label></li>`; }).join('')}</ul>`;
+const stepList = list => `<ol class="steps">${list.map(t => `<li><span>${esc(t)}</span></li>`).join('')}</ol>`;
+const sideHTML = (sid, pre) => { const s = SD[sid]; return `<section class="side"><div class="sec-head" style="margin:0"><h2>Yanına: ${esc(s.name)}</h2><small>${esc(s.time)}</small></div>${ingList(s.ing, pre)}${s.steps.length > 1 ? `<div class="card">${stepList(s.steps)}</div>` : `<p class="note" style="margin:0 2px">${esc(s.steps[0])}</p>`}</section>`; };
+
+function hatirlatma(p){
+  if(!p || p.i >= GUN) return '';
+  const [nid, nmod] = PLAN[p.i + 1], n = R[nid], out = [];
+  if(nmod !== 'yap') return '';
+  if(n.soak) out.push(`Bu akşam ${n.soak} bol suda ıslatmaya koy.`);
+  if(n.et.length) out.push(p.i === 0 ? `Ayırdığın ${n.et.join(', ')} poşetini dondurma, buzdolabında bırak.` : `${n.et.join(', ')} poşetini buzluktan buzdolabına al.`);
+  if(nid === 'doner') out.push('Yarın sabah tavuğu marine etmeyi unutma.');
+  if(!out.length) return '';
+  return `<section><div class="card hatir"><span class="em" aria-hidden="true">⏰</span><span><b>Yarın ${esc(n.name)} var</b><span class="note" style="color:var(--ink)">${out.map(esc).join(' ')}</span></span></div></section>`;
+}
+
+function rGun(){
+  const t = bugun(), g = view.gun, p = plnOf(g), d = fark(g, t);
+  const rel = d === 0 ? 'Bugün' : d === 1 ? 'Yarın' : d === -1 ? 'Dün' : '';
+  const pzt = addDays(g, -((new Date(g+'T12:00').getDay() + 6) % 7));
+  const hafta = Array.from({length: 7}, (_, k) => addDays(pzt, k));
+  const nav = `<section style="margin-top:0"><div class="dnav"><button data-gun="${addDays(g, -1)}" aria-label="Önceki gün">‹</button>
+    <div class="t"><b>${esc(dayLabel(g, {weekday:'long', day:'numeric', month:'long'}))}</b><small>${rel ? rel + ' · ' : ''}${p ? (p.i === 0 ? 'Alışveriş günü' : `${p.i}. gün / ${GUN}`) : 'Plan dışında'}</small></div>
+    <button data-gun="${addDays(g, 1)}" aria-label="Sonraki gün">›</button></div>
+    <div class="week">${hafta.map(h => { const q = plnOf(h), k = q ? R[q.id].kind : ''; return `<button data-gun="${h}" aria-pressed="${h === g}" class="${h === t ? 'bugun' : ''}" aria-label="${esc(dayLabel(h))}${q ? ': ' + esc(R[q.id].name) : ''}"><small>${esc(dayLabel(h, {weekday:'short'}))}</small><b>${new Date(h+'T12:00').getDate()}</b><i class="${k ? 'k-' + k : ''}"></i></button>`; }).join('')}</div>
+    ${d !== 0 ? `<div class="btns" style="justify-content:center;margin-top:8px"><button class="chip" data-gun="${t}">Bugüne dön</button></div>` : ''}</section>`;
+  if(!p){
+    const once = gunOf(g) < 0;
+    return `${nav}<section><div class="card empty"><b>${once ? 'Plan henüz başlamadı' : 'Bu ayın planı bitti'}</b>${once ? `Alışveriş günü ${esc(dayLabel(S.bas, {day:'numeric', month:'long'}))}. İleri ok ile o güne geç.` : 'Aynı 28 günlük menüyü yeniden başlatabilirsin; alışveriş listesi de sıfırlanır.'}
+      ${once ? '' : `<div class="btns" style="justify-content:center;margin-top:12px"><button class="btn" data-yeniay="1">Yeni ayı bugün başlat</button></div>`}</div></section>`;
+  }
+  const r = R[p.id], gun2 = p.mod === 'gun2', pre = `${g}:`;
+  const hero = `<section><div class="hero dish"><span><span class="label">${rel ? (rel === 'Bugün' ? 'Bu akşam' : rel + ' akşam') : esc(dayLabel(g, {weekday:'long'})) + ' akşamı'}</span><h1>${esc(r.name)}</h1></span>
+    <span class="sq" aria-hidden="true"><img src="ikon-mutfak.jpg" alt=""></span>
+    <div class="meta"><span>${esc(turYazi(r, p.mod))}</span>${gun2 ? '<span>Isıt, 10 dk</span>' : `<span>${esc(r.time)}</span><span>${esc(r.serves)}</span>`}</div></div></section>`;
+  let govde;
+  if(gun2){
+    const j = yapilanGun(p.i, p.id), firin = ['izmir','guvec'].includes(p.id);
+    govde = `<section><div class="sec-head"><h2>Dünden kalan</h2><small>${esc(dayLabel(addDays(S.bas, j), {day:'numeric', month:'long'}))} yapıldı</small></div>
+      <div class="card">${stepList(firin ? ['Saklama kabındaki yemeği fırın kabına al, üstünü folyoyla kapat.', '180°C fırında 15 dakika ısıt. Acelen varsa tencerede 2-3 kaşık su ile kısık ateşte 10 dakika da olur.'] : ['Yemeği tencereye al, 2-3 kaşık su ekle.', 'Kapağı kapalı kısık ateşte arada karıştırarak 8-10 dakika ısıt.', 'Zeytinyağlı sebze yemeklerini istersen ılık da yiyebilirsin.'])}</div>
+      <button class="btn ghost" data-tarif="${esc(p.id)}" style="width:100%;margin-top:10px">Tarifin tamamını aç</button></section>`;
+  } else {
+    govde = `<section><div class="sec-head"><h2>Malzemeler</h2><small>Dokun: hazırladım</small></div>${ingList(r.ing, pre + 'm')}</section>
+      <section><div class="sec-head"><h2>Yapılışı</h2></div><div class="card">${stepList(r.steps)}</div>
+      ${r.note ? `<p class="note" style="margin:10px 2px 0">💡 ${esc(r.note)}</p>` : ''}</section>`;
+  }
+  const yanlar = [...(gun2 ? [] : (r.side || [])), ...(p.ek || [])];
+  return `${okumaHatasi ? `<section style="margin-top:0"><div class="card uyari"><b>Mutfak kayıtları okunamadı</b><span class="note" style="color:var(--ink)">Kayıtların bozulmuş olabilir. İşaretlerin sıfırdan başlıyor.</span></div></section>` : ''}
+    ${nav}${hero}${hatirlatma(p)}${govde}${yanlar.map(s => sideHTML(s, pre + 's' + s)).join('')}
+    <section><button class="cta" data-tarif="corba"><span class="em" aria-hidden="true">🥣</span><span><b>Tek kaldığın akşam</b><small>Kırmızı mercimek çorbası · 30 dk · buzlukta 1 ay durur</small></span><span class="chev" aria-hidden="true">›</span></button></section>`;
+}
+
+function rTakvim(){
+  const t = bugun();
+  const haftalar = [];
+  for(let i = 0; i <= GUN; i++){ const w = i === 0 ? 0 : Math.ceil(i / 7); (haftalar[w] = haftalar[w] || []).push(i); }
+  const sayi = PLAN.filter(([id, m]) => R[id].kind === 'tencere' && m === 'yap').length, keyif = PLAN.filter(([id]) => R[id].kind === 'keyif').length;
+  return `<section style="margin-top:0"><div class="hero"><span class="label">28 günlük menü</span>
+    <div class="row"><div class="cell"><span class="label">Tencere yemeği</span><b>${sayi} çeşit · 2'şer gün</b></div><div class="cell"><span class="label">Keyif akşamı</span><b>${keyif} cuma</b></div></div>
+    <span style="font-size:14px">Zeytinyağı ağırlıklı, kızartmasız; köfteler fırında ya da az yağlı tavada. Etler kasaptan, alışveriş günü porsiyonlanıp dondurulur.</span></div></section>
+    ${haftalar.map((g, w) => `<section><div class="sec-head"><h2>${w === 0 ? 'Hazırlık' : w + '. hafta'}</h2><small>${esc(dayLabel(addDays(S.bas, g[0]), {day:'numeric', month:'short'}))}${g.length > 1 ? ' – ' + esc(dayLabel(addDays(S.bas, g[g.length-1]), {day:'numeric', month:'short'})) : ''}</small></div>
+      <div class="items">${g.map(i => { const [id, mod] = PLAN[i], r = R[id], iso = addDays(S.bas, i);
+        return `<button class="item${iso === t ? ' bugun' : ''}" data-git="${iso}"><span class="dt"><b>${new Date(iso+'T12:00').getDate()}</b><small>${esc(dayLabel(iso, {weekday:'short'}))}</small></span>
+          <span class="mid"><b>${mod === 'gun2' ? '↻ ' : ''}${esc(r.name)}</b><small>${mod === 'gun2' ? 'Dünden kalan, ısıt' : esc(r.time)}${iso === t ? ' · bugün' : ''}</small></span>
+          <span class="tag ${r.kind}">${esc(turYazi(r, mod))}</span></button>`; }).join('')}</div></section>`).join('')}
+    <section><div class="card" style="display:grid;gap:10px"><b style="font-family:var(--display);font-size:17px">Alışveriş günü</b>
+      <span class="note">Menü bu günden sayılır: ertesi gün 1. gün olur. Alışverişi başka gün yaptıysan buradan değiştir.</span>
+      <input type="date" id="basGun" value="${esc(S.bas)}" aria-label="Alışveriş günü"></div>
+      <p class="note" style="margin:10px 2px 0">Sürüm ${APP_VERSION}</p></section>`;
+}
+
+function shopGrup(rows, grup){
+  let cat = '', html = '';
+  for(const r of rows){
+    if(r.cat !== cat){ cat = r.cat; html += `<div class="cat">${esc(cat)}</div>`; }
+    const k = grup + ':' + r.key, ok = !!S.alindi[k];
+    html += `<label class="item${ok ? ' ok' : ''}"><input type="checkbox" data-al="${esc(k)}" ${ok ? 'checked' : ''}><span class="mid"><b>${esc(r.name)}${r.pantry ? '<span class="evde">evde varsa alma</span>' : ''}</b><small>${esc(r.qty)} · ${esc(r.unit)}</small></span><span class="amt">${esc(tl.format(r.cost))}</span></label>`;
+  }
+  return `<div class="items shop">${html}</div>`;
+}
+function rListe(){
+  const kalan = (rows, g) => rows.filter(r => !S.alindi[g + ':' + r.key]).reduce((a, r) => a + r.cost, 0);
+  const A = M.shopA, B = M.shopB, T = M.totals, kA = kalan(A, 'A'), kB = kalan(B, 'B'), tB = addDays(S.bas, 14);
+  return `<section style="margin-top:0"><div class="hero"><span class="label">Aylık tahmini tutar</span><span class="big num">${esc(tl.format(T.all))}</span>
+    <div class="row"><div class="cell"><span class="label">Bugün</span><b class="num">${esc(tl.format(T.A))}</b></div><div class="cell"><span class="label">${esc(dayLabel(tB, {day:'numeric', month:'long'}))} tazeleme</span><b class="num">${esc(tl.format(T.B))}</b></div></div>
+    <span style="font-size:14px">Kalan: <strong class="num">${esc(tl.format(kA + kB))}</strong> · Kasap: ${esc(tl.format(T.meat))} · Evde olabilecekler: ${esc(tl.format(T.pantry))}</span></div></section>
+    <section><div class="sec-head"><h2>Bugün al</h2><small>Et, kiler ve ilk 2 haftanın tazesi</small></div>${shopGrup(A, 'A')}</section>
+    <section><div class="sec-head"><h2>${esc(dayLabel(tB, {day:'numeric', month:'long', weekday:'long'}))}</h2><small>Son 2 haftanın tazesi</small></div>${shopGrup(B, 'B')}</section>
+    <section><p class="note" style="margin:0 2px">Et fiyatları Samsun kasabı için tahmindir (kıyma 900, göğüs 280, kemiksiz but 250 TL/kg). Diğerleri Kasım 2026 zincir market raf fiyatlarından; File'de küçük farklar olabilir. Kasap ve manavda miktarı söyle, tartarak alırsın.</p>
+      <div class="btns" style="margin-top:12px"><button class="btn ghost" data-sifirla="1" style="flex:1">İşaretleri sıfırla</button></div></section>`;
+}
+
+/* ---------- pencereler ---------- */
+let geriFn = null;
+function openSheet(html, label, geri){ geriFn = geri || null; sheetRoot.innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="in"><div class="grab"></div>${html}</div></div>`;
+  sheetRoot.querySelectorAll('[data-close]').forEach(b => b.onclick = closeSheetAnimated); return sheetRoot.querySelector('.sheet'); }
+const head = t => `<div class="sec-head" style="margin:0"><h2>${esc(t)}</h2><button class="icon-btn" data-close>Kapat</button></div>`;
+function closeSheet(){ geriFn = null; sheetRoot.innerHTML = ''; }
+function closeSheetAnimated(){ if(geriFn){ const g = geriFn; geriFn = null; return g(); } const sh = sheetRoot.querySelector('.sheet'), sc = sheetRoot.querySelector('.scrim'); if(!sh) return closeSheet();
+  sh.style.transition = 'transform .2s ease-in'; sh.style.transform = 'translateY(105%)'; if(sc){ sc.style.transition = 'opacity .2s'; sc.style.opacity = '0'; } setTimeout(closeSheet, 200); }
+/*SWIPE*/
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && sheetRoot.innerHTML) closeSheetAnimated(); });
+function openTarif(id){
+  const r = R[id];
+  openSheet(`${head(r.name)}<div class="chips"><span class="tag ${r.kind}">${esc(TUR[r.kind])}</span><span class="tag">${esc(r.time)}</span><span class="tag">${esc(r.serves)}</span></div>
+    <div><div class="label" style="margin-bottom:8px">Malzemeler</div><div class="items" style="padding:10px 14px"><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${r.ing.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div></div>
+    <div><div class="label" style="margin-bottom:8px">Yapılışı</div>${stepList(r.steps)}</div>${r.note ? `<p class="note" style="margin:0">💡 ${esc(r.note)}</p>` : ''}`, r.name);
+}
+
+/* ---------- olaylar ---------- */
+const gec = tab => { view.tab = tab; render(); window.scrollTo(0, 0); history.replaceState(null, '', '#' + tab); };
+document.querySelectorAll('nav .tab').forEach(b => b.onclick = () => { if(b.dataset.tab === 'gun' && view.tab === 'gun') view.gun = bugun(); gec(b.dataset.tab); });
+let sifirOnay = 0;
+main.addEventListener('click', e => {
+  const t = e.target.closest('[data-gun],[data-git],[data-tarif],[data-yeniay],[data-sifirla]'); if(!t) return;
+  const d = t.dataset;
+  if(d.gun){ view.gun = d.gun; render(); return; }
+  if(d.git){ view.gun = d.git; gec('gun'); return; }
+  if(d.tarif) return openTarif(d.tarif);
+  if(d.yeniay){ S = {bas: addDays(bugun(), -0), tik: {}, alindi: {}}; save(); view.gun = bugun(); render(); toast('Yeni ay başladı: bugün alışveriş günü'); return; }
+  if(d.sifirla){ if(Date.now() - sifirOnay > 3000){ sifirOnay = Date.now(); t.textContent = 'Emin misin? Tekrar dokun'; return; } S.alindi = {}; save(); render(); toast('Alışveriş işaretleri sıfırlandı'); }
+});
+main.addEventListener('change', e => {
+  const el = e.target;
+  if(el.dataset.tik !== undefined){ if(el.checked) S.tik[el.dataset.tik] = 1; else delete S.tik[el.dataset.tik];
+    // eski günlerin işaretleri birikmesin
+    const sinir = addDays(bugun(), -7); for(const k of Object.keys(S.tik)) if(k.slice(0, 10) < sinir) delete S.tik[k]; save(); return; }
+  if(el.dataset.al !== undefined){ if(el.checked) S.alindi[el.dataset.al] = 1; else delete S.alindi[el.dataset.al]; save(); const y = scrollY; render(); scrollTo(0, y); return; }
+  if(el.id === 'basGun' && /^\d{4}-\d{2}-\d{2}$/.test(el.value)){ S.bas = el.value; save(); render(); toast('Menü ' + dayLabel(S.bas, {day:'numeric', month:'long'}) + ' alışverişine göre ayarlandı'); }
+});
+
+/* ---------- tek seferlik ipuçları ---------- */
+const TIP_KEY = 'ipuclari-v1';
+const tipSeen = () => { try { return JSON.parse(localStorage.getItem(TIP_KEY) || '{}') || {}; } catch(e){ return {}; } };
+const tipMark = k => { try { const s = tipSeen(); s[k] = 1; localStorage.setItem(TIP_KEY, JSON.stringify(s)); } catch(e){} };
+const TIPS = {
+  'm-gun': [['.dish', 'Bu akşamın yemeği', 'Tarihe göre o günün menüsü açılır. Oklarla ya da haftadaki günlere dokunarak başka günün yemeğine bak.'],
+    ['.ing', 'Malzemeler', 'Hazırladığın malzemeye dokun, üstü çizilsin.']],
+  'm-takvim': [['.items', 'Ayın menüsü', 'Bir güne dokun, o günün tarifi açılır. ↻ olanlar bir önceki günün tenceresinden.']],
+  'm-liste': [['.shop', 'Alışveriş listesi', 'Sepete koyduğun ürünü işaretle; kalan tutar üstte güncellenir.']]
+};
+const currentTipKey = () => 'm-' + view.tab;
+/*TIPENGINE*/
+
+render(); snapYaz();
+addEventListener('pageshow', e => { if(e.persisted) render(); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden && !sheetRoot.innerHTML) render(); });
+if('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

@@ -2000,8 +2000,8 @@ function stopRecurring(rid){
 }
 
 async function exportData(){
-  let saglik = null, spor = null; try { saglik = JSON.parse(localStorage.getItem('bocekler-saglik-v1') || 'null'); spor = JSON.parse(localStorage.getItem('bocekler-spor-v1') || 'null'); } catch(e){}
-  const json = JSON.stringify({app:'bocekler-cuzdan', v:1, exported:todayISO, settings:S.settings, months:S.months, rates:S.rates, saglik, spor}, null, 1);
+  let saglik = null, spor = null, mutfak = null; try { saglik = JSON.parse(localStorage.getItem('bocekler-saglik-v1') || 'null'); spor = JSON.parse(localStorage.getItem('bocekler-spor-v1') || 'null'); mutfak = JSON.parse(localStorage.getItem('bocekler-mutfak-v1') || 'null'); } catch(e){}
+  const json = JSON.stringify({app:'bocekler-cuzdan', v:1, exported:todayISO, settings:S.settings, months:S.months, rates:S.rates, saglik, spor, mutfak}, null, 1);
   const name = `bocekler-cuzdan-yedek-${todayISO}.json`;
   try {
     const file = new File([json], name, {type:'application/json'});
@@ -2044,6 +2044,7 @@ function importData(ev){
       } else saveLocal();
       if(d.saglik && typeof d.saglik === 'object' && !Array.isArray(d.saglik)) try { localStorage.setItem('bocekler-saglik-v1', JSON.stringify(d.saglik)); } catch(e){}
       if(d.spor && typeof d.spor === 'object' && !Array.isArray(d.spor)) try { localStorage.setItem('bocekler-spor-v1', JSON.stringify(d.spor)); } catch(e){}
+      if(d.mutfak && typeof d.mutfak === 'object' && !Array.isArray(d.mutfak)) try { localStorage.setItem('bocekler-mutfak-v1', JSON.stringify(d.mutfak)); } catch(e){}
       render(); toast(d.saglik ? 'Yedek yüklendi (Sağlık dahil)' : 'Yedek yüklendi');
     };
   };
