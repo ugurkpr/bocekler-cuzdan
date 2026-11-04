@@ -519,7 +519,7 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--bg);border:1px s
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
 (() => {
-const APP_VERSION = '1.2 · 4 Kasım 2026';
+const APP_VERSION = '1.3 · 4 Kasım 2026';
 const KEY = 'bocekler-mutfak-v1';
 const mode = 'local';
 const M = window.MUTFAK, R = M.recipes, SD = M.sides, PLAN = M.plan, GUN = PLAN.length - 1;
@@ -579,10 +579,10 @@ function hatirlatma(p){
   const [nid, nmod] = PLAN[p.i + 1], n = R[nid], out = [];
   if(nmod !== 'yap') return '';
   if(n.soak) out.push(`Bu akşam ${n.soak} bol suda ıslatmaya koy.`);
-  if(n.et.length) out.push(p.i === 0 ? `Ayırdığın ${n.et.join(', ')} poşetini dondurma, buzdolabında bırak.` : `${n.et.join(', ')} poşetini buzluktan buzdolabına al.`);
+  if(n.et.length) out.push(p.i === 0 ? `Bu yemeğin etini (${n.et.join(', ')}) dondurma, buzdolabında bırak.` : `${n.et.join(', ')} poşetini buzluktan buzdolabına al.`);
   if(nid === 'doner') out.push('Yarın sabah tavuğu marine etmeyi unutma.');
   if(!out.length) return '';
-  return `<section><div class="card hatir"><span class="em" aria-hidden="true">⏰</span><span><b>Yarın ${esc(n.name)} var</b><span class="note" style="color:var(--ink)">${out.map(esc).join(' ')}</span></span></div></section>`;
+  return `<section><div class="sec-head"><h2>Yarın için hazırlık</h2></div><div class="card hatir"><span class="em" aria-hidden="true">⏰</span><span><b>Yarının yemeği: ${esc(n.name)}</b><span class="note" style="color:var(--ink)">${out.map(esc).join(' ')}</span></span></div></section>`;
 }
 
 function rGun(){
@@ -601,15 +601,24 @@ function rGun(){
       ${once ? '' : `<div class="btns" style="justify-content:center;margin-top:12px"><button class="btn" data-yeniay="1">Yeni ayı bugün başlat</button></div>`}</div></section>`;
   }
   const r = R[p.id], gun2 = p.mod === 'gun2', pre = `${g}:`;
-  const hero = `<section><div class="hero dish"><span><span class="label">${rel ? (rel === 'Bugün' ? 'Bu akşam' : rel + ' akşam') : esc(dayLabel(g, {weekday:'long'})) + ' akşamı'}</span><h1>${esc(r.name)}</h1></span>
+  const hero = `<section><div class="hero dish"><span><span class="label">${r.kind === 'hazirlik' ? (rel || esc(dayLabel(g, {weekday:'long'}))) + ' · eti hazırla' : rel ? (rel === 'Bugün' ? 'Bu akşam' : rel + ' akşam') : esc(dayLabel(g, {weekday:'long'})) + ' akşamı'}</span><h1>${esc(r.name)}</h1></span>
     <span class="sq" aria-hidden="true"><img src="ikon-mutfak.jpg" alt=""></span>
-    <div class="meta"><span>${esc(turYazi(r, p.mod))}</span>${gun2 ? '<span>Isıt, 10 dk</span>' : `<span>${esc(r.time)}</span><span>${esc(r.serves)}</span>`}</div></div></section>`;
+    <div class="meta">${r.kind === 'hazirlik' ? '' : `<span>${esc(turYazi(r, p.mod))}</span>`}${gun2 ? '<span>Isıt, 10 dk</span>' : `<span>${esc(r.time)}</span><span>${esc(r.serves)}</span>`}</div></div></section>`;
   let govde;
   if(gun2){
     const j = yapilanGun(p.i, p.id);
     govde = `<section><div class="sec-head"><h2>Dünden kalan</h2><small>${esc(dayLabel(addDays(S.bas, j), {day:'numeric', month:'long'}))} yapıldı</small></div>
       <div class="card">${stepList(['Yemeği tencereye al, 2-3 kaşık su ekle.', 'Kapağı kapalı kısık ateşte arada karıştırarak 8-10 dakika ısıt.', 'Zeytinyağlı sebze yemeklerini istersen ılık da yiyebilirsin.'])}</div>
       <button class="btn ghost" data-tarif="${esc(p.id)}" style="width:100%;margin-top:10px">Tarifin tamamını aç</button></section>`;
+  } else if(r.kind === 'hazirlik'){
+    // ay boyu kullanılacak et poşetleri: hangi gün, hangi yemek, ne kadar
+    const poset = []; for(let i = 1; i <= GUN; i++){ const [id, mod] = PLAN[i]; if(mod === 'yap' && R[id].et.length) poset.push({i, r: R[id]}); }
+    govde = `<section><div class="card hatir"><span class="em" aria-hidden="true">🛒</span><span><b>Bu akşam yemek yok, hazırlık var</b><span class="note" style="color:var(--ink)">Alışverişten dönünce iki iş yap: önce köfte harcını yoğur, sonra bütün eti aşağıdaki listeye göre poşetle. Karnın açsa en alttaki çorba 30 dakikada hazır.</span></span></div></section>
+      <section><div class="sec-head"><h2>1. Köfte harcı</h2><small>1,2 kg kıymadan</small></div>${ingList(r.ing, pre + 'm')}<div class="card" style="margin-top:10px">${stepList(r.steps)}</div></section>
+      <section><div class="sec-head"><h2>2. Et poşetleri</h2><small>Dokun: poşetledim</small></div>
+        <p class="note" style="margin:-4px 2px 10px">Her poşete tarihi ve yemeğin adını yaz, düz şekilde dondur. ${esc(dayLabel(addDays(S.bas, 1), {day:'numeric', month:'long'}))} poşetini dondurma, buzdolabında beklet.</p>
+        <ul class="ing items">${poset.map(({i, r: y}) => { const k = pre + 'p' + i; return `<li><label><input type="checkbox" data-tik="${esc(k)}" ${tikli(k) ? 'checked' : ''}><span><b>${esc(dayLabel(addDays(S.bas, i), {day:'numeric', month:'short', weekday:'short'}))}</b> · ${esc(y.name)}<br><small style="color:var(--muted)">${esc(y.et.join(', '))}</small></span></label></li>`; }).join('')}</ul>
+        ${r.note ? `<p class="note" style="margin:10px 2px 0">💡 ${esc(r.note)}</p>` : ''}</section>`;
   } else {
     govde = `<section><div class="sec-head"><h2>Malzemeler</h2><small>Dokun: hazırladım</small></div>${ingList(r.ing, pre + 'm')}</section>
       <section><div class="sec-head"><h2>Yapılışı</h2></div><div class="card">${stepList(r.steps)}</div>
@@ -617,7 +626,7 @@ function rGun(){
   }
   const yanlar = [...(gun2 ? [] : (r.side || [])), ...(p.ek || [])];
   return `${okumaHatasi ? `<section style="margin-top:0"><div class="card uyari"><b>Mutfak kayıtları okunamadı</b><span class="note" style="color:var(--ink)">Kayıtların bozulmuş olabilir. İşaretlerin sıfırdan başlıyor.</span></div></section>` : ''}
-    ${nav}${hero}${hatirlatma(p)}${govde}${yanlar.map(s => sideHTML(s, pre + 's' + s)).join('')}
+    ${nav}${hero}${govde}${yanlar.map(s => sideHTML(s, pre + 's' + s)).join('')}${hatirlatma(p)}
     <section><button class="cta" data-tarif="corba"><span class="em" aria-hidden="true">🥣</span><span><b>Tek kaldığın akşam</b><small>Kırmızı mercimek çorbası · 30 dk · buzlukta 1 ay durur</small></span><span class="chev" aria-hidden="true">›</span></button></section>`;
 }
 
