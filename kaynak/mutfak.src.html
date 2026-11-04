@@ -89,7 +89,7 @@ input[type=date]{font:inherit;color:var(--ink);background:var(--bg);border:1px s
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
 (() => {
-const APP_VERSION = '1.3 · 4 Kasım 2026';
+const APP_VERSION = '1.4 · 4 Kasım 2026';
 const KEY = 'bocekler-mutfak-v1';
 const mode = 'local';
 const M = window.MUTFAK, R = M.recipes, SD = M.sides, PLAN = M.plan, GUN = PLAN.length - 1;
@@ -103,6 +103,9 @@ const tl = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximu
 const tl2 = new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2});
 const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
 // Türkçe yazım: "1.250,50" ya da "1250,5" ya da "45.5"
+// "3,2 kg", "750 g", "1.5kg" → kilogram; adet, paket gibi birimlerde null
+const kgOf = v => { const m = /^\s*(\d+(?:[.,]\d+)?)\s*(kg|kilo|g|gr|gram)\b/i.exec(String(v || '')); if(!m) return null; const n = parseFloat(m[1].replace(',', '.')); return /^g/i.test(m[2]) ? n / 1000 : n; };
+const kgFiyat = (tl, mik) => { const kg = kgOf(mik); return tl != null && kg ? Math.round(tl / kg) : null; };
 const tutar = v => { let x = String(v ?? '').trim().replace(/[₺\s]|tl/gi, ''); if(!x) return null;
   if(x.includes(',')) x = x.replace(/\./g, '').replace(',', '.'); else if(/^\d{1,3}(\.\d{3})+$/.test(x)) x = x.replace(/\./g, '');
   const n = parseFloat(x); return isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null; };
@@ -111,12 +114,13 @@ let toastT; function toast(m){ const t = document.getElementById('toast'); t.tex
 
 /* ---------- veri ---------- */
 const BAS0 = '2026-11-04';   // ilk alışveriş günü; Takvim'den değiştirilebilir
-const blank = () => ({bas: BAS0, tik: {}, alindi: {}, fiyat: {}, ekstra: [], gecmis: []});
+const blank = () => ({bas: BAS0, tik: {}, alindi: {}, fiyat: {}, miktar: {}, ekstra: [], gecmis: []});
 const obj = x => x && typeof x === 'object' && !Array.isArray(x);
 let okumaHatasi = false;
 let S = (() => { try { const raw = localStorage.getItem(KEY); if(!raw) return blank(); const d = JSON.parse(raw);
   if(obj(d)) return {bas: /^\d{4}-\d{2}-\d{2}$/.test(d.bas) ? d.bas : BAS0, tik: obj(d.tik) ? d.tik : {}, alindi: obj(d.alindi) ? d.alindi : {},
     fiyat: Object.fromEntries(Object.entries(obj(d.fiyat) ? d.fiyat : {}).filter(([, v]) => isFinite(+v) && +v >= 0).map(([k, v]) => [k, +v])),
+    miktar: Object.fromEntries(Object.entries(obj(d.miktar) ? d.miktar : {}).filter(([, v]) => typeof v === 'string' && v.trim()).map(([k, v]) => [k, v.slice(0, 30)])),
     ekstra: (Array.isArray(d.ekstra) ? d.ekstra : []).filter(e => obj(e) && e.id && e.ad && ['A','B'].includes(e.grup)).map(e => ({id: String(e.id), grup: e.grup, ad: String(e.ad).slice(0, 60), tl: isFinite(+e.tl) && e.tl !== null ? +e.tl : null})),
     gecmis: (Array.isArray(d.gecmis) ? d.gecmis : []).filter(g => obj(g) && g.id && Array.isArray(g.kalem))}; } catch(e){ okumaHatasi = true; } return blank(); })();
 function snapYaz(){ Bocekler.snap('mutfak', {bas: S.bas, adlar: PLAN.map(([id, mod]) => (mod === 'gun2' ? '↻ ' : '') + R[id].name)}); }
@@ -225,13 +229,13 @@ const grupRows = g => [...ROWS[g].map(r => ({...r, k: g + ':' + r.key})), ...S.e
 const tutarOf = r => r.ekstra ? r.ekstra.tl : S.fiyat[r.k] ?? r.cost;
 const sepet = g => { const sec = grupRows(g).filter(r => S.alindi[r.k]); return {sec, top: sec.reduce((a, r) => a + (tutarOf(r) || 0), 0),
   gercek: sec.filter(r => r.ekstra ? r.ekstra.tl != null : S.fiyat[r.k] != null)}; };
-const sonFiyat = key => { for(const g of S.gecmis) { const k = g.kalem.find(x => x.key === key && x.tl != null); if(k) return {tl: k.tl, tarih: g.tarih}; } return null; };
+const sonFiyat = key => { for(const g of S.gecmis) { const k = g.kalem.find(x => x.key === key && x.tl != null); if(k) return {tl: k.tl, tarih: g.tarih, alinan: k.alinan}; } return null; };
 function shopGrup(g){
   let cat = '', html = '';
   for(const r of grupRows(g)){
     if(r.cat !== cat){ cat = r.cat; html += `<div class="cat">${esc(cat)}</div>`; }
     const ok = !!S.alindi[r.k], f = r.ekstra ? r.ekstra.tl : S.fiyat[r.k];
-    html += `<div class="item${ok ? ' ok' : ''}"><label class="pick"><input type="checkbox" data-al="${esc(r.k)}" ${ok ? 'checked' : ''} aria-label="${esc(r.name)} sepette"><span class="mid"><b>${esc(r.name)}${r.pantry ? '<span class="evde">evde varsa alma</span>' : ''}</b><small>${esc(r.qty)}${r.unit ? ' · ' + esc(r.unit) : ''}</small></span></label>
+    html += `<div class="item${ok ? ' ok' : ''}"><label class="pick"><input type="checkbox" data-al="${esc(r.k)}" ${ok ? 'checked' : ''} aria-label="${esc(r.name)} sepette"><span class="mid"><b>${esc(r.name)}${r.pantry ? '<span class="evde">evde varsa alma</span>' : ''}</b><small>${S.miktar[r.k] ? `aldın <strong style="color:var(--ink);font-weight:600">${esc(S.miktar[r.k])}</strong>${kgFiyat(f, S.miktar[r.k]) ? ' · ' + esc(tl.format(kgFiyat(f, S.miktar[r.k]))) + '/kg' : ''}${r.ekstra ? '' : ' · plan ' + esc(r.qty)}` : `${esc(r.qty)}${r.unit ? ' · ' + esc(r.unit) : ''}`}</small></span></label>
       <button class="fiyat${f != null ? ' girildi' : ''}" data-fiyat="${esc(r.k)}" aria-label="${esc(r.name)} fiyatını yaz">${f != null ? `<b>${esc(tl2.format(f))}</b>${r.cost != null ? `<small>tahmin ${esc(tl.format(r.cost))}</small>` : '<small>ödenen</small>'}` : `<b>${r.cost != null ? esc(tl.format(r.cost)) : '—'}</b><small>${r.cost != null ? 'tahmin' : 'fiyat yaz'} ✎</small>`}</button></div>`;
   }
   return `<div class="items shop">${html}<button class="item ekle" data-ekstra="${g}">＋ Listede olmayan ürün ekle</button></div>`;
@@ -246,7 +250,7 @@ function rListe(){
   const ger = [...a.gercek, ...b.gercek], gT = ger.reduce((x, r) => x + tutarOf(r), 0), gTah = ger.filter(r => r.cost != null).reduce((x, r) => x + r.cost, 0), gFark = ger.filter(r => r.cost != null).reduce((x, r) => x + tutarOf(r), 0) - gTah;
   return `<section style="margin-top:0"><div class="hero"><span class="label">Sepetim</span><span class="big num">${esc(tl.format(a.top + b.top))}</span>
     <div class="row"><div class="cell"><span class="label">Bugün · ${a.sec.length} ürün</span><b class="num">${esc(tl.format(a.top))}</b></div><div class="cell"><span class="label">${esc(dayLabel(tB, {day:'numeric', month:'short'}))} · ${b.sec.length} ürün</span><b class="num">${esc(tl.format(b.top))}</b></div></div>
-    <span style="font-size:14px">${ger.length ? `Fiyatını yazdığın ${ger.length} ürün: <strong class="num">${esc(tl2.format(gT))}</strong>${gTah ? ` · tahmine göre <strong class="num">${gFark > 0 ? '+' : gFark < 0 ? '−' : ''}${esc(tl.format(Math.abs(gFark)))}</strong>` : ''}` : 'İşaretlediğin ürünler sepete eklenir. Fiyatı farklıysa tutara dokunup ödediğini yaz.'}<br>Listenin tamamı tahminen ${esc(tl.format(T.all))}.</span></div></section>
+    <span style="font-size:14px">${ger.length ? `Fiyatını yazdığın ${ger.length} ürün: <strong class="num">${esc(tl2.format(gT))}</strong>${gTah ? ` · tahmine göre <strong class="num">${gFark > 0 ? '+' : gFark < 0 ? '−' : ''}${esc(tl.format(Math.abs(gFark)))}</strong>` : ''}` : 'İşaretlediğin ürünler sepete eklenir. Tutara dokunup aldığın miktarı ve ödediğini yaz.'}<br>Listenin tamamı tahminen ${esc(tl.format(T.all))}.</span></div></section>
     ${grupKutu('A', 'Bugün al', 'Et, kiler, ilk 2 haftanın tazesi')}
     ${grupKutu('B', esc(dayLabel(tB, {day:'numeric', month:'long', weekday:'long'})), 'Son 2 haftanın tazesi')}
     <section><div class="sec-head"><h2>Geçmiş alışverişler</h2><small>${S.gecmis.length ? 'Dokun: ürün ürün' : ''}</small></div>
@@ -259,35 +263,41 @@ function rListe(){
 function arsivle(g){
   const s = sepet(g); if(!s.sec.length) return false;
   const id = S.bas + '-' + g, kayit = {id, grup: g, tarih: g === 'A' ? S.bas : addDays(S.bas, 14), kaydedildi: bugun(), toplam: Math.round(s.top * 100) / 100,
-    kalem: s.sec.map(r => ({key: r.ekstra ? 'x:' + r.name.toLocaleLowerCase('tr') : r.key, ad: r.name, miktar: r.ekstra ? '' : r.qty, tahmin: r.cost, tl: r.ekstra ? r.ekstra.tl : S.fiyat[r.k] ?? null}))};
+    kalem: s.sec.map(r => ({key: r.ekstra ? 'x:' + r.name.toLocaleLowerCase('tr') : r.key, ad: r.name, miktar: r.ekstra ? '' : r.qty, tahmin: r.cost, tl: r.ekstra ? r.ekstra.tl : S.fiyat[r.k] ?? null, alinan: S.miktar[r.k] || ''}))};
   S.gecmis = [kayit, ...S.gecmis.filter(x => x.id !== id)].sort((x, y) => y.tarih.localeCompare(x.tarih)).slice(0, 36);
   return true;
 }
 function openFiyat(k){
   const r = [...grupRows('A'), ...grupRows('B')].find(x => x.k === k); if(!r) return;
   const f = r.ekstra ? r.ekstra.tl : S.fiyat[k], son = r.ekstra ? null : sonFiyat(r.key);
-  openSheet(`${head(r.name)}<div class="note" style="color:var(--ink)">${r.ekstra ? 'Listeye sonradan eklediğin ürün.' : `${esc(r.qty)}${r.cost != null ? ` · tahmin <b>${esc(tl.format(r.cost))}</b>` : ''}`}${son ? `<br>Geçen sefer ödediğin: <b>${esc(tl2.format(son.tl))}</b> (${esc(dayLabel(son.tarih, {day:'numeric', month:'long'}))})` : ''}</div>
+  openSheet(`${head(r.name)}<div class="note" style="color:var(--ink)">${r.ekstra ? 'Listeye sonradan eklediğin ürün.' : `${esc(r.qty)}${r.cost != null ? ` · tahmin <b>${esc(tl.format(r.cost))}</b>` : ''}`}${son ? `<br>Geçen sefer: <b>${esc(tl2.format(son.tl))}</b>${son.alinan ? ' · ' + esc(son.alinan) + (kgFiyat(son.tl, son.alinan) ? ' (' + esc(tl.format(kgFiyat(son.tl, son.alinan))) + '/kg)' : '') : ''} · ${esc(dayLabel(son.tarih, {day:'numeric', month:'long'}))}` : ''}</div>
+    <label class="field"><span class="label">Aldığın miktar</span><input id="mGir" autocomplete="off" placeholder="${r.ekstra ? 'Örn. 1 kg' : esc(r.qty.replace(/\s*\(.*\)/, ''))}" value="${esc(S.miktar[k] || '')}" style="font:inherit;font-size:20px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
     <label class="field"><span class="label">Ödediğin tutar (bu miktarın toplamı)</span><input id="fGir" inputmode="decimal" autocomplete="off" placeholder="${r.cost != null ? esc(String(r.cost)) : 'Örn. 125,50'}" value="${f != null ? esc(String(f).replace('.', ',')) : ''}" style="font:inherit;font-size:20px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
     <div class="btns"><button class="btn" id="fKaydet" style="flex:1">Kaydet ve sepete ekle</button>${f != null || r.ekstra ? `<button class="btn ghost" id="fSil">${r.ekstra ? 'Ürünü sil' : 'Tahmine dön'}</button>` : ''}</div>`, 'Fiyat');
   const inp = document.getElementById('fGir'); setTimeout(() => inp.focus(), 250);
-  const kaydet = () => { const v = tutar(inp.value); if(v === null) return toast('Tutarı rakamla yaz, örn. 125,50'); if(r.ekstra) r.ekstra.tl = v; else S.fiyat[k] = v; S.alindi[k] = 1; save(); closeSheet(); keepScroll(); toast(r.name + ': ' + tl2.format(v)); };
+  const kaydet = () => { const mk = document.getElementById('mGir').value.trim(), v = inp.value.trim() ? tutar(inp.value) : null;
+    if(inp.value.trim() && v === null) return toast('Tutarı rakamla yaz, örn. 125,50'); if(v === null && !mk) return toast('Miktar ya da tutar yaz');
+    if(mk) S.miktar[k] = mk.slice(0, 30); else delete S.miktar[k];
+    if(v !== null){ if(r.ekstra) r.ekstra.tl = v; else S.fiyat[k] = v; }
+    S.alindi[k] = 1; save(); closeSheet(); keepScroll(); toast(r.name + (mk ? ' · ' + mk : '') + (v !== null ? ' · ' + tl2.format(v) : '')); };
   document.getElementById('fKaydet').onclick = kaydet; inp.addEventListener('keydown', e => { if(e.key === 'Enter') kaydet(); });
-  const sil = document.getElementById('fSil'); if(sil) sil.onclick = () => { if(r.ekstra){ S.ekstra = S.ekstra.filter(e => e.id !== r.ekstra.id); delete S.alindi[k]; } else delete S.fiyat[k]; save(); closeSheet(); keepScroll(); };
+  const sil = document.getElementById('fSil'); if(sil) sil.onclick = () => { if(r.ekstra){ S.ekstra = S.ekstra.filter(e => e.id !== r.ekstra.id); delete S.alindi[k]; } else { delete S.fiyat[k]; delete S.miktar[k]; } save(); closeSheet(); keepScroll(); };
 }
 function openEkstra(g){
   openSheet(`${head('Listede olmayan ürün')}<label class="field"><span class="label">Ürün</span><input id="eAd" maxlength="60" autocomplete="off" placeholder="Örn. Çay 1 kg" style="font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
+    <label class="field"><span class="label">Miktar</span><input id="eMk" autocomplete="off" placeholder="Örn. 1 kg ya da 2 adet" style="font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
     <label class="field"><span class="label">Ödediğin tutar</span><input id="eTl" inputmode="decimal" autocomplete="off" placeholder="Örn. 89,90" style="font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></label>
     <button class="btn" id="eKaydet">Sepete ekle</button>`, 'Ürün ekle');
   setTimeout(() => document.getElementById('eAd').focus(), 250);
   document.getElementById('eKaydet').onclick = () => { const ad = document.getElementById('eAd').value.trim(), v = tutar(document.getElementById('eTl').value);
     if(!ad) return toast('Ürün adını yaz'); if(v === null) return toast('Tutarı rakamla yaz, örn. 89,90');
-    const e = {id: uid(), grup: g, ad, tl: v}; S.ekstra.push(e); S.alindi[g + ':x-' + e.id] = 1; save(); closeSheet(); keepScroll(); toast(ad + ' sepete eklendi'); };
+    const e = {id: uid(), grup: g, ad, tl: v}, mk = document.getElementById('eMk').value.trim(); S.ekstra.push(e); S.alindi[g + ':x-' + e.id] = 1; if(mk) S.miktar[g + ':x-' + e.id] = mk.slice(0, 30); save(); closeSheet(); keepScroll(); toast(ad + ' sepete eklendi'); };
 }
 function openGecmis(id){
   const g = S.gecmis.find(x => x.id === id); if(!g) return;
   openSheet(`${head(dayLabel(g.tarih, {day:'numeric', month:'long', year:'numeric'}))}<div class="note">${g.grup === 'A' ? 'Ana alışveriş' : 'Tazeleme'} · ${g.kalem.length} ürün · toplam <b style="color:var(--ink)">${esc(tl2.format(g.toplam))}</b></div>
     <div class="items">${g.kalem.map(k => { const d = k.tl != null && k.tahmin != null ? k.tl - k.tahmin : null;
-      return `<div class="item"><span class="mid"><b>${esc(k.ad)}</b><small>${esc(k.miktar || '')}${k.tahmin != null ? ' · tahmin ' + esc(tl.format(k.tahmin)) : ''}${d ? ` · <span style="color:${d > 0 ? 'var(--out)' : 'var(--in)'}">${d > 0 ? '+' : '−'}${esc(tl.format(Math.abs(d)))}</span>` : ''}</small></span><span class="amt num">${k.tl != null ? esc(tl2.format(k.tl)) : `<span style="color:var(--muted)">≈ ${esc(tl.format(k.tahmin || 0))}</span>`}</span></div>`; }).join('')}</div>
+      return `<div class="item"><span class="mid"><b>${esc(k.ad)}</b><small>${k.alinan ? 'aldın ' + esc(k.alinan) + (kgFiyat(k.tl, k.alinan) ? ' · ' + esc(tl.format(kgFiyat(k.tl, k.alinan))) + '/kg' : '') : esc(k.miktar || '')}${k.tahmin != null ? ' · tahmin ' + esc(tl.format(k.tahmin)) : ''}${d ? ` · <span style="color:${d > 0 ? 'var(--out)' : 'var(--in)'}">${d > 0 ? '+' : '−'}${esc(tl.format(Math.abs(d)))}</span>` : ''}</small></span><span class="amt num">${k.tl != null ? esc(tl2.format(k.tl)) : `<span style="color:var(--muted)">≈ ${esc(tl.format(k.tahmin || 0))}</span>`}</span></div>`; }).join('')}</div>
     <p class="note" style="margin:0">≈ olanlara fiyat yazılmamış, tahmin sayıldı. Bu kaydı güncellemek için o dönemin listesinde fiyatları düzeltip tekrar kaydet.</p>
     <button class="btn ghost" id="gSil">Bu kaydı sil</button>`, 'Geçmiş alışveriş');
   let onay = 0; document.getElementById('gSil').onclick = e => { if(Date.now() - onay > 3000){ onay = Date.now(); e.target.textContent = 'Emin misin? Tekrar dokun'; return; } S.gecmis = S.gecmis.filter(x => x.id !== id); save(); closeSheet(); keepScroll(); toast('Kayıt silindi'); };
@@ -326,7 +336,7 @@ main.addEventListener('click', e => {
   if(d.gecmis) return openGecmis(d.gecmis);
   if(d.bitir){ if(arsivle(d.bitir)){ save(); keepScroll(); toast('Kaydedildi, geçmiş alışverişlerde'); } return; }
   if(d.yeniay){ arsivle('A'); arsivle('B'); S = {...blank(), bas: bugun(), gecmis: S.gecmis}; save(); view.gun = bugun(); render(); toast('Yeni ay başladı: bugün alışveriş günü'); return; }
-  if(d.sifirla){ if(Date.now() - sifirOnay > 3000){ sifirOnay = Date.now(); t.textContent = 'Emin misin? Tekrar dokun'; return; } S.alindi = {}; S.fiyat = {}; S.ekstra = []; save(); render(); toast('Sepet boşaltıldı; geçmiş kayıtlar duruyor'); }
+  if(d.sifirla){ if(Date.now() - sifirOnay > 3000){ sifirOnay = Date.now(); t.textContent = 'Emin misin? Tekrar dokun'; return; } S.alindi = {}; S.fiyat = {}; S.miktar = {}; S.ekstra = []; save(); render(); toast('Sepet boşaltıldı; geçmiş kayıtlar duruyor'); }
 });
 main.addEventListener('change', e => {
   const el = e.target;
@@ -345,7 +355,7 @@ const TIPS = {
   'm-gun': [['.dish', 'Bu akşamın yemeği', 'Tarihe göre o günün menüsü açılır. Oklarla ya da haftadaki günlere dokunarak başka günün yemeğine bak.'],
     ['.ing', 'Malzemeler', 'Hazırladığın malzemeye dokun, üstü çizilsin.']],
   'm-takvim': [['.items', 'Ayın menüsü', 'Bir güne dokun, o günün tarifi açılır. ↻ olanlar bir önceki günün tenceresinden.']],
-  'm-liste': [['.shop', 'Alışveriş listesi', 'Sepete koyduğun ürünü işaretle, üstteki tutar artar. Fiyat farklıysa sağdaki tutara dokunup ödediğini yaz.']]
+  'm-liste': [['.shop', 'Alışveriş listesi', 'Sepete koyduğun ürünü işaretle, üstteki tutar artar. Sağdaki tutara dokunup aldığın miktarı ve ödediğin fiyatı yaz.']]
 };
 const currentTipKey = () => 'm-' + view.tab;
 /*TIPENGINE*/
