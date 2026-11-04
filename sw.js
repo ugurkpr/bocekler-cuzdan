@@ -1,5 +1,5 @@
 // Uygulamayı internetsiz de açılabilir yapar. Sürümü değiştirince telefonlar yeni dosyaları alır.
-const CACHE = 'bocekler-v41';
+const CACHE = 'bocekler-v42';
 const FILES = ['./', './index.html', './banka.html', './saglik.html', './profil.html', './spor.html', './spor-veri.js', './ikon-spor.jpg', './mutfak.html', './mutfak-veri.js', './ikon-mutfak.jpg', './avatar-erkek.jpg', './avatar-kadin.jpg', './ortak.js', './gidalar.js', './ikon-banka.jpg', './ikon-saglik.jpg', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './splash-poster.jpg', './splash.mp4'];
 
 // Spor hareket görselleri (başlangıç ve bitiş pozları)
